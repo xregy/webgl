@@ -1,4 +1,3 @@
-// HelloCanvas.js
 function main()
 {
   var canvas = document.getElementById('webgl');
