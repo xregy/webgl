@@ -43,28 +43,49 @@ function main()
             ])
         ]);
 
+
+    var h_prog = Array([null, null]);
+    var vao = Array([null, null]);
+    var vbo = Array([null, null]);
+
+//-----------------------------------------------------
+    var VSHADER_SOURCE = document.getElementById("vert-shader").text;
+    var FSHADER_SOURCE = document.getElementById("frag-shader-0").text;
+
     if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
         console.log('Failed to intialize shaders.');
         return;
     }
 
-    var h_prog = Array([null, null]);
     h_prog[0] = gl.program;
+//-----------------------------------------------------
+    var VSHADER_SOURCE = document.getElementById("vert-shader").text;
+    var FSHADER_SOURCE = document.getElementById("frag-shader-1").text;
+
+    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+        console.log('Failed to intialize shaders.');
+        return;
+    }
+
+    h_prog[1] = gl.program;
+
 
 //-----------------------------------------------------
-    var vao = ext.createVertexArrayOES();
-    ext.bindVertexArrayOES(vao); 
-
-    var vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    var loc_aPosition = gl.getAttribLocation(h_prog, 'aPosition');
-    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    ext.bindVertexArrayOES(null); 
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    for(var i=0 ; i<2 ; i++)
+    {
+        vao[i] = ext.createVertexArrayOES();
+        ext.bindVertexArrayOES(vao[i]); 
+    
+        var vbo[i] = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo[i]);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    
+        var loc_aPosition = gl.getAttribLocation(h_prog, 'aPosition');
+        gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(loc_aPosition);
+    
+        ext.bindVertexArrayOES(null); 
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 //-----------------------------------------------------
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);

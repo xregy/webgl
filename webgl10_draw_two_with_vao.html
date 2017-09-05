@@ -10,7 +10,28 @@
     <canvas id="webgl" width="512" height="512" align=center>
     Please use a browser that supports "canvas"
     </canvas>
-
+    <script id="vert-shader" type="not-javascript">
+        attribute float x;
+        attribute float y;
+        void main()
+        {
+        	gl_Position = vec4(x,y,0,1);
+        }
+    </script>
+    <script id="frag-shader-0" type="not-javascript">
+        precision mediump float;
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+        }
+    </script>
+    <script id="frag-shader-1" type="not-javascript">
+        precision mediump float;
+        void main()
+        {
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
     <script src="lib/cuon-utils.js"></script>
