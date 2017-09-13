@@ -47,17 +47,18 @@ function main()
         '\tgl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n' +
         '}\n';
 
+    var h_prog = gl.createProgram();
+
     var h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
     gl.compileShader(h_vert);
+    gl.attachShader(h_prog, h_vert);
 
     var	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
-
-    var h_prog = gl.createProgram();
-    gl.attachShader(h_prog, h_vert);
     gl.attachShader(h_prog, h_frag);
+
     gl.linkProgram(h_prog);
 
     var vbo = gl.createBuffer();
