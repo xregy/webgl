@@ -31,6 +31,11 @@ function main() {
     return;
   }
 
+  if(!gl.getExtension("OES_texture_float")) {
+    alert("no OES_texture_float");
+    return;
+  }
+
   // Initialize shaders
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     console.log('Failed to intialize shaders.');
@@ -112,17 +117,14 @@ function initTextures(gl, n) {
 		return false;
 	}
 	
-	var texdata = new Uint8Array([255, 0, 0, 255]);
-	
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 	
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); 
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+//	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 2, 2, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, texdata);
-	
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 2, 2, 0, gl.RGB, gl.FLOAT, new Float32Array([1,0,0,   0,1,0,   0,0,1,   1,0,1]));
 	
 	gl.uniform1i(u_Sampler, 0);
 	
