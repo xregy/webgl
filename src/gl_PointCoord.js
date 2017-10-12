@@ -1,4 +1,4 @@
-// HelloTQuad_FragCoord.js 
+// gl_PointCoord.js 
 // Vertex shader program
 function main() {
   // Retrieve <canvas> element
@@ -32,16 +32,15 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // Draw the rectangle
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+  gl.drawArrays(gl.POINTS, 0, n);
 }
 
 function initVertexBuffers(gl) {
   var vertices = new Float32Array([
-    -0.9,  0.9, -1, 1,
-	-0.9, -0.9, -1, -1,
-	 0.9,  0.9, 1, 1,
-	 0.9, -0.9,  1, -1
+    -0.5,  0.5,
+	-0.5, -0.5,
+	 0.5,  0.5,
+	 0.5, -0.5,
   ]);
   var n = 4; // The number of vertices
 
@@ -63,19 +62,11 @@ function initVertexBuffers(gl) {
     console.log('Failed to get the storage location of a_Position');
     return -1;
   }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 4*4, 0);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
   // Enable the generic vertex attribute array
   gl.enableVertexAttribArray(a_Position);
 
-  var a_coords = gl.getAttribLocation(gl.program, 'a_coords');
-  if (a_coords < 0) {
-    console.log('Failed to get the storage location of a_coords');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_coords, 2, gl.FLOAT, false, 4*4, 4*2);
-
-  gl.enableVertexAttribArray(a_coords);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Change quad color by FragCoord</title>
+    <title>gl_PointCoord</title>
   </head>
 
   <body onload="main()">
@@ -14,25 +14,23 @@
     <script src="../lib/webgl-debug.js"></script>
     <script src="../lib/cuon-utils.js"></script>
     <script src="../lib/cuon-matrix.js"></script>
-    <script src="point-circle.js"></script>
+    <script src="gl_PointCoord.js"></script>
 	<script id="shader-vert" type="x-shader/x-vertex">
 		attribute vec4 a_Position;
 		attribute vec2 a_coords;
-		varying vec2 v_coords;
-		void main() {
+		void main() 
+		{
 			gl_Position = a_Position;
-			v_coords = a_coords;
+			gl_PointSize = 100.0;
 		}
 	</script>
 	<script id="shader-frag" type="x-shader/x-fragment">
 		precision mediump float;
-		varying vec2 v_coords;
-		void main() {
-			if(length(v_coords) < 0.5)    gl_FragColor = vec4(1,1,1,1);
-			else gl_FragColor = vec4(0,0,0,1);
+		void main() 
+		{
+			if(length(gl_PointCoord - vec2(.5,.5)) <= 0.5)    gl_FragColor = vec4(1,1,1,1);
+			else discard;
 		}
 	</script>
-
-
   </body>
 </html>
