@@ -18,10 +18,9 @@
 	<script id="shader-vert" type="x-shader/x-vertex">#version 300 es
         in vec4 a_Position;
         in int a_Index;
-        vec4 colors[3];
+        vec4 colors[3] = vec4[](vec4(1.0,0.0,0.0,1.0), vec4(0.0,1.0,0.0,1.0), vec4(0.0,0.0,1.0,1.0));
         out vec4 v_Color;
         void main() {
-            colors = vec4[](vec4(1.0,0.0,0.0,1.0), vec4(0.0,1.0,0.0,1.0), vec4(0.0,0.0,1.0,1.0));
             gl_Position = a_Position;
             v_Color = colors[a_Index];
         }

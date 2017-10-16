@@ -1,4 +1,10 @@
-// ColoredTriangle.js (c) 2012 matsuda
+// Comparison with WebGL 1.0
+//
+// - non-float attribute supported
+// - initialized declaration of an array
+// - array initialization using an array
+// - array index by an attribute
+
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
