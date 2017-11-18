@@ -31,7 +31,7 @@ function initVertexBuffers(gl) {
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
-    var verticesColors = new Float32Array([
+	var verticesColors = new Float32Array([
 
          1.0,  1.0,  1.0,     1.0,  1.0,  1.0,  // v0 White
          1.0, -1.0,  1.0,     1.0,  1.0,  0.0,  // v3 Yellow
@@ -83,4 +83,5 @@ function initVertexBuffers(gl) {
     gl.enableVertexAttribArray(a_Color);
     
     return;
+
 }
