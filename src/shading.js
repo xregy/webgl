@@ -36,39 +36,43 @@ var light = {
 	specular:[1.0, 1.0, 1.0]
 };
 
-
-function main()
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
-    var canvas = document.getElementById('webgl');
-    var gl = getWebGLContext(canvas);
+	initShaders(gl, src_vert, src_frag);
+	h_prog = gl.program;
+	var	attribs = {};
+	for(let attrib of attrib_names)
+	{
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+	}
+	return {h_prog:h_prog, attribs:attribs};
+}
 
-	gl.enable(gl.DEPTH_TEST);
+function init_models(gl)
+{
+	var	attrib_names = ["aPosition", "aNormal"];
+	var	models = ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"];
+	for(let model of models)
+	{
+		var	src_vert = document.getElementById("vert-" + model).text;
+		var	src_frag = document.getElementById("frag-" + model).text;
+		list_shaders[model] = init_shader(gl, src_vert, src_frag, attrib_names);
+	}
 
-//	h_prog_Blinn_Gouraud = init_shaders(gl, "vert-Blinn-Gouraud", "frag-Blinn-Gouraud");
-//	h_prog_Phong_Gouraud = init_shaders(gl, "vert-Phong-Gouraud", "frag-Phong-Gouraud");
-//	h_prog_Blinn_Phong = init_shaders(gl, "vert-Blinn-Phong", "frag-Blinn-Phong");
-//	h_prog_Phong_Phong = init_shaders(gl, "vert-Phong-Phong", "frag-Phong-Phong");
+	var	combo_shading = document.getElementById("shading-models");
+	for(var name in list_shaders)
+	{
+		var opt = document.createElement("option");
+		opt.value = name;
+		opt.text = name;
+		combo_shading.add(opt, null);
+	}
+	combo_shading.selectedIndex = 3;
+	combo_shading.onchange = function(ev) { refresh_scene(gl) };
+}
 
-//	console.log("Blinn-Gouraud");
-	initShaders(gl, document.getElementById("vert-Blinn-Gouraud").text, document.getElementById("frag-Blinn-Gouraud").text);
-	h_prog_Blinn_Gouraud = gl.program;
-//	console.log("Phong-Gouraud");
-	initShaders(gl, document.getElementById("vert-Phong-Gouraud").text, document.getElementById("frag-Phong-Gouraud").text);
-	h_prog_Phong_Gouraud = gl.program;
-//	console.log("Blinn-Phong");
-	initShaders(gl, document.getElementById("vert-Blinn-Phong").text, document.getElementById("frag-Blinn-Phong").text);
-	h_prog_Blinn_Phong = gl.program;
-//	console.log("Phong-Phong");
-	initShaders(gl, document.getElementById("vert-Phong-Phong").text, document.getElementById("frag-Phong-Phong").text);
-	h_prog_Phong_Phong = gl.program;
-
-	list_shaders.push({name:"Blinn-Gouraud", h_prog:h_prog_Blinn_Gouraud, loc_Position:-1, loc_Normal:-1});
-	list_shaders.push({name:"Phong-Gouraud", h_prog:h_prog_Phong_Gouraud, loc_Position:-1, loc_Normal:-1});
-	list_shaders.push({name:"Blinn-Phong", h_prog:h_prog_Blinn_Phong, loc_Position:-1, loc_Normal:-1});
-	list_shaders.push({name:"Phong-Phong", h_prog:h_prog_Phong_Phong, loc_Position:-1, loc_Normal:-1});
- 
-	init_vbo_cube(gl);
-
+function init_materials(gl)
+{
 	var	combo_mat = document.getElementById("materials");
 	for(var i=0 ; i<list_mats.length ; i++)
 	{
@@ -79,19 +83,31 @@ function main()
 	}
 	combo_mat.selectedIndex = 10;
 	combo_mat.onchange = function(ev) { refresh_scene(gl) };
+}
 
-	var	combo_shading = document.getElementById("shading-models");
 
-	for(var i=0 ; i<list_shaders.length ; i++)
-	{
-		var opt = document.createElement("option");
-		opt.value = i;
-		opt.text = list_shaders[i].name;
-		combo_shading.add(opt, null);
-		init_locations(gl, list_shaders[i]);
-	}
-	combo_shading.selectedIndex = 3;
-	combo_shading.onchange = function(ev) { refresh_scene(gl) };
+var	cube;
+var	axes;
+var	shader_axes;
+
+
+function main()
+{
+    var canvas = document.getElementById('webgl');
+    var gl = getWebGLContext(canvas);
+
+	gl.enable(gl.DEPTH_TEST);
+
+	shader_axes = init_shader(gl,
+								document.getElementById("vert-axes").text, 
+								document.getElementById("frag-axes").text,
+								["aPosition", "aColor"]);
+ 
+	cube = init_vbo_cube(gl);
+	axes = init_vbo_axes(gl);
+
+	init_models(gl);
+	init_materials(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -100,74 +116,84 @@ function main()
 
 function refresh_scene(gl)
 {
-	var	shader = list_shaders[document.getElementById("shading-models").selectedIndex];
+	var	combo_shader = document.getElementById("shading-models");
+	var	shader_model = list_shaders[combo_shader.options[combo_shader.selectedIndex].value];
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.useProgram(shader.h_prog);
 
+	render_object(gl, shader_model, cube);
+
+	render_object(gl, shader_axes, axes);
+}
+
+function render_object(gl, shader, object)
+{
+    gl.useProgram(shader.h_prog);
+	set_uniforms(gl, shader.h_prog);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, object.vbo);
+	for(var attrib_name in object.attribs)
+	{
+		var	attrib = object.attribs[attrib_name];
+		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+	}
+	gl.drawArrays(object.type, 0, object.n);
+	for(var attrib_name in object.attribs)
+	{
+		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
+	}
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+function set_uniforms(gl, h_prog)
+{
+	set_xforms(gl, h_prog);
+	set_light(gl, h_prog);
+	set_material(gl, h_prog);
+}
+function set_xforms(gl, h_prog)
+{
 	var	M = new Matrix4();
 	var V = new Matrix4();
 	var	P = new Matrix4();
 	var	matNormal = new Matrix4();
 
+	M.setRotate(30, 0, 1, 0);
 	V.setLookAt(3, 2, 3, 0, 0, 0, 0, 1, 0);
 	P.setPerspective(60, 1, 1, 100); 
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "V"), false, V.elements);
-    gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MV"), false, (M.multiply(M)).elements);
-    gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, ((P.multiply(V)).multiply(M)).elements);
-
 	matNormal.setInverseOf(M);
 	matNormal.transpose();
-	gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "matNormal"), false, matNormal.elements);
 
-	set_light(gl, shader);
-	set_material(gl, shader);
-
-	enable_attribs(gl, shader);
-
-	for(var i=0 ; i<6 ; i++)
-    	gl.drawArrays(gl.TRIANGLE_FAN, i*4, 4);
+	loc = gl.getUniformLocation(h_prog, "VP")
+	if(loc != null) gl.uniformMatrix4fv(loc, false, (P.multiply(V)).elements);
+	loc = gl.getUniformLocation(h_prog, "V")
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, V.elements);
+	loc = gl.getUniformLocation(h_prog, "MV")
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, (V.multiply(M)).elements);
+	loc = gl.getUniformLocation(h_prog, "MVP")
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, ((P.multiply(V)).multiply(M)).elements);
+	loc = gl.getUniformLocation(h_prog, "matNormal")
+	if(loc != null)	gl.uniformMatrix4fv(loc, false, matNormal.elements);
 }
 
-function set_light(gl, shader)
+function set_light(gl, h_prog)
 {
-	gl.uniform4f(gl.getUniformLocation(shader.h_prog, "light.position"), light.position[0], light.position[1], light.position[2], light.position[3]);
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "light.ambient"), light.ambient[0], light.ambient[1], light.ambient[2]);
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "light.diffuse"), light.diffuse[0], light.diffuse[1], light.diffuse[2]);
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "light.specular"), light.specular[0], light.specular[1], light.specular[2]);
+	gl.uniform4f(gl.getUniformLocation(h_prog, "light.position"), light.position[0], light.position[1], light.position[2], light.position[3]);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "light.ambient"), light.ambient[0], light.ambient[1], light.ambient[2]);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "light.diffuse"), light.diffuse[0], light.diffuse[1], light.diffuse[2]);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "light.specular"), light.specular[0], light.specular[1], light.specular[2]);
 }
 
-function set_material(gl, shader)
+function set_material(gl, h_prog)
 {
 	var	mat = list_mats[document.getElementById("materials").selectedIndex];
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "material.ambient"), mat.ambient[0], mat.ambient[1], mat.ambient[2]);
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "material.diffuse"), mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
-	gl.uniform3f(gl.getUniformLocation(shader.h_prog, "material.specular"), mat.specular[0], mat.specular[1], mat.specular[2]);
-	gl.uniform1f(gl.getUniformLocation(shader.h_prog, "material.shininess"), mat.shininess);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "material.ambient"), mat.ambient[0], mat.ambient[1], mat.ambient[2]);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "material.diffuse"), mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
+	gl.uniform3f(gl.getUniformLocation(h_prog, "material.specular"), mat.specular[0], mat.specular[1], mat.specular[2]);
+	gl.uniform1f(gl.getUniformLocation(h_prog, "material.shininess"), mat.shininess);
 }
 
-
-function init_shaders(gl, id_vert, id_frag)
-{
-	var src_vert = document.getElementById(id_vert).text;
-	var src_frag = document.getElementById(id_frag).text;
-
-    var h_vert = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(h_vert, src_vert);
-    gl.compileShader(h_vert);
-
-    var	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(h_frag, src_frag);
-    gl.compileShader(h_frag);
-
-    var h_prog = gl.createProgram();
-    gl.attachShader(h_prog, h_vert);
-    gl.attachShader(h_prog, h_frag);
-
-    gl.linkProgram(h_prog);
-
-	return h_prog;
-}
 
 function init_vbo_cube(gl) {
     // Create a cube
@@ -179,35 +205,54 @@ function init_vbo_cube(gl) {
     //  |/      |/
     //  v2------v3
     var verts = new Float32Array([
-         1, 1, 1,     1, 0, 0,  // v0
-         1,-1, 1,     1, 0, 0,  // v3
-         1,-1,-1,     1, 0, 0,  // v4
-         1, 1,-1,     1, 0, 0,  // v5
+         1, 1, 1,    1, 0, 0,  // v0 White
+         1,-1, 1,    1, 0, 0,  // v3 Yellow
+         1,-1,-1,    1, 0, 0,  // v4 Green
 
-         1, 1, 1,     0, 1, 0,  // v0
-         1, 1,-1,     0, 1, 0,  // v5
-        -1, 1,-1,     0, 1, 0,  // v6
-        -1, 1, 1,     0, 1, 0,  // v1
+         1, 1, 1,    1, 0, 0,  // v0 White
+         1,-1,-1,    1, 0, 0,  // v4 Green
+         1, 1,-1,    1, 0, 0,  // v5 Cyan
 
-         1, 1, 1,     0, 0, 1,  // v0
-        -1, 1, 1,     0, 0, 1,  // v1
-        -1,-1, 1,     0, 0, 1,  // v2
-         1,-1, 1,     0, 0, 1,  // v3
+         1, 1, 1,    0, 1, 0,  // v0 White
+         1, 1,-1,    0, 1, 0,  // v5 Cyan
+        -1, 1,-1,    0, 1, 0,  // v6 Blue
 
-        -1,-1,-1,    -1, 0, 0,  // v7
-        -1,-1, 1,    -1, 0, 0,  // v2
-        -1, 1, 1,    -1, 0, 0,  // v1
-        -1, 1,-1,    -1, 0, 0,  // v6
+         1, 1, 1,    0, 1, 0,  // v0 White
+        -1, 1,-1,    0, 1, 0,  // v6 Blue
+        -1, 1, 1,    0, 1, 0,  // v1 Magenta
 
-        -1,-1,-1,     0, 0,-1,  // v7
-        -1, 1,-1,     0, 0,-1,  // v6
-         1, 1,-1,     0, 0,-1,  // v5
-         1,-1,-1,     0, 0,-1,  // v4
+         1, 1, 1,    0, 0, 1,  // v0 White
+        -1, 1, 1,    0, 0, 1,  // v1 Magenta
+        -1,-1, 1,    0, 0, 1,  // v2 Red
 
-        -1,-1,-1,     0,-1, 0,  // v7
-         1,-1,-1,     0,-1, 0,  // v4
-         1,-1, 1,     0,-1, 0,  // v3
-        -1,-1, 1,     0,-1, 0,  // v2
+         1, 1, 1,    0, 0, 1,  // v0 White
+        -1,-1, 1,    0, 0, 1,  // v2 Red
+         1,-1, 1,    0, 0, 1,  // v3 Yellow
+
+        -1,-1,-1,   -1, 0, 0,  // v7 Black
+        -1,-1, 1,   -1, 0, 0,  // v2 Red
+        -1, 1, 1,   -1, 0, 0,  // v1 Magenta
+
+        -1,-1,-1,   -1, 0, 0,  // v7 Black
+        -1, 1, 1,   -1, 0, 0,  // v1 Magenta
+        -1, 1,-1,   -1, 0, 0,  // v6 Blue
+
+        -1,-1,-1,    0, 0,-1,  // v7 Black
+        -1, 1,-1,    0, 0,-1,  // v6 Blue
+         1, 1,-1,    0, 0,-1,  // v5 Cyan
+
+        -1,-1,-1,    0, 0,-1,  // v7 Black
+         1, 1,-1,    0, 0,-1,  // v5 Cyan
+         1,-1,-1,    0, 0,-1,  // v4 Green
+
+        -1,-1,-1,    0,-1, 0,  // v7 Black
+         1,-1,-1,    0,-1, 0,  // v4 Green
+         1,-1, 1,    0,-1, 0,  // v3 Yellow
+
+        -1,-1,-1,    0,-1, 0,  // v7 Black
+         1,-1, 1,    0,-1, 0,  // v3 Yellow
+        -1,-1, 1,    0,-1, 0,  // v2 Red
+
     ]);
     
    
@@ -215,29 +260,48 @@ function init_vbo_cube(gl) {
     
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+
+	var FSIZE = verts.BYTES_PER_ELEMENT;
+	var	attribs = [];
+	attribs["aPosition"] = {size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
+	attribs["aNormal"] = {size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*3};
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-//    var FSIZE = verts.BYTES_PER_ELEMENT;
-
-   return;
-
+	return {vbo:vbo, n:36, type:gl.TRIANGLES, attribs:attribs};
 }
 
-function init_locations(gl, shader)
+function init_vbo_axes(gl)
 {
-//	console.log(shader);
-//	gl.UseProgram(shader.h_prog);
-	shader.loc_Position = gl.getAttribLocation(shader.h_prog, 'aPosition');
-	shader.loc_Color = gl.getAttribLocation(shader.h_prog, 'aNormal');
-	shader.loc_MVP = gl.getUniformLocation(shader.h_prog, 'MVP');
-	shader.loc_MV = gl.getUniformLocation(shader.h_prog, 'MV');
-	shader.loc_V = gl.getUniformLocation(shader.h_prog, 'V');
-	shader.loc_matNormal = gl.getUniformLocation(shader.h_prog, 'matNormal');
+    var vertices = new Float32Array([
+      // Vertex coordinates and color
+      0,0,0, 1,0,0,
+      2,0,0, 1,0,0,
+
+      0,0,0, 0,1,0,
+      0,2,0, 0,1,0,
+
+      0,0,0, 0,0,1,
+      0,0,2, 0,0,1,
+    ]);
+
+    var vbo = gl.createBuffer();  
+   
+    // Write the vertex information and enable it
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    
+    var FSIZE = vertices.BYTES_PER_ELEMENT;
+    
+	var	attribs = [];
+	attribs["aPosition"] = {size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
+	attribs["aColor"] = {size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*3};
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+   
+    return {vbo:vbo, n:6, type:gl.LINES, attribs:attribs};
 }
 
-function enable_attribs(gl, shader)
-{
-	gl.vertexAttribPointer(shader.loc_Position, 3, gl.FLOAT, false, 4 * 6, 0);
-	gl.enableVertexAttribArray(shader.loc_Position);
-	gl.vertexAttribPointer(shader.loc_Color, 3, gl.FLOAT, false, 4 * 6, 4 * 3);
-	gl.enableVertexAttribArray(shader.loc_Color);
-}
+
+
+
