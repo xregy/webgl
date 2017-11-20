@@ -73,11 +73,13 @@ function main()
 	    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_x[i]);
 		var loc_x = gl.getAttribLocation(h_prog[i], 'x');
 	    gl.vertexAttribPointer(loc_x, 1, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	    gl.enableVertexAttribArray(loc_x);
 
 	    gl.bindBuffer(gl.ARRAY_BUFFER, vbo_y[i]);
 	    var loc_y = gl.getAttribLocation(h_prog[i], 'y');
 	    gl.vertexAttribPointer(loc_y, 1, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	    gl.enableVertexAttribArray(loc_y);
 
 		gl.drawArrays(gl.TRIANGLES, 0, 3);
