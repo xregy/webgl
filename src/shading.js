@@ -32,7 +32,7 @@ var	list_shaders = [];
 
 //var light = {position:null, ambient:null, diffuse:null, specular:null};
 
-var light = { position:[0.0, 1.2, 0.0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
+var light = { position:[0, 1.2, 0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
                 position_transformed:null};
 
 //var light = {position:new Vector4(0.0, 1.2, 0.0, 0.0),
@@ -142,7 +142,7 @@ function refresh_scene(gl)
 
 	render_object(gl, shader_axes, axes);
 
-//	render_object(gl, shader_model, cube);
+	render_object(gl, shader_model, cube);
 }
 
 function render_object(gl, shader, object)
@@ -189,41 +189,66 @@ function update_xforms(gl)
 	matNormal = new Matrix4();
 
 	M.setRotate(0, 0, 1, 0);
-	V.setLookAt(3, 1, 3, 0, 0, 0, 0, 1, 0);
-//	V.setLookAt(3, 0, 3, 0, 0, 0, 0, 1, 0);
-//	V.setLookAt(3, 0, 3, 0, 0, 0, 0, 1, 0);
-//    V.setTranslate(0, 0, -3);
-//	V.rotate(90, 0, 1, 0);
+
+    V.setLookAt(3, 2, 3, 0, 0, 0, 0, 1, 0);
+
 	P.setPerspective(60, 1, 1, 100); 
 	matNormal.setInverseOf(M);
 	matNormal.transpose();
 
     var combo_light = document.getElementById("light-type");
 	var	light_type = combo_light.options[combo_light.selectedIndex].value;
+
     if(light_type == "directional") light.position[3] = 0;
     else                            light.position[3] = 1;
 
-    light.position_xformed = V.multiplyVector4(new Vector4(light.position));
+//    light.position_xformed = V.multiplyVector4(new Vector4(light.position));
+    light.position_xformed = new Vector4(light.position);
 
+//    if(light_type == "directional") light.position_xformed.elements[3] = 0;
+//    else                            light.position_xformed.elements[3] = 1;
+}
+
+function print_matrix(m)
+{
+    var row0 = m.elements[0*4+0] + ' ' + 
+                m.elements[1*4+0] + ' ' + 
+                m.elements[2*4+0] + ' ' + 
+                m.elements[3*4+0];
+    var row1 = m.elements[0*4+1] + ' ' + 
+                m.elements[1*4+1] + ' ' + 
+                m.elements[2*4+1] + ' ' + 
+                m.elements[3*4+1];
+    var row2 = m.elements[0*4+2] + ' ' + 
+                m.elements[1*4+2] + ' ' + 
+                m.elements[2*4+2] + ' ' + 
+                m.elements[3*4+2];
+    var row3 = m.elements[0*4+3] + ' ' + 
+                m.elements[1*4+3] + ' ' + 
+                m.elements[2*4+3] + ' ' + 
+                m.elements[3*4+3];
+    console.log(row0 + '\n' + row1 + '\n' + row2 + '\n' + row3);
 }
 
 function set_xforms(gl, h_prog)
 {
-    var VP = P.multiply(V);
-    var MV = V.multiply(M);
-    var MVP = (P.multiply(V)).multiply(M);
-
-    console.log(M);
-    console.log(V);
-    console.log(MV);
-    console.log(MVP);
-    console.log(VP);
+    var VP = new Matrix4(P); VP.multiply(V);
+    var MV = new Matrix4(V); MV.multiply(M);
+    var MVP = new Matrix4(P); MVP.multiply(V); MVP.multiply(M);
+    var V_inv = new Matrix4();
+    V_inv.setInverseOf(V);
 
 	loc = gl.getUniformLocation(h_prog, "VP")
 	if(loc != null) gl.uniformMatrix4fv(loc, false, VP.elements);
 
 	loc = gl.getUniformLocation(h_prog, "V")
     if(loc != null)	gl.uniformMatrix4fv(loc, false, V.elements);
+
+	loc = gl.getUniformLocation(h_prog, "V_inv")
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, V_inv.elements);
+
+	loc = gl.getUniformLocation(h_prog, "M")
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, M.elements);
 
 	loc = gl.getUniformLocation(h_prog, "MV")
     if(loc != null)	gl.uniformMatrix4fv(loc, false, MV.elements);
@@ -241,6 +266,8 @@ function set_light(gl, h_prog)
 //    console.log(light);
 
 //	gl.uniform4f(gl.getUniformLocation(h_prog, "light.position"), light.position[0], light.position[1], light.position[2], light.position[3]);
+
+    console.log(light.position_xformed.elements);
 
 	gl.uniform4fv(gl.getUniformLocation(h_prog, "light.position"), light.position_xformed.elements);
     gl.uniform3f(gl.getUniformLocation(h_prog, "light.ambient"), light.ambient[0], light.ambient[1], light.ambient[2]);
