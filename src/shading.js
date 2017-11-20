@@ -29,13 +29,16 @@ var list_mats =
 
 var	list_shaders = [];
 
-var light = {
-	position:[2.0, 2.0, 2.0, 0.0],
-	ambient:[0.5, 0.5, 0.5],
-	diffuse:[1.0, 1.0, 1.0],
-	specular:[1.0, 1.0, 1.0]
-};
 
+//var light = {position:null, ambient:null, diffuse:null, specular:null};
+
+var light = { position:[0.0, 1.2, 0.0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
+                position_transformed:null};
+
+//var light = {position:new Vector4(0.0, 1.2, 0.0, 0.0),
+//ambient:new Vector4(0.5, 0.5, 0.5, 1.0),
+//diffuse:new Vector4(1.0, 1.0, 1.0, 1.0),
+//specular:new Vector4(1.0, 1.0, 1.0, 1.0)};
 function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
@@ -85,6 +88,20 @@ function init_materials(gl)
 	combo_mat.onchange = function(ev) { refresh_scene(gl) };
 }
 
+function init_lights(gl)
+{
+	var	combo_light = document.getElementById("light-type");
+    combo_light.selectedIndex = 1;
+	combo_light.onchange = function(ev) { refresh_scene(gl) };
+
+//    light.position = new Vector4(0.0, 1.2, 0.0, 0.0);
+//    light.ambient = new Vector4(0.5, 0.5, 0.5, 1.0);
+//    light.diffuse = new Vector4(1.0, 1.0, 1.0, 1.0);
+//    light.specular = new Vector4(1.0, 1.0, 1.0, 1.0);
+
+//    console.log(light);
+};
+
 
 var	cube;
 var	axes;
@@ -108,6 +125,7 @@ function main()
 
 	init_models(gl);
 	init_materials(gl);
+    init_lights(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -120,9 +138,11 @@ function refresh_scene(gl)
 	var	shader_model = list_shaders[combo_shader.options[combo_shader.selectedIndex].value];
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	render_object(gl, shader_model, cube);
+    update_xforms(gl);
 
 	render_object(gl, shader_axes, axes);
+
+//	render_object(gl, shader_model, cube);
 }
 
 function render_object(gl, shader, object)
@@ -131,6 +151,7 @@ function render_object(gl, shader, object)
 	set_uniforms(gl, shader.h_prog);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vbo);
+
 	for(var attrib_name in object.attribs)
 	{
 		var	attrib = object.attribs[attrib_name];
@@ -144,6 +165,7 @@ function render_object(gl, shader, object)
 	}
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
 }
 
 function set_uniforms(gl, h_prog)
@@ -152,37 +174,78 @@ function set_uniforms(gl, h_prog)
 	set_light(gl, h_prog);
 	set_material(gl, h_prog);
 }
-function set_xforms(gl, h_prog)
-{
-	var	M = new Matrix4();
-	var V = new Matrix4();
-	var	P = new Matrix4();
-	var	matNormal = new Matrix4();
 
-	M.setRotate(30, 0, 1, 0);
-	V.setLookAt(3, 2, 3, 0, 0, 0, 0, 1, 0);
+var	M;
+var V;
+var	P;
+var	matNormal;
+
+
+function update_xforms(gl)
+{
+	M = new Matrix4();
+	V = new Matrix4();
+	P = new Matrix4();
+	matNormal = new Matrix4();
+
+	M.setRotate(0, 0, 1, 0);
+	V.setLookAt(3, 1, 3, 0, 0, 0, 0, 1, 0);
+//	V.setLookAt(3, 0, 3, 0, 0, 0, 0, 1, 0);
+//	V.setLookAt(3, 0, 3, 0, 0, 0, 0, 1, 0);
+//    V.setTranslate(0, 0, -3);
+//	V.rotate(90, 0, 1, 0);
 	P.setPerspective(60, 1, 1, 100); 
 	matNormal.setInverseOf(M);
 	matNormal.transpose();
 
+    var combo_light = document.getElementById("light-type");
+	var	light_type = combo_light.options[combo_light.selectedIndex].value;
+    if(light_type == "directional") light.position[3] = 0;
+    else                            light.position[3] = 1;
+
+    light.position_xformed = V.multiplyVector4(new Vector4(light.position));
+
+}
+
+function set_xforms(gl, h_prog)
+{
+    var VP = P.multiply(V);
+    var MV = V.multiply(M);
+    var MVP = (P.multiply(V)).multiply(M);
+
+    console.log(M);
+    console.log(V);
+    console.log(MV);
+    console.log(MVP);
+    console.log(VP);
+
 	loc = gl.getUniformLocation(h_prog, "VP")
-	if(loc != null) gl.uniformMatrix4fv(loc, false, (P.multiply(V)).elements);
+	if(loc != null) gl.uniformMatrix4fv(loc, false, VP.elements);
+
 	loc = gl.getUniformLocation(h_prog, "V")
     if(loc != null)	gl.uniformMatrix4fv(loc, false, V.elements);
+
 	loc = gl.getUniformLocation(h_prog, "MV")
-    if(loc != null)	gl.uniformMatrix4fv(loc, false, (V.multiply(M)).elements);
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, MV.elements);
+
 	loc = gl.getUniformLocation(h_prog, "MVP")
-    if(loc != null)	gl.uniformMatrix4fv(loc, false, ((P.multiply(V)).multiply(M)).elements);
+    if(loc != null)	gl.uniformMatrix4fv(loc, false, MVP.elements);
+
 	loc = gl.getUniformLocation(h_prog, "matNormal")
 	if(loc != null)	gl.uniformMatrix4fv(loc, false, matNormal.elements);
+
 }
 
 function set_light(gl, h_prog)
 {
-	gl.uniform4f(gl.getUniformLocation(h_prog, "light.position"), light.position[0], light.position[1], light.position[2], light.position[3]);
-	gl.uniform3f(gl.getUniformLocation(h_prog, "light.ambient"), light.ambient[0], light.ambient[1], light.ambient[2]);
-	gl.uniform3f(gl.getUniformLocation(h_prog, "light.diffuse"), light.diffuse[0], light.diffuse[1], light.diffuse[2]);
-	gl.uniform3f(gl.getUniformLocation(h_prog, "light.specular"), light.specular[0], light.specular[1], light.specular[2]);
+//    console.log(light);
+
+//	gl.uniform4f(gl.getUniformLocation(h_prog, "light.position"), light.position[0], light.position[1], light.position[2], light.position[3]);
+
+	gl.uniform4fv(gl.getUniformLocation(h_prog, "light.position"), light.position_xformed.elements);
+    gl.uniform3f(gl.getUniformLocation(h_prog, "light.ambient"), light.ambient[0], light.ambient[1], light.ambient[2]);
+    gl.uniform3f(gl.getUniformLocation(h_prog, "light.diffuse"), light.diffuse[0], light.diffuse[1], light.diffuse[2]);
+    gl.uniform3f(gl.getUniformLocation(h_prog, "light.specular"), light.specular[0], light.specular[1], light.specular[2]);
 }
 
 function set_material(gl, h_prog)
@@ -299,9 +362,73 @@ function init_vbo_axes(gl)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
    
-    return {vbo:vbo, n:6, type:gl.LINES, attribs:attribs};
+    return {vbo:vbo, n:6, drawcall:"drawArrays", type:gl.LINES, attribs:attribs};
 }
 
 
+// http://rodger.global-linguist.com/webgl/ch08/PointLightedSphere.js
+function init_vbo_sphere(gl) 
+{ // Create a sphere
+    var SPHERE_DIV = 13;
+    
+    var i, ai, si, ci;
+    var j, aj, sj, cj;
+    var p1, p2;
+    
+    var positions = [];
+    var indices = [];
+    
+    // Generate coordinates
+    for (j = 0; j <= SPHERE_DIV; j++) {
+        aj = j * Math.PI / SPHERE_DIV;
+        sj = Math.sin(aj);
+        cj = Math.cos(aj);
+        for (i = 0; i <= SPHERE_DIV; i++) {
+            ai = i * 2 * Math.PI / SPHERE_DIV;
+            si = Math.sin(ai);
+            ci = Math.cos(ai);
+            
+            positions.push(si * sj);  // X
+            positions.push(cj);       // Y
+            positions.push(ci * sj);  // Z
+        }
+    }
+    
+    // Generate indices
+    for (j = 0; j < SPHERE_DIV; j++) {
+        for (i = 0; i < SPHERE_DIV; i++) {
+            p1 = j * (SPHERE_DIV+1) + i;
+            p2 = p1 + (SPHERE_DIV+1);
+            
+            indices.push(p1);
+            indices.push(p2);
+            indices.push(p1 + 1);
+            
+            indices.push(p1 + 1);
+            indices.push(p2);
+            indices.push(p2 + 1);
+        }
+    }
+    
+    // Write the vertex property to buffers (coordinates and normals)
+    // Same data can be used for vertex and normal
+    // In order to make it intelligible, another buffer is prepared separately
+    if (!initArrayBuffer(gl, 'a_Position', new Float32Array(positions), gl.FLOAT, 3)) return -1;
+    if (!initArrayBuffer(gl, 'a_Normal', new Float32Array(positions), gl.FLOAT, 3))  return -1;
+    
+    // Unbind the buffer object
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    
+    // Write the indices to the buffer object
+    var indexBuffer = gl.createBuffer();
+    if (!indexBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    
+    return indices.length;
+}
 
 

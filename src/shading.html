@@ -10,12 +10,25 @@
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
-		<br>
-		<select id="materials">
-		</select>
-		<br>
-		<select id="shading-models">
-		</select>
+        <table>
+            <tr>
+                <td>material</td>
+                <td><select id="materials"></select></td>
+            </tr>
+            <tr>
+		        <td>shading model</td>
+                <td><select id="shading-models"></select></td>
+            </tr>
+            <tr>
+		        <td>light type</td>
+                <td>
+                    <select id="light-type">
+                        <option value="directional">directional</option>
+                        <option value="positional">positional</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
 
 		<script id="vert-axes" type="x-shader/x-vertex">
             attribute vec4 aPosition;
@@ -67,6 +80,7 @@
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);
 				vec4	vPosEye = MV*aPosition;
+//				vec4	vPosEye = MV*vec4(aPosition, 1);
 				vec3	l;
 				if(light.position.w == 1.0)
 					l = normalize((V*light.position - vPosEye).xyz);
