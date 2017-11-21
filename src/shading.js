@@ -32,7 +32,7 @@ var	list_shaders = [];
 
 //var light = {position:null, ambient:null, diffuse:null, specular:null};
 
-var light = { position:[3, 3, 0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
+var light = { position:[3, 3, 0, 0.0], ambient: [0.2, 0.2, 0.2, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
                 position_transformed:null};
 
 //var light = {position:new Vector4(0.0, 1.2, 0.0, 0.0),

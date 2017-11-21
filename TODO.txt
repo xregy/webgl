@@ -1,0 +1,5 @@
+- culling
+- (DONE) two-sided lighting
+- multiple objects
+- spot light source
+- multiple light sources
