@@ -28,7 +28,6 @@
                     </select>
                 </td>
             </tr>
-			<!--
             <tr>
 		        <td>object</td>
                 <td>
@@ -38,7 +37,6 @@
                     </select>
                 </td>
 			</tr>
-			-->
         </table>
 
 		<script id="vert-axes" type="x-shader/x-vertex">
@@ -49,7 +47,7 @@
             void main()
             {
                 gl_Position = VP * aPosition;
-                gl_Position = VP * aPosition;
+                gl_PointSize = 10.0;
                 vColor = aColor;
             }
 		</script>
