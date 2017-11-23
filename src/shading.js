@@ -99,6 +99,8 @@ function init_objects(gl)
 var	cube;
 var	axes;
 var	ball;
+var	monkey;
+var	monkey_smooth;
 var	shader_axes;
 
 
@@ -117,6 +119,8 @@ function main()
 	cube = init_vbo_cube(gl);
 	axes = init_vbo_axes(gl);
 	ball = init_vbo_sphere(gl);
+	monkey_smooth = parse_json_js(gl, __js_monkey_smooth);
+	monkey = parse_json_js(gl, __js_monkey);
 
 	init_models(gl);
 	init_materials(gl);
@@ -153,6 +157,8 @@ function refresh_scene(gl)
 
 	if(object_name == "cube")			render_object(gl, shader_model, cube);
 	else if(object_name == "sphere")	render_object(gl, shader_model, ball);
+	else if(object_name == "monkey")	render_object(gl, shader_model, monkey);
+	else if(object_name == "monkey (smooth)")	render_object(gl, shader_model, monkey_smooth);
 
     render_light_source(gl);
 }
@@ -462,6 +468,29 @@ function init_vbo_sphere(gl)
     return {n:indices.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
 }
 
+function parse_json_js(gl, obj)
+{
+	var	attributes = obj.data.attributes;
+
+	var	buf_position = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.position.array), gl.STATIC_DRAW);
+
+	var	buf_normal = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.normal.array), gl.STATIC_DRAW);
+
+	var	buf_index = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(obj.data.index.array), gl.STATIC_DRAW);
+
+	var	attribs = [];
+	attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+	attribs["aColor"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+
+    return {n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
+}
+
 var g_last = Date.now();
 var ANGLE_STEP = 30.0;
 function animate(angle) {
@@ -473,3 +502,4 @@ function animate(angle) {
 	var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
 	return newAngle %= 360;
 }
+
