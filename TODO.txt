@@ -3,3 +3,7 @@
 - multiple objects
 - spot light source
 - multiple light sources
+- (DONE) hierarchical transformation
+- picking
+- viewer
+- OBJ loader
