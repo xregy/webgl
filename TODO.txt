@@ -7,3 +7,4 @@
 - picking
 - viewer
 - OBJ loader
+- various shading techniques (normal map, bump map, replacement map, environment map, etc.)
