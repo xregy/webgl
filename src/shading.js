@@ -102,6 +102,7 @@ var	axes;
 var	ball;
 var	monkey;
 var	monkey_smooth;
+var	monkey_sub2_smooth;
 var	shader_axes;
 
 
@@ -119,6 +120,7 @@ function main()
  
 	monkey = parse_json_js(gl, __js_monkey);
 	monkey_smooth = parse_json_js(gl, __js_monkey_smooth);
+	monkey_sub2_smooth = parse_json_js(gl, __js_monkey_sub2_smooth);
 	cube = init_vbo_cube(gl);
 	axes = init_vbo_axes(gl);
 	ball = init_vbo_sphere(gl);
@@ -160,6 +162,7 @@ function refresh_scene(gl)
 	else if(object_name == "sphere")	render_object(gl, shader_model, ball);
 	else if(object_name == "monkey")	render_object(gl, shader_model, monkey);
 	else if(object_name == "monkey (smooth)")	render_object(gl, shader_model, monkey_smooth);
+	else if(object_name == "monkey (subdivided 2 steps, smooth)")	render_object(gl, shader_model, monkey_sub2_smooth);
 
     render_light_source(gl);
 }

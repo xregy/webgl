@@ -30,8 +30,15 @@ var list_mats =
 var	list_shaders = [];
 
 
-var light = { position:[1.5, 1.5, 0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
-                position_transformed:null};
+var light = {
+	position:[1.5, 0, 0, 1], 
+	direction:[-1,0,0,0],
+	cuotff_angle:-1,
+	ambient: [0.5, 0.5, 0.5, 1.0], 
+	diffuse: [1.0, 1.0, 1.0, 1.0], 
+	specular:[1.0, 1.0, 1.0, 1.0],
+	position_transformed:null
+};
 
 function init_shader(gl, src_vert, src_frag, attrib_names)
 {
@@ -64,7 +71,7 @@ function init_models(gl)
 		opt.text = name;
 		combo_shading.add(opt, null);
 	}
-	combo_shading.selectedIndex = 2;
+	combo_shading.selectedIndex = 3;
 	combo_shading.onchange = function(ev) { refresh_scene(gl) };
 
 }
@@ -85,22 +92,17 @@ function init_materials(gl)
 
 function init_lights(gl)
 {
-	var	combo_light = document.getElementById("light-type");
-    combo_light.selectedIndex = 1;
-	combo_light.onchange = function(ev) { refresh_scene(gl) };
+	document.getElementById("cutoff-angle").onchange = function(ev) { refresh_scene(gl) };
 };
 
 function init_objects(gl)
 {
-	var	combo_obj = document.getElementById("objects");
-	combo_obj.onchange = function(ev) { refresh_scene(gl) };
 }
 
-var	cube;
-var	axes;
-var	ball;
 var	monkey;
-var	monkey_smooth;
+var	cube;
+var	ball;
+
 var	shader_axes;
 
 
@@ -116,11 +118,10 @@ function main()
 								document.getElementById("frag-axes").text,
 								["aPosition", "aColor"]);
  
-	cube = init_vbo_cube(gl);
 	axes = init_vbo_axes(gl);
+	cube = init_vbo_cube(gl);
 	ball = init_vbo_sphere(gl);
-	monkey_smooth = parse_json_js(gl, __js_monkey_smooth);
-	monkey = parse_json_js(gl, __js_monkey);
+	monkey = parse_json_js(gl, __js_monkey_sub2_smooth);
 
 	init_models(gl);
 	init_materials(gl);
@@ -128,7 +129,6 @@ function main()
     init_objects(gl);
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
-//    gl.clearColor(0, 0, 0, 1.0);
 
 	var tick = function() {
 		angle = animate(angle);  // Update the rotation angle
@@ -147,18 +147,17 @@ function refresh_scene(gl)
 	var	shader_model = list_shaders[combo_shader.options[combo_shader.selectedIndex].value];
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	light.cutoff_angle = parseInt(document.getElementById("cutoff-angle").value);
+
     update_xforms(gl);
 
 	render_object(gl, shader_axes, axes);
 
-
 	var	combo_object = document.getElementById("objects");
 	var	object_name = combo_object.options[combo_object.selectedIndex].value;
-
 	if(object_name == "cube")			render_object(gl, shader_model, cube);
 	else if(object_name == "sphere")	render_object(gl, shader_model, ball);
 	else if(object_name == "monkey")	render_object(gl, shader_model, monkey);
-	else if(object_name == "monkey (smooth)")	render_object(gl, shader_model, monkey_smooth);
 
     render_light_source(gl);
 }
@@ -238,16 +237,33 @@ function update_xforms(gl)
 	matNormal.setInverseOf(MV);
 	matNormal.transpose();
 
-    var combo_light = document.getElementById("light-type");
-	var	light_type = combo_light.options[combo_light.selectedIndex].value;
-
     var m = new Matrix4(V);
     m.rotate(angle, 0, 1, 0);
-    if(light_type == "directional") light.position[3] = 0;
-    else                            light.position[3] = 1;
 
     light.position_xformed = m.multiplyVector4(new Vector4(light.position));
+	var	origin = m.multiplyVector4(new Vector4([0,0,0,1]));
+	light.direction_xformed = new Vector4(
+								normalize_vec4([
+									origin.elements[0] - light.position_xformed.elements[0],
+									origin.elements[1] - light.position_xformed.elements[1],
+									origin.elements[2] - light.position_xformed.elements[2],
+									origin.elements[3] - light.position_xformed.elements[3],
+									]));
+
 }
+
+function normalize_vec3(v)
+{
+	var	len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+	return [v[0]/len, v[1]/len, v[2]/len];
+}
+
+function normalize_vec4(v)
+{
+	var	len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]+v[3]*v[3]);
+	return [v[0]/len, v[1]/len, v[2]/len, v[3]/len];
+}
+
 
 
 function set_xforms(gl, h_prog)
@@ -271,6 +287,8 @@ function set_xforms(gl, h_prog)
 function set_light(gl, h_prog)
 {
 	gl.uniform4fv(gl.getUniformLocation(h_prog, "light.position"), light.position_xformed.elements);
+	gl.uniform4fv(gl.getUniformLocation(h_prog, "light.direction"), light.direction_xformed.elements);
+	gl.uniform1f(gl.getUniformLocation(h_prog, "light.cutoff_angle"), Math.cos(light.cutoff_angle*Math.PI/180.0));
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.ambient"), (new Vector3(light.ambient)).elements);
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.diffuse"), (new Vector3(light.diffuse)).elements);
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.specular"), (new Vector3(light.specular)).elements);
