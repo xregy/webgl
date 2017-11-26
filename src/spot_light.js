@@ -159,6 +159,8 @@ function refresh_scene(gl)
 	else if(object_name == "sphere")	render_object(gl, shader_model, ball);
 	else if(object_name == "monkey")	render_object(gl, shader_model, monkey);
 
+	combo_object.selectedIndex = 2;
+
     render_light_source(gl);
 }
 
