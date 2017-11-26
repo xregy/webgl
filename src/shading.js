@@ -93,6 +93,7 @@ function init_lights(gl)
 function init_objects(gl)
 {
 	var	combo_obj = document.getElementById("objects");
+	combo_obj.selectedIndex = 2;
 	combo_obj.onchange = function(ev) { refresh_scene(gl) };
 }
 
@@ -116,11 +117,11 @@ function main()
 								document.getElementById("frag-axes").text,
 								["aPosition", "aColor"]);
  
+	monkey = parse_json_js(gl, __js_monkey);
+	monkey_smooth = parse_json_js(gl, __js_monkey_smooth);
 	cube = init_vbo_cube(gl);
 	axes = init_vbo_axes(gl);
 	ball = init_vbo_sphere(gl);
-	monkey_smooth = parse_json_js(gl, __js_monkey_smooth);
-	monkey = parse_json_js(gl, __js_monkey);
 
 	init_models(gl);
 	init_materials(gl);
@@ -486,7 +487,7 @@ function parse_json_js(gl, obj)
 
 	var	attribs = [];
 	attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
-	attribs["aColor"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+	attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 
     return {n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
 }

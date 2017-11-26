@@ -1,4 +1,5 @@
  var	file_JSON = "json!../resources/monkey.json";
+
 function main()
 {
     var canvas = document.getElementById('webgl');
@@ -8,9 +9,9 @@ function main()
 
 
 //	console.log(monkey.data.attributes.position.array.length);
-	console.log(monkey.data);
+	console.log(__monkey_js.data);
 
-	parse_json_js(gl, monkey);
+	monkey = parse_json_js(gl, monkey);
 
 
  }
