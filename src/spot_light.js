@@ -224,6 +224,7 @@ function update_xforms(gl)
 //                                    0,
 //									]));
 
+>>>>>>> 6e4df473724a7b0f46e9bea141501c05cee0c322
 }
 
 function normalize_vec3(v)
@@ -252,9 +253,6 @@ function set_xforms(gl, h_prog)
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MV"), false, MV.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, MVP.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "matNormal"), false, matNormal.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "V"), false, V.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "V_inv"), false, V_inv.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "M"), false, M.elements);
 
 }
 
