@@ -243,15 +243,7 @@ function update_xforms(gl)
     m.rotate(angle, 0, 1, 0);
 
     light.position_xformed = m.multiplyVector4(new Vector4(light.position));
-	var	origin = m.multiplyVector4(new Vector4([0,0,0,1]));
-	light.direction_xformed = new Vector4(
-								normalize_vec4([
-									origin.elements[0] - light.position_xformed.elements[0],
-									origin.elements[1] - light.position_xformed.elements[1],
-									origin.elements[2] - light.position_xformed.elements[2],
-									origin.elements[3] - light.position_xformed.elements[3],
-									]));
-
+	light.direction_xformed = m.multiplyVector4(new Vector4(light.direction));
 }
 
 function normalize_vec3(v)
@@ -273,16 +265,11 @@ function set_xforms(gl, h_prog)
     var VP = new Matrix4(P); VP.multiply(V);
     var MV = new Matrix4(V); MV.multiply(M);
     var MVP = new Matrix4(P); MVP.multiply(V); MVP.multiply(M);
-//    var V_inv = new Matrix4();
-//    V_inv.setInverseOf(V);
 
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "VP"), false, VP.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MV"), false, MV.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, MVP.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "matNormal"), false, matNormal.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "V"), false, V.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "V_inv"), false, V_inv.elements);
-//  gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "M"), false, M.elements);
 
 }
 
