@@ -215,15 +215,6 @@ function update_xforms(gl)
 
     light.position_xformed = m.multiplyVector4(new Vector4(light.position));
 	light.direction_xformed = m.multiplyVector4(new Vector4(light.direction));
-//	var	origin = m.multiplyVector4(new Vector4([0,0,0,1]));
-//	light.direction_xformed = new Vector4(
-//								normalize_vec4([
-//									origin.elements[0] - light.position_xformed.elements[0],
-//									origin.elements[1] - light.position_xformed.elements[1],
-//									origin.elements[2] - light.position_xformed.elements[2],
-//                                    0,
-//									]));
-
 }
 
 function normalize_vec3(v)
@@ -262,13 +253,6 @@ function set_light(gl, h_prog)
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.diffuse"), (new Vector3(light.diffuse)).elements);
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.specular"), (new Vector3(light.specular)).elements);
 
-    var V_inv = new Matrix4();
-    V_inv.setInverseOf(V);
-
-	var	eye = new Vector4([0,0,0,1]);
-	var	pos_eye_world = V_inv.multiplyVector4(eye);
-
-    gl.uniform4fv(gl.getUniformLocation(h_prog, "light.eye_world"), pos_eye_world.elements);
 }
 
 function set_material(gl, h_prog)
