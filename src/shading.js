@@ -250,13 +250,13 @@ function set_light(gl, h_prog)
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.diffuse"), (new Vector3(light.diffuse)).elements);
     gl.uniform3fv(gl.getUniformLocation(h_prog, "light.specular"), (new Vector3(light.specular)).elements);
 
-    var V_inv = new Matrix4();
-    V_inv.setInverseOf(V);
-
-	var	eye = new Vector4([0,0,0,1]);
-	var	pos_eye_world = V_inv.multiplyVector4(eye);
-
-    gl.uniform4fv(gl.getUniformLocation(h_prog, "light.eye_world"), pos_eye_world.elements);
+//    var V_inv = new Matrix4();
+//    V_inv.setInverseOf(V);
+//
+//	var	eye = new Vector4([0,0,0,1]);
+//	var	pos_eye_world = V_inv.multiplyVector4(eye);
+//
+//    gl.uniform4fv(gl.getUniformLocation(h_prog, "light.eye_world"), pos_eye_world.elements);
 }
 
 function set_material(gl, h_prog)
