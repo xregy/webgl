@@ -224,7 +224,6 @@ function update_xforms(gl)
 //                                    0,
 //									]));
 
->>>>>>> 6e4df473724a7b0f46e9bea141501c05cee0c322
 }
 
 function normalize_vec3(v)
@@ -246,8 +245,6 @@ function set_xforms(gl, h_prog)
     var VP = new Matrix4(P); VP.multiply(V);
     var MV = new Matrix4(V); MV.multiply(M);
     var MVP = new Matrix4(P); MVP.multiply(V); MVP.multiply(M);
-//    var V_inv = new Matrix4();
-//    V_inv.setInverseOf(V);
 
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "VP"), false, VP.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MV"), false, MV.elements);

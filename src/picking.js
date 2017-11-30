@@ -1,9 +1,9 @@
 var	list_shaders = [];
 
 var light = {
-	position:[1.5, 0, 0, 1], 
-	direction:[-1,0,0,0],
-	cuotff_angle:-1,
+	position:[0, 1.5, 1.5, 1], 
+	direction:[0,-Math.sqrt(2),-Math.sqrt(2),0],
+	cuotff_angle:180,
 	ambient: [0.5, 0.5, 0.5, 1.0], 
 	diffuse: [1.0, 1.0, 1.0, 1.0], 
 	specular:[1.0, 1.0, 1.0, 1.0],
@@ -102,13 +102,7 @@ function main()
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-	var tick = function() {
-		angle = animate(angle);  // Update the rotation angle
-		refresh_scene(gl);   // Draw the triangle
-		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-	};
-	tick();
-
+    refresh_scene(gl);
 }
 
 var angle = 0;
@@ -483,15 +477,4 @@ function parse_json_js(gl, obj)
     return {n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
 }
 
-var g_last = Date.now();
-var ANGLE_STEP = 30.0;
-function animate(angle) {
-	// Calculate the elapsed time
-	var now = Date.now();
-	var elapsed = now - g_last;
-	g_last = now;
-	// Update the current rotation angle (adjusted by the elapsed time)
-	var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
-	return newAngle %= 360;
-}
 
