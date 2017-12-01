@@ -3,6 +3,14 @@ var	list_shaders = [];
 
 var light = { position:[0, 1.5, 1.5, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0]};
 
+const	STATE_NONE = 0;
+const	STATE_ROTATING = 1;
+const	STATE_MOVING = 2;
+
+var	gui = {offset:[0,0], position_mouse:null, state:STATE_NONE};
+
+var model = {T:new Matrix4(), R:new Matrix4()};
+
 function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
@@ -31,10 +39,149 @@ function main()
 	var	src_frag = document.getElementById("frag-Blinn-Gouraud").text;
 	shader = init_shader(gl, src_vert, src_frag, ["aPosition", "aNormal"]);
 
+	canvas.onmousedown = function (ev) { on_mouse_down(gl, ev); };
+	canvas.onmouseup = function (ev) { on_mouse_up(gl, ev); };
+	canvas.onmousemove = function (ev) { on_mouse_move(gl, ev); };
+
+
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
 	refresh_scene(gl);
 }
+
+function get_mouse_position_in_canvas(ev)
+{
+	var x = ev.clientX, y = ev.clientY;
+	var rect = ev.target.getBoundingClientRect();
+//	return [x - rect.left, rect.bottom - y];
+	return [x - rect.x, y - rect.y];
+}
+
+function on_mouse_down(gl, ev)
+{
+	if(ev.button == 2)	// left
+	{
+		gui.state = STATE_ROTATING;
+		gui.position_mouse = get_mouse_position_in_canvas(ev);
+	}
+	else if(ev.button == 0)	// right
+	{
+		gui.state = STATE_MOVING;
+		gui.position_mouse = get_mouse_position_in_canvas(ev);
+	}
+}
+
+function on_mouse_up(gl, ev)
+{
+	gui.state = STATE_NONE;
+}
+
+// https://gist.github.com/sixman9/871099
+function gl_project(gl, vec, MVP, viewport, d)
+{
+	var v = MVP.multiplyVector4(new Vector4([vec[0], vec[1], vec[2], 1]));
+	if(v.elements[3] != 0)
+	{
+		v.elements[0] = v.elements[0]/v.elements[3];
+		v.elements[1] = v.elements[1]/v.elements[3];
+		v.elements[2] = v.elements[2]/v.elements[3];
+	}
+	v.elements[0] = (((v.elements[0] + 1.0)*0.5)*parseFloat(viewport[2])) + parseFloat(viewport[0]);
+	v.elements[1] = (((-v.elements[1] + 1.0)*0.5)*parseFloat(viewport[3])) + parseFloat(viewport[1]);
+//	v.elements[2] = (v.elements[2]*(d[1] - d[0])) + d[0];
+	v.elements[2] = v.elements[2]*(d[1] - d[0])*0.5 + (d[0]+d[1])*0.5;
+	return [v.elements[0], v.elements[1], v.elements[2]];
+}
+
+// https://gist.github.com/sixman9/871099
+function gl_unproject(gl, vec, MVP, viewport, d)
+{
+	var v = [(((vec[0] - parseFloat(viewport[0]))/parseFloat(viewport[2]))*2.0) - 1.0,
+		-(((vec[1] - parseFloat(viewport[1]))/parseFloat(viewport[3]))*2.0) - 1.0,
+		(vec[2] - d[0])/(d[1]-d[0])];
+	var	v = MVP.multiplyVector4(new Vector4([v[0], v[1], v[2], 1]));
+	if(v.elements[3] != 0)
+	{
+		v.elements[0] = v.elements[0]/v.elements[3];
+		v.elements[1] = v.elements[1]/v.elements[3];
+		v.elements[2] = v.elements[2]/v.elements[3];
+	}
+	return [v.elements[0], v.elements[1], v.elements[2]];
+}
+
+function length3(v)
+{
+	return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+function on_mouse_move(gl, ev)
+{
+	if((gui.state == STATE_ROTATING) || (gui.state == STATE_MOVING))
+	{
+		pos = get_mouse_position_in_canvas(ev);
+//		console.log(pos);
+
+		gui.offset = [pos[0]-gui.position_mouse[0], pos[1]-gui.position_mouse[1]];
+//		console.log(gui.offset);
+		gui.position_mouse = pos;
+		var	viewport = gl.getParameter(gl.VIEWPORT, viewport);
+		var	d = gl.getParameter(gl.DEPTH_RANGE, d);
+
+		var MVP = new Matrix4(P);
+		MVP.multiply(V);
+
+		MVP.multiply(model.T);
+		MVP.multiply(model.R);
+
+		var	M = new Matrix4(model.T);
+		M.multiply(model.R);
+
+//		console.log(P);
+//		console.log(V);
+//		console.log(model.T);
+//		console.log(model.R);
+//		console.log(MVP);
+
+		var org_win = gl_project(gl, [0,0,0], MVP, viewport, d);
+//		console.log(org_win);
+		var	dir_win;
+		if(gui.state == STATE_ROTATING)
+		{
+			dir_win = [gui.offset[1], gui.offset[0], 0];
+		}
+		else if (gui.state == STATE_MOVING)
+		{
+			dir_win = [gui.offset[0], -gui.offset[1], 0];
+		}
+
+		var	v = [org_win[0] + dir_win[0], org_win[1] + dir_win[1], org_win[2] + dir_win[2]];
+		var	dir_model = gl_unproject(gl, v, MVP, viewport, d);
+
+		var	dd = new Float32Array(3);
+		var	ret = GLU.unProject(v[0], v[1], v[2], M.elements, P.elements, V.elements, dd);
+		console.log(ret, dd);
+
+
+		dir_model[2] = 0;
+		console.log(dir_model);
+		if(gui.state == STATE_ROTATING)
+		{
+			R = new Matrix4();
+			R.setRotate(length3(dir_win), dir_model[0], dir_model[1], dir_model[2]);
+			R.multiply(model.R);
+			model.R = R;
+		}
+		else if (gui.state == STATE_MOVING)
+		{
+			T = new Matrix4();
+			T.setTranslate(dir_model[0], dir_model[1], dir_model[2]);
+			T.multiply(model.T);
+			model.T = T;
+		}
+		refresh_scene(gl);
+	}
+}
+	
 
 function refresh_scene(gl)
 {
@@ -83,7 +230,6 @@ function set_uniforms(gl, h_prog)
 	set_material(gl, h_prog);
 }
 
-var	M;
 var V;
 var	P;
 var	matNormal;
@@ -91,14 +237,16 @@ var	matNormal;
 
 function update_xforms(gl)
 {
-	M = new Matrix4();
 	V = new Matrix4();
 	P = new Matrix4();
 	matNormal = new Matrix4();
 
-    V.setLookAt(2, 1, 3, 0, 0, 0, 0, 1, 0);
+    V.setLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
 
-	P.setPerspective(50, 1, 1, 100); 
+	P.setPerspective(30, 1, 1, 20); 
+
+	M = new Matrix4(model.T);
+	M.multiply(model.R);
 
 	var MV = new Matrix4(V); MV.multiply(M);
 	matNormal.setInverseOf(MV);
