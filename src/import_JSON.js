@@ -35,7 +35,7 @@ function main()
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-	refresh_scene(gl);
+//	refresh_scene(gl);
 }
 
 function refresh_scene(gl)
