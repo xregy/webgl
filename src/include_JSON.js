@@ -24,10 +24,7 @@ function main()
 
 	gl.enable(gl.DEPTH_TEST);
 
-    $.getJSON('../resources/monkey_sub2_smooth.js', function(data)
-        {
-            console.log(data);
-        });
+	monkey_sub2_smooth = parse_json(gl, __js_monkey_sub2_smooth);
 
 	var	src_vert = document.getElementById("vert-Blinn-Gouraud").text;
 	var	src_frag = document.getElementById("frag-Blinn-Gouraud").text;
