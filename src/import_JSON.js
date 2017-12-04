@@ -38,6 +38,7 @@ function main()
 
 	var tick = function() {   // Start drawing
 		refresh_scene(gl);
+		requestAnimationFrame(tick, canvas);
 	};
 	tick();
 }
