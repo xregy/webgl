@@ -24,7 +24,7 @@ function main()
 
 	gl.enable(gl.DEPTH_TEST);
 
-    $.getJSON('../resources/monkey_sub2_smooth.js', function(data)
+    $.getJSON('../resources/monkey_sub2_smooth.json', function(data)
         {
             console.log(data);
         });
