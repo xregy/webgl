@@ -16,7 +16,7 @@ function init_shader(gl, src_vert, src_frag, attrib_names)
 
 var	monkey_sub2_smooth;
 var	shader;
-
+var	json_loaded = false;
 function main()
 {
     var canvas = document.getElementById('webgl');
@@ -26,7 +26,8 @@ function main()
 
     $.getJSON('../resources/monkey_sub2_smooth.json', function(data)
         {
-            console.log(data);
+            monkey_sub2_smooth = parse_json(gl, data);
+	    json_loaded = true;
         });
 
 	var	src_vert = document.getElementById("vert-Blinn-Gouraud").text;
@@ -35,16 +36,22 @@ function main()
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-//	refresh_scene(gl);
+	var tick = function() {   // Start drawing
+		refresh_scene(gl);
+	};
+	tick();
 }
 
 function refresh_scene(gl)
 {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	if(json_loaded)
+	{
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    update_xforms(gl);
+		update_xforms(gl);
 
-	render_object(gl, shader, monkey_sub2_smooth);
+		render_object(gl, shader, monkey_sub2_smooth);
+	}
 }
 
 function render_object(gl, shader, object)
