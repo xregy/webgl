@@ -24,7 +24,7 @@ function main()
 
 	gl.enable(gl.DEPTH_TEST);
 
-    $.getJSON('../resources/monkey_sub2_smooth.js', function(data)
+    $.getJSON('../resources/monkey_sub2_smooth.json', function(data)
         {
             console.log(data);
         });
@@ -35,7 +35,7 @@ function main()
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-	refresh_scene(gl);
+//	refresh_scene(gl);
 }
 
 function refresh_scene(gl)
