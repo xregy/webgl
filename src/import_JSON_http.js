@@ -29,16 +29,23 @@ function main()
 
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-    $.getJSON('../resources/monkey_sub2_smooth.json', function(data)
-        {
-            monkey_sub2_smooth = parse_json(gl, data);
+
+    var request = new XMLHttpRequest();
+
+    request.onreadystatechange = function() {
+        if(request.readyState == 4 && request.status != 404) {
+            monkey_sub2_smooth = parse_json(gl, JSON.parse(request.responseText));
     	    var tick = function() {   // Start drawing
                 refresh_scene(gl);
     		    requestAnimationFrame(tick, canvas);
             };
             tick();
+        }
+    }
 
-        });
+    request.open('GET', '../resources/monkey_sub2_smooth.json', true);
+    request.send();
+
 }
 
 function refresh_scene(gl)
