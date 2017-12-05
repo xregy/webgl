@@ -11,7 +11,8 @@ function init_shader(gl, src_vert, src_frag, attrib_names)
 }
 
 
-function main() {
+function main() 
+{
     var canvas = document.getElementById('webgl');
     var gl = getWebGLContext(canvas);
     var ext = gl.getExtension('WEBGL_draw_buffers');
@@ -24,39 +25,56 @@ function main() {
 
     gl.enable(gl.DEPTH_TEST);
 
-    var VP = new Matrix4();
-	VP.setPerspective(50, 1, 1, 100); 
-	VP.lookAt(2,1,3,0,0,0,0,1,0);
+	var	P = new Matrix4();
+	var	V = new Matrix4();
 	var	MVP;
+	var	MV;
+	var	N;
+    var tex_unit_position = 3;
+    var tex_unit_normal = 2;
+    var tex_unit_diffuse = 1;
+
+
+	P.setPerspective(50, 1, 1, 20); 
+	V.lookAt(0,3,7,0,0,0,0,1,0);
 
     var shader_preproc = init_shader(gl,
         document.getElementById("shader-vert-preproc").text,
         document.getElementById("shader-frag-preproc").text,
         ["aPosition", "aNormal"]);
 
-   var shader_shading = init_shader(gl,
-        document.getElementById("vert-Blinn-Gouraud").text,
-        document.getElementById("frag-Blinn-Gouraud").text,
+	var shader_shading = init_shader(gl,
+        document.getElementById("vert-Phong-Phong").text,
+        document.getElementById("frag-Phong-Phong").text,
         ["aPosition", "aTexcoord"]);
+
+	var shader_tex = init_shader(gl,
+        document.getElementById("vert-tex").text,
+        document.getElementById("frag-tex").text,
+        ["aPosition", "aTexcoord"]);
+
 
     shader_preproc.set_uniforms = function(gl) {
             gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MV"), false, MV.elements);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "N"), false, N.elements);
+            gl.uniform4fv(gl.getUniformLocation(this.h_prog, "diffuse"), diffuse.elements);
         }
-
-    var tex_unit_position = 3;
-    var tex_unit_normal = 2;
-    var tex_unit_material = 1;
 
     shader_shading.set_uniforms = function(gl) {
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "V"), false, V.elements);
             gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_position"), tex_unit_position);
             gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_normal"), tex_unit_normal);
-            gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_material"), tex_unit_material);
+            gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_diffuse"), tex_unit_diffuse);
         }
 
-	var	monkey;
-	var	torus;
-	var	monkey_loaded = false;
-	var	torus_loaded = false;
+	shader_tex.set_uniforms = function(gl) {
+            gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex"), 0);
+        }
+	
+
+	var	monkey = parse_json(gl, __js_monkey_sub2_smooth);
+	var	torus = parse_json(gl, __js_torus);
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
 	ext.drawBuffersWEBGL([
@@ -68,31 +86,55 @@ function main() {
 	gl.clearColor(0, 0, 0, 1);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
-	MVP = new Matrix4(VP);
-	MVP.translate(-1,0,0);
+	MV = new Matrix4(V);
+	MV.translate(-1.5,0,0);
+	N = new Matrix4();
+	N.setInverseOf(MV);
+	N.transpose();
+	MVP = new Matrix4(P);
+	MVP.multiply(MV);
+	var	diffuse = new Vector4([1,0,0,1]);
 	render_object(gl, shader_preproc, monkey);
 	
-	MVP = new Matrix4(VP);
-	MVP.translate(1,0,0);
+	MV = new Matrix4(V);
+	MV.translate(1.5,0,0);
+	N = new Matrix4();
+	N.setInverseOf(MV);
+	N.transpose();
+	MVP = new Matrix4(P);
+	MVP.multiply(MV);
+	var	diffuse = new Vector4([0,0,1,1]);
 	render_object(gl, shader_preproc, torus);
 	
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	
-	gl.viewport(0, 0, canvas.width, canvas.height);
-	gl.clearColor(.5, .5, .5, 1);
+	gl.clearColor(0, 0, 0, 1);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	
-	gl.activeTexture(gl.TEXTURE0 + tex_unit);
-	
-	var MVP = new Matrix4(P);
-	MVP.translate(-.5,.5,0);
+
+	gl.viewport(0, canvas.height/2, canvas.width/2, canvas.height/2);
+	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[0]);
 	render_object(gl, shader_tex, quad);
-	
-	var MVP = new Matrix4(P);
-	MVP.translate(.5,-.5,0);
+
+	gl.viewport(canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2);
+	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[1]);
 	render_object(gl, shader_tex, quad);
+
+	gl.viewport(0, 0, canvas.width/2, canvas.height/2);
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, fbo.color[2]);
+	render_object(gl, shader_tex, quad);
+
+//	console.log(V);
+	gl.viewport(canvas.width/2, 0, canvas.width/2, canvas.height/2);
+	gl.activeTexture(gl.TEXTURE0 + tex_unit_position);
+	gl.bindTexture(gl.TEXTURE_2D, fbo.color[0]);
+	gl.activeTexture(gl.TEXTURE0 + tex_unit_normal);
+	gl.bindTexture(gl.TEXTURE_2D, fbo.color[1]);
+	gl.activeTexture(gl.TEXTURE0 + tex_unit_diffuse);
+	gl.bindTexture(gl.TEXTURE_2D, fbo.color[2]);
+	render_object(gl, shader_shading, quad);
 
 }
 
@@ -133,38 +175,6 @@ function render_object(gl, shader, object)
     gl.useProgram(null);
 }
 
-function init_triangles(gl)
-{
-    var verts = new Float32Array([
-		 -0.50, -0.50,  0.1, 1.0,		0, 0, 1, 1,		1, 1, 0, 1 ,
-		  0.90, -0.50,  0.1, 1.0,		0, 0, 1, 1,		1, 1, 0, 1 ,
-		  0.20,  0.90,  0.1, 1.0,		0, 0, 1, 1,		1, 1, 0, 1 ,
-
-		 -0.70, -0.70,  0.0, 1.0,		0, 1, 0, 1,		1, 0, 1, 1 ,
-		  0.70, -0.70,  0.0, 1.0,		0, 1, 0, 1,		1, 0, 1, 1 ,
-		  0.00,  0.70,  0.0, 1.0,		0, 1, 0, 1,		1, 0, 1, 1 ,
-
-   		 -0.90, -0.90, -0.1, 1.0,		1, 0, 0, 1,		0, 1, 1, 1 ,
-		  0.50, -0.90, -0.1, 1.0,		1, 0, 0, 1,		0, 1, 1, 1 ,
-		 -0.20,  0.50, -0.1, 1.0,		1, 0, 0, 1,		0, 1, 1, 1 ,
-          ]);
-
-
-    var buf = gl.createBuffer();
-    
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-
-	var FSIZE = verts.BYTES_PER_ELEMENT;
-	var	attribs = [];
-	attribs["aPosition"] = {buffer:buf, size:4, type:gl.FLOAT, normalized:false, stride:FSIZE*12, offset:0};
-	attribs["aColor0"] = {buffer:buf, size:4, type:gl.FLOAT, normalized:false, stride:FSIZE*12, offset:FSIZE*4};
-	attribs["aColor1"] = {buffer:buf, size:4, type:gl.FLOAT, normalized:false, stride:FSIZE*12, offset:FSIZE*8};
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    
-	return {n:9, drawcall:"drawArrays", type:gl.TRIANGLES, attribs:attribs};
-}
 
 function init_quad(gl)
 {
@@ -190,6 +200,16 @@ function init_quad(gl)
 
 }
 
+function get_framebuffer_status(gl)
+{
+	var	status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	if(status == gl.FRAMEBUFFER_COMPLETE)	return 'FRAMEBUFFER_COMPLETE';
+	else if(status == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT';
+	else if(status == gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT';
+	else if(status == gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS) return 'gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS';
+	else if(status == gl.FRAMEBUFFER_UNSUPPORTED) return 'gl.FRAMEBUFFER_UNSUPPORTED';
+}
+
 
 function init_fbo(gl, ext, fbo_width, fbo_height)
 {
@@ -205,6 +225,7 @@ function init_fbo(gl, ext, fbo_width, fbo_height)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fbo_width, fbo_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex_color0, 0);
 
+
 	var tex_color1 = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, tex_color1);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -214,10 +235,45 @@ function init_fbo(gl, ext, fbo_width, fbo_height)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fbo_width, fbo_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, tex_color1, 0);
 
+	var tex_color2 = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, tex_color2);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fbo_width, fbo_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D, tex_color2, 0);
+
 	var rbo_depth = gl.createRenderbuffer();
 	gl.bindRenderbuffer(gl.RENDERBUFFER, rbo_depth);
 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, fbo_width, fbo_height);
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rbo_depth);
 
-    return {fbo:fbo, color:[tex_color0, tex_color1], depth:rbo_depth};
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    return {fbo:fbo, color:[tex_color0, tex_color1, tex_color2], depth:rbo_depth};
 }
+function parse_json(gl, obj)
+{
+	var	attributes = obj.data.attributes;
+
+	var	buf_position = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.position.array), gl.STATIC_DRAW);
+
+	var	buf_normal = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.normal.array), gl.STATIC_DRAW);
+
+	var	buf_index = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(obj.data.index.array), gl.STATIC_DRAW);
+
+	var	attribs = [];
+	attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+	attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+
+    return {n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
+}
+
+

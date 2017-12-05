@@ -1,4 +1,4 @@
-var __js_torus = {
+var __js_torus = 
 {
     "data":{
         "index":{
