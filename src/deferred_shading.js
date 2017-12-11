@@ -10,12 +10,12 @@ function init_shader(gl, src_vert, src_frag, attrib_names)
 	return {h_prog:h_prog, attribs:attribs};
 }
 
-
 function main() 
 {
     var canvas = document.getElementById('webgl');
     var gl = getWebGLContext(canvas);
     var ext = gl.getExtension('WEBGL_draw_buffers');
+
     
     var fbo_width = canvas.width/2;
     var fbo_height = canvas.height/2;
@@ -34,9 +34,8 @@ function main()
     var tex_unit_normal = 2;
     var tex_unit_diffuse = 1;
 
-
 	P.setPerspective(50, 1, 1, 20); 
-	V.lookAt(0,3,7,0,0,0,0,1,0);
+	V.setLookAt(0,3,7,0,0,0,0,1,0);
 
     var shader_preproc = init_shader(gl,
         document.getElementById("shader-vert-preproc").text,
@@ -62,10 +61,11 @@ function main()
         }
 
     shader_shading.set_uniforms = function(gl) {
-            gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "V"), false, V.elements);
             gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_position"), tex_unit_position);
             gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_normal"), tex_unit_normal);
             gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_diffuse"), tex_unit_diffuse);
+            var light_position = V.multiplyVector4(new Vector4([1,1,1,0]));
+            gl.uniform4fv(gl.getUniformLocation(this.h_prog, "light_position"), light_position.elements);
         }
 
 	shader_tex.set_uniforms = function(gl) {
@@ -74,7 +74,8 @@ function main()
 	
 
 	var	monkey = parse_json(gl, __js_monkey_sub2_smooth);
-	var	torus = parse_json(gl, __js_torus);
+//	var	torus = parse_json(gl, __js_torus);
+	var	sphere = parse_json(gl, __js_sphere);
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
 	ext.drawBuffersWEBGL([
@@ -104,7 +105,7 @@ function main()
 	MVP = new Matrix4(P);
 	MVP.multiply(MV);
 	var	diffuse = new Vector4([0,0,1,1]);
-	render_object(gl, shader_preproc, torus);
+	render_object(gl, shader_preproc, sphere);
 	
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	
@@ -138,11 +139,6 @@ function main()
 
 }
 
-
-function render_scene(gl)
-{
-
-}
 
 function render_object(gl, shader, object)
 {
@@ -202,12 +198,12 @@ function init_quad(gl)
 
 function get_framebuffer_status(gl)
 {
-	var	status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-	if(status == gl.FRAMEBUFFER_COMPLETE)	return 'FRAMEBUFFER_COMPLETE';
-	else if(status == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT';
-	else if(status == gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT';
-	else if(status == gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS) return 'gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS';
-	else if(status == gl.FRAMEBUFFER_UNSUPPORTED) return 'gl.FRAMEBUFFER_UNSUPPORTED';
+    var	status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if(status == gl.FRAMEBUFFER_COMPLETE)	return 'FRAMEBUFFER_COMPLETE';
+    else if(status == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT';
+    else if(status == gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) return 'gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT';
+    else if(status == gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS) return 'gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS';
+    else if(status == gl.FRAMEBUFFER_UNSUPPORTED) return 'gl.FRAMEBUFFER_UNSUPPORTED';
 }
 
 

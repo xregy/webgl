@@ -23,7 +23,7 @@
 			{
 				gl_Position = MVP*aPosition;
 				vPosition = MV*aPosition;
-				vNormal = (N*aNormal).xyz;
+				vNormal = normalize((N*vec4(aNormal.xyz, 0)).xyz);
 			}
 	    </script>
 		<script id="shader-frag-preproc" type="x-shader/x-fragment">
@@ -37,11 +37,8 @@
 	        void main()
 	        {
 				gl_FragData[0] = vPosition;
-				gl_FragData[1] = vec4(vNormal,1);
+				gl_FragData[1] = vec4(normalize(vNormal),1);
 				gl_FragData[2] = diffuse;
-//	        	gl_FragColor = vPosition;
-//	        	gl_FragColor = vec4(vNormal,1);
-//				gl_FragColor = diffuse;
 	        }
 	
 	    </script>
@@ -79,7 +76,6 @@
 	        }
 		</script>
 		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
-            // eye coordinate system
             #ifdef GL_ES
             precision mediump float;
             #endif
@@ -98,18 +94,16 @@
 
 			struct TLight
 			{
-				vec4	position;
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
 			};
 			TLight		light;
 			TMaterial	material;
-			uniform mat4	V;
+			uniform vec4	light_position;
 			void main()
 			{
-
-				vec3	n = normalize(texture2D(tex_normal, vTexcoord).xyz);
+				vec3	n = texture2D(tex_normal, vTexcoord).xyz;
 				vec4	p = texture2D(tex_position, vTexcoord);
 				
 				material.diffuse = texture2D(tex_diffuse, vTexcoord).rgb;
@@ -117,17 +111,15 @@
 				material.specular = vec3(.7);
 				material.ambient = vec3(.1);
 
-//				light.position = V*vec4(0,1,0,1);
-				light.position = vec4(0,1,3,1);
 				light.ambient = vec3(.1);
 				light.diffuse = vec3(1);
 				light.specular = vec3(1);
 
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - p).xyz);
+				if(light_position.w == 1.0)
+					l = normalize((light_position - p).xyz);
 				else
-					l = normalize((light.position).xyz);
+					l = normalize((light_position).xyz);
 				vec3	v = normalize(-p.xyz);
 
 				vec3	r = reflect(-l, n);
@@ -153,7 +145,7 @@
 		<script src="../lib/cuon-utils.js"></script>
 		<script src="../lib/cuon-matrix.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
-		<script src="../resources/torus.js"></script>
+		<script src="../resources/sphere.js"></script>
 		<script src="deferred_shading.js"></script>
 	</body>
 </html>
