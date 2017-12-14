@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>(WebGL 1.0) Plumbing Attributes (forcing locations)</title>
+	</head>
+
+	<body onload="main()">
+		<h1 align=center>(WebGL 1.0) Plumbing Attributes (forcing locations)</h1>
+		<canvas id="webgl" width="512" height="512">
+		Please use a browser that supports "canvas"
+		</canvas>
+
+		<script id="shader-vert" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aColor;
+			varying vec3	vColor;
+			void main()
+			{
+				gl_Position = aPosition;
+				vColor = aColor;
+			}
+		</script>
+		<script id="shader-frag" type="x-shader/x-fragment">
+			precision mediump float;
+			varying vec3	vColor;
+			void main()
+			{
+				gl_FragColor = vec4(vColor,1);
+			}
+		</script>
+	
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="plumbing_WebGL1_bindAttribLocation.js"></script>
+	</body>
+</html>

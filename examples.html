@@ -15,6 +15,25 @@ title: WebGL examples by Minho Kim
 	<li><a href="src/triangles.html">triangles</a></li>
 	<li><a href="src/shaders_in_html.html">Shaders embedded in the HTML file</a></li>
 	<li>
+		Plumbing attributes and varying variables
+		-- How to set the attribute locations? How to connect varying variables
+		between vert &amp; frag shaders?
+		<ul>
+			<li><a href="src/plumbing_WebGL1_getAttribLocation.html">plumbing_WebGL1_getAttribLocation</a>:
+				Querying attribute locations
+					using
+					<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getAttribLocation"><tt>getAttribLocation()</tt></a></li>
+			<li><a href="src/plumbing_WebGL1_bindAttribLocation.html">plumbing_WebGL1_bindAttribLocation</a>:
+					Forcing attribute locations by host
+					using
+					<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindAttribLocation"><tt>bindAttribLocation()</tt></a>
+			-- useful when the same geometry is rendered with different shaders</li>
+			<li><a href="src/plumbing_WebGL2_layout_attrib.html">plumbing_WebGL2_layout_attrib</a>:
+				(WebGL2) Setting attributes locations statically using 
+				<a href="https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)"><tt>layout</tt> qualifier</a></li>
+		</ul>
+	</li>
+	<li>
 		Transformation matrix libraries
 		<ul>
 			<li><a href="src/RotatedTranslatedTriangle_glMatrix.html"><tt>RotatedTranslatedTriangle_glMatrix.html</tt></a> using <a href="http://glmatrix.net">glMatrix</a></li>
