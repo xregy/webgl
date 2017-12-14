@@ -15,6 +15,11 @@ function main()
     var canvas = document.getElementById('webgl');
     var gl = getWebGLContext(canvas);
     var ext = gl.getExtension('WEBGL_draw_buffers');
+	if(ext == null)
+	{
+		console.log('WEBGL_draw_buffers extension not supported.');
+		return;
+	}
 
     
     var fbo_width = canvas.width/2;
