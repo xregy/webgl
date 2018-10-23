@@ -1,19 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>texture byte alignment</title>
-  </head>
-
-  <body onload="main()">
-    <canvas id="webgl" width="400" height="400">
-    Please use a browser that supports "canvas"
-    </canvas>
-
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script src="../lib/cuon-matrix.js"></script>
-    <script src="tex-alignment.js"></script>
-  </body>
+    <head>
+        <meta charset="utf-8" />
+        <title>texture byte alignment</title>
+    </head>
+    
+    <body onload="main()">
+        <canvas id="webgl" width="400" height="400">
+        Please use a browser that supports "canvas"
+        </canvas>
+        
+        <script src="../lib/webgl-utils.js"></script>
+        <script src="../lib/webgl-debug.js"></script>
+        <script src="../lib/cuon-utils.js"></script>
+        <script src="../lib/cuon-matrix.js"></script>
+        <script id="shader-vert" type="x-shader/x-vertex">
+            attribute vec4 a_Position;
+            attribute vec2 a_TexCoord;
+            varying vec2 v_TexCoord;
+            void main()
+            {
+                gl_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+        <script id="shader-frag" type="x-shader/x-fragment">
+            #ifdef GL_ES
+            precision mediump float;
+            #endif
+            uniform sampler2D u_Sampler;
+            varying vec2 v_TexCoord;
+            void main()
+            {
+                gl_FragColor = texture2D(u_Sampler, v_TexCoord);
+            }
+        </script>
+        <script type="text/javascript">
+            function main()
+            {
+                  var canvas = document.getElementById('webgl');
+                  var gl = getWebGLContext(canvas);
+                  if(!gl.getExtension("OES_texture_float")) {
+                    alert("no OES_texture_float");
+                    return;
+                  }
+                  initShaders(gl, document.getElementById("shader-vert").text,
+                                    document.getElementById("shader-frag").text);
+                  initVertexBuffers(gl);
+                  gl.clearColor(0.5, 0.5, 0.5, 1.0);
+                  initTextures(gl);
+                  refresh(gl);
+                }
+                
+                function refresh(gl)
+                {
+                	gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
+                	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
+                }
+            
+            function initVertexBuffers(gl)
+            {
+                var verticesTexCoords = new Float32Array([
+                  -0.5,  0.5,   0.0, 1.0,
+                  -0.5, -0.5,   0.0, 0.0,
+                   0.5,  0.5,   1.0, 1.0,
+                   0.5, -0.5,   1.0, 0.0,
+                ]);
+                
+                var vertexTexCoordBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
+                
+                var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+                
+                var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+                gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
+                gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+                
+                var a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
+                gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+                gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
+                
+                return;
+            }
+            
+            function initTextures(gl)
+            {
+                var tex0 = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, tex0);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); 
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 2, 2, 0, gl.RGB, gl.UNSIGNED_BYTE, 
+                    new Uint8Array([255,0,0,   0,255,0,  99,99,    0,0,255,   255,0,255, 99,99]));
+                var u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
+                gl.uniform1i(u_Sampler, 0);
+            }
+        </script>
+    </body>
 </html>
