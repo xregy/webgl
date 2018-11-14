@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>luxo</title>
+	</head>
+
+	<body onload="main()">
+		<h1 align=center>luxo</h1>
+		<table>
+			<tr>
+				<td>
+					<canvas id="webgl" width="512" height="512">
+						Please use a browser that supports "canvas"
+					</canvas>
+				</td>
+				<td>
+			        <table>
+			            <tr> <td>x</td> <td><input type="range" id="x", min=-100 max=100 value=0><span id="x-value"></span></td> </tr>
+			            <tr> <td>z</td> <td><input type="range" id="z", min=-100 max=100 value=-50><span id="z-value"></span></td> </tr>
+			            <tr> <td>shoulder 1</td> <td><input type="range" id="shoulder-1", min=0 max=180 value=120><span id="shoulder-1-value"></span></td> </tr>
+			            <tr> <td>shoulder 2</td> <td><input type="range" id="shoulder-2", min=-180 max=180 value=-30><span id="shoulder-2-value"></span></td> </tr>
+			            <tr> <td>lower arm</td> <td><input type="range" id="lower", min=10 max=100 value=40><span id="lower-value"></span></td> </tr>
+			            <tr> <td>elbow</td> <td><input type="range" id="elbow", min=-180 max=180 value=-60><span id="elbow-value"></span></td> </tr>
+			            <tr> <td>upper arm</td> <td><input type="range" id="upper", min=10 max=100 value=40><span id="upper-value"></span></td> </tr>
+			            <tr> <td>head 1</td> <td><input type="range" id="head-1", min=0 max=180 value=0><span id="head-1-value"></span></td> </tr>
+			            <tr> <td>head 2</td> <td><input type="range" id="head-2", min=-180 max=180 value=0><span id="head-2-value"></span></td> </tr>
+			            <tr> <td>cut-off angle</td> <td><input type="range" id="cutoff", min=1 max=90 value=30><span id="cutoff-value"></span></td> </tr>
+			
+			        </table>
+				</td>
+			</tr>
+		</table>
+
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="luxo.js"></script>
+	</body>
+</html>
