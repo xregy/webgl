@@ -1,8 +1,8 @@
 - culling
 - (DONE) two-sided lighting
 - multiple objects
-- spot light source
-- multiple light sources
+- (DONE) spot light source
+- (DONE) multiple light sources
 - (DONE) hierarchical transformation
 - picking
 - viewer

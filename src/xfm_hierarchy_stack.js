@@ -1,9 +1,7 @@
 function main() {
-    var canvas = document.getElementById('webgl');
-    var gl = getWebGLContext(canvas);
-
-
-	var	shader = init_shader(gl, ["aPosition"]);
+	 canvas = document.getElementById('webgl');
+	 gl = getWebGLContext(canvas);
+	var shader = init_shader(gl, ["aPosition"]);
 	
 	quad = init_vbo_quad(gl);
 	
@@ -12,7 +10,6 @@ function main() {
 	
 	// Clear <canvas>
 	
-
 	set_slider_callbacks("x_R", function(ev) {render_scene(gl, shader, quad);});
 	set_slider_callbacks("y_R", function(ev) {render_scene(gl, shader, quad);});
 	set_slider_callbacks("length_R", function(ev) {render_scene(gl, shader, quad);});
@@ -32,19 +29,19 @@ function set_slider_callbacks(id, fn)
 	document.getElementById(id).oninput = fn;
 }
 
-var	WIDTH_RED = 0.3;
-var	WIDTH_GREEN	= 0.2;
-var	LENGTH_GREEN = 0.8;
-var	WIDTH_BLUE = (WIDTH_GREEN/2.0);
-var	LENGTH_BLUE	= 0.3;
+var WIDTH_RED = 0.3;
+var WIDTH_GREEN	= 0.2;
+var LENGTH_GREEN = 0.8;
+var WIDTH_BLUE = (WIDTH_GREEN/2.0);
+var LENGTH_BLUE	= 0.3;
 
-var	x_R = 0;
-var	y_R = 0;
-var	length_R = 1.0;
-var	angle_R = 10;
-var	length_G;
+var x_R = 0;
+var y_R = 0;
+var length_R = 1.0;
+var angle_R = 10;
+var length_G;
 var angle_G = -10;
-var	length_B;
+var length_B;
 var angle_B = 30;
 
 function render_quad(gl, shader, object, loc_MVP, MVP, loc_color, color)
@@ -91,43 +88,72 @@ function render_scene(gl, shader, quad)
 	var loc_MVP = gl.getUniformLocation(shader.h_prog, "MVP");
 	var loc_color = gl.getUniformLocation(shader.h_prog, "color");
 
-    var MatStack = [];
-    var MVP = new Matrix4();
+	var MatStack = [];
+	var MVP = new Matrix4();
 
-    MVP.setOrtho(-2, 2, -2, 2, 0, 4);   // P
-    MVP.translate(0, 0, -2);    // V
+    /*
+                     P
+                     |
+                     V
+                     |
+                  T_base
+                     |
+                     Rr
+                    /  \
+               Tr_high  Tr_low
+                  /      |
+                 Rg      Sr
+                /|\      |
+               / | \  red quad
+              /  |  \   
+             /   |   \      
+            /    |    \
+       Tg_low Tg_high1 Tg_high2
+          |      |      |
+          Sg    Rb1    Rb2
+          |      |      | 
+        green    Tb     Tb
+         quad    |      |
+                 Sb     Sb
+                 |      |
+               blue    blue
+               quad    quad
+    */
 
-    MVP.translate(x_R, y_R, 0); // T_base
-    MVP.rotate(angle_R, 0, 0, 1);   // Rr
-    MatStack.push(new Matrix4(MVP));
-        MVP.translate((length_R-WIDTH_RED)/2.0, 0, 0.1);    // Tr_low
-        MVP.scale(length_R, WIDTH_RED, 1);  // Sr
-	    render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [1,0,0]);
-    MVP = MatStack.pop();
-
-    MVP.translate(length_R - WIDTH_RED, 0, 0);  // Tr_high
-    MVP.rotate(angle_G, 0, 0, 1);   // Rg
-    MatStack.push(new Matrix4(MVP));
-        MVP.translate((length_G - WIDTH_GREEN)/2.0, 0, 0);  // Tg_low
-        MVP.scale(length_G, WIDTH_GREEN, 1);    // Sg
-	    render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,1,0]);
-    MVP = MatStack.pop();
-
-    MatStack.push(new Matrix4(MVP));
-        MVP.translate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, WIDTH_BLUE/2.0, 0); // Tg_high1
-        MVP.rotate(angle_B, 0, 0, 1);    // Rb1
-        MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
-        MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
-	    render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);
-    MVP = MatStack.pop();
-
-    MatStack.push(new Matrix4(MVP));
-        MVP.translate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, -WIDTH_BLUE/2.0, 0);    // Tg_high2
-        MVP.rotate(-angle_B, 0, 0, 1);   // Rb2
-        MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
-        MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
-	    render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);
-    MVP = MatStack.pop();
+	MVP.setOrtho(-2, 2, -2, 2, 0, 4);   // P
+	MVP.translate(0, 0, -2);    // V
+	
+	MVP.translate(x_R, y_R, 0); // T_base
+	MVP.rotate(angle_R, 0, 0, 1);   // Rr
+	MatStack.push(new Matrix4(MVP));
+		MVP.translate((length_R-WIDTH_RED)/2.0, 0, 0.1);    // Tr_low
+		MVP.scale(length_R, WIDTH_RED, 1);  // Sr
+		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [1,0,0]);    // red quad
+	MVP = MatStack.pop();
+	
+	MVP.translate(length_R - WIDTH_RED, 0, 0);  // Tr_high
+	MVP.rotate(angle_G, 0, 0, 1);   // Rg
+	MatStack.push(new Matrix4(MVP));
+		MVP.translate((length_G - WIDTH_GREEN)/2.0, 0, 0);  // Tg_low
+		MVP.scale(length_G, WIDTH_GREEN, 1);    // Sg
+		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,1,0]);    // green quad
+	MVP = MatStack.pop();
+	
+	MatStack.push(new Matrix4(MVP));
+		MVP.translate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, WIDTH_BLUE/2.0, 0); // Tg_high1
+		MVP.rotate(angle_B, 0, 0, 1);    // Rb1
+		MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
+		MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
+		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);    // blue quad
+	MVP = MatStack.pop();
+	
+	MatStack.push(new Matrix4(MVP));
+		MVP.translate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, -WIDTH_BLUE/2.0, 0);    // Tg_high2
+		MVP.rotate(-angle_B, 0, 0, 1);   // Rb2
+		MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
+		MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
+		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);    // blue quad
+	MVP = MatStack.pop();
 
 
 

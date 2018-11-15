@@ -1,8 +1,6 @@
 function main() {
-    var canvas = document.getElementById('webgl');
-    var gl = getWebGLContext(canvas);
-
-
+	var canvas = document.getElementById('webgl');
+	var gl = getWebGLContext(canvas);
 	var	shader = init_shader(gl, ["aPosition"]);
 	
 	quad = init_vbo_quad(gl);
@@ -12,7 +10,6 @@ function main() {
 	
 	// Clear <canvas>
 	
-
 	set_slider_callbacks("x_R", function(ev) {render_scene(gl, shader, quad);});
 	set_slider_callbacks("y_R", function(ev) {render_scene(gl, shader, quad);});
 	set_slider_callbacks("length_R", function(ev) {render_scene(gl, shader, quad);});
@@ -32,20 +29,20 @@ function set_slider_callbacks(id, fn)
 	document.getElementById(id).oninput = fn;
 }
 
-var	WIDTH_RED = 0.3;
-var	WIDTH_GREEN	= 0.2;
-var	LENGTH_GREEN = 0.8;
-var	WIDTH_BLUE = (WIDTH_GREEN/2.0);
-var	LENGTH_BLUE	= 0.3;
+var WIDTH_RED    = 0.3;
+var WIDTH_GREEN  = 0.2;
+var LENGTH_GREEN = 0.8;
+var WIDTH_BLUE   = (WIDTH_GREEN/2.0);
+var LENGTH_BLUE  = 0.3;
 
-var	x_R = 0;
-var	y_R = 0;
-var	length_R = 1.0;
-var	angle_R = 10;
-var	length_G;
-var angle_G = -10;
-var	length_B;
-var angle_B = 30;
+var x_R      = 0;
+var y_R      = 0;
+var length_R = 1.0;
+var angle_R  = 10;
+var length_G;
+var angle_G  = -10;
+var length_B;
+var angle_B  = 30;
 
 function render_quad(gl, shader, object, loc_MVP, matrices, loc_color, color)
 {
@@ -95,13 +92,43 @@ function render_scene(gl, shader, quad)
 	var loc_MVP = gl.getUniformLocation(shader.h_prog, "MVP");
 	var loc_color = gl.getUniformLocation(shader.h_prog, "color");
 
-	var	P  = new Matrix4();	P.setOrtho(-2, 2, -2, 2, 0, 4);
-	var	V = new Matrix4();	V.setTranslate(0, 0, -2);
+    /*
+                     P
+                     |
+                     V
+                     |
+                  T_base
+                     |
+                     Rr
+                    /  \
+               Tr_high  Tr_low
+                  /      |
+                 Rg      Sr
+                /|\      |
+               / | \  red quad
+              /  |  \   
+             /   |   \      
+            /    |    \
+       Tg_low Tg_high1 Tg_high2
+          |      |      |
+          Sg    Rb1    Rb2
+          |      |      | 
+        green    Tb     Tb
+         quad    |      |
+                 Sb     Sb
+                 |      |
+               blue    blue
+               quad    quad
+    */
 
-	var	T_base = new Matrix4();	T_base.setTranslate(x_R, y_R, 0);
-	var	Rr = new Matrix4();	Rr.setRotate(angle_R, 0, 0, 1);
-	var	Tr_low = new Matrix4();	Tr_low.setTranslate((length_R-WIDTH_RED)/2.0, 0, 0.1);
-	var	Sr = new Matrix4();	Sr.setScale(length_R, WIDTH_RED, 1);
+
+	var P  = new Matrix4();	P.setOrtho(-2, 2, -2, 2, 0, 4);
+	var V = new Matrix4();	V.setTranslate(0, 0, -2);
+
+	var T_base = new Matrix4();		T_base.setTranslate(x_R, y_R, 0);
+	var Rr = new Matrix4();			Rr.setRotate(angle_R, 0, 0, 1);
+	var Tr_low = new Matrix4();		Tr_low.setTranslate((length_R-WIDTH_RED)/2.0, 0, 0.1);
+	var Sr = new Matrix4();			Sr.setScale(length_R, WIDTH_RED, 1);
 
 	render_quad(gl, shader, quad, loc_MVP, [P,V,T_base,Rr,Tr_low,Sr], loc_color, [1,0,0]);
 
@@ -111,21 +138,18 @@ function render_scene(gl, shader, quad)
 	var Sg = new Matrix4();			Sg.setScale(length_G, WIDTH_GREEN, 1);
 	render_quad(gl, shader, quad, loc_MVP, [P,V,T_base,Rr,Tr_high,Rg,Tg_low,Sg], loc_color, [0,1,0]);
 
-	var	Tg_high1 = new Matrix4();	 Tg_high1.setTranslate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, WIDTH_BLUE/2.0, 0);
-	var	Tg_high2 = new Matrix4();	 Tg_high2.setTranslate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, -WIDTH_BLUE/2.0, 0);
-	var	Tb = new Matrix4();			Tb.setTranslate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);
-	var	Sb = new Matrix4();			Sb.setScale(length_B, WIDTH_BLUE, 1);
-	var	Rb1 = new Matrix4();	 	Rb1.setRotate(angle_B, 0, 0, 1);
-	var	Rb2 = new Matrix4();		Rb2.setRotate(-angle_B, 0, 0, 1);
+	var Tg_high1 = new Matrix4();	Tg_high1.setTranslate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, WIDTH_BLUE/2.0, 0);
+	var Tg_high2 = new Matrix4();	Tg_high2.setTranslate(length_G - WIDTH_GREEN + WIDTH_BLUE/2.0, -WIDTH_BLUE/2.0, 0);
+	var Tb = new Matrix4();			Tb.setTranslate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);
+	var Sb = new Matrix4();			Sb.setScale(length_B, WIDTH_BLUE, 1);
+	var Rb1 = new Matrix4();		Rb1.setRotate(angle_B, 0, 0, 1);
+	var Rb2 = new Matrix4();		Rb2.setRotate(-angle_B, 0, 0, 1);
 	render_quad(gl, shader, quad, loc_MVP, [P,V,T_base,Rr,Tr_high,Rg,Tg_high1,Rb1,Tb,Sb], loc_color, [0,0,1]);
 	render_quad(gl, shader, quad, loc_MVP, [P,V,T_base,Rr,Tr_high,Rg,Tg_high2,Rb2,Tb,Sb], loc_color, [0,0,1]);
-
-
 }
 
 function init_shader(gl, attrib_names)
 {
-
 	var src_vert = document.getElementById("shader-vert").text;
 	var src_frag = document.getElementById("shader-frag").text;
 	// Initialize shaders
