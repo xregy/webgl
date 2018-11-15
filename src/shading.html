@@ -20,12 +20,28 @@
                 <td><select id="shading-models"></select></td>
             </tr>
             <tr>
-		        <td>light type</td>
+                <td><input type="checkbox" id="light-static" checked>static light</td>
                 <td>
-                    <select id="light-type">
+                    (
+                    type
+                    <select id="light-type-static">
                         <option value="directional">directional</option>
                         <option value="positional">positional</option>
                     </select>
+                    )
+                </td>
+
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="light-rotating" checked>rotating light</td>
+                <td>
+                    (
+                    type
+                    <select id="light-type-rotating">
+                        <option value="directional">directional</option>
+                        <option value="positional">positional</option>
+                    </select>
+                    )
                 </td>
             </tr>
             <tr>
@@ -84,30 +100,38 @@
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+                bool    enabled;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			varying vec3		vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);
-				vec4	vPosWorld = MV*aPosition;
+				vec4	vPosEye = MV*aPosition;
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(-vPosWorld.xyz);
-				vec3	h = normalize(l + v);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
-				{
-					specular = light.specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-				}
-				vColor = ambient + diffuse + specular;
+                vec3	v = normalize(-vPosEye.xyz);
+                vColor = vec3(0.0);
+                for(int i=0 ; i<2 ; i++)
+                {
+                    if(light[i].enabled)
+                    {
+        				if(light[i].position.w == 1.0)
+        					l = normalize((light[i].position - vPosEye).xyz);
+        				else
+        					l = normalize((light[i].position).xyz);
+        				vec3	h = normalize(l + v);
+        				float	l_dot_n = max(dot(l, n), 0.0);
+        				vec3	ambient = light[i].ambient * material.ambient;
+        				vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+        				vec3	specular = vec3(0.0);
+        				if(l_dot_n > 0.0)
+        				{
+        					specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+        				}
+        				vColor += ambient + diffuse + specular;
+                    }
+                }
 				gl_Position = MVP*aPosition;
 			}
 		</script>
@@ -141,30 +165,38 @@
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+                bool    enabled;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			varying vec3	vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);	// n is the normal vector in eye coordinate system
-				vec4	vPosWorld = MV*aPosition;	// vPosWorld is the vertex position in eye coordinate system
+				vec4	vPosEye = MV*aPosition;	// vPosEye is the vertex position in eye coordinate system
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(-vPosWorld.xyz);
-				vec3	r = reflect(-l, n);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
-				{
-					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-				}
-				vColor = ambient + diffuse + specular;
+				vec3	v = normalize(-vPosEye.xyz);
+                vColor = vec3(0.0);
+                for(int i=0 ; i<2 ; i++)
+                {
+                    if(light[i].enabled)
+                    {
+        				if(light[i].position.w == 1.0)
+        					l = normalize((light[i].position - vPosEye).xyz);
+        				else
+        					l = normalize((light[i].position).xyz);
+        				vec3	r = reflect(-l, n);
+        				float	l_dot_n = max(dot(l, n), 0.0);
+        				vec3	ambient = light[i].ambient * material.ambient;
+        				vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+        				vec3	specular = vec3(0.0);
+        				if(l_dot_n > 0.0)
+        				{
+        					specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+        				}
+        				vColor += ambient + diffuse + specular;
+                    }
+                }
 
 				gl_Position = MVP*aPosition;
 			}
@@ -186,10 +218,10 @@
 			uniform mat4	MV;
 			uniform mat4	matNormal;
 			varying vec3	vNormal;
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			void main()
 			{
-				vPosWorld = MV*aPosition;
+				vPosEye = MV*aPosition;
 				vNormal = normalize(mat3(matNormal)*aNormal);
 				gl_Position = MVP*aPosition;
 			}
@@ -198,7 +230,7 @@
             #ifdef GL_ES
             precision mediump float;
             #endif
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			varying vec3	vNormal;
 			struct TMaterial
 			{
@@ -214,30 +246,39 @@
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+                bool    enabled;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			void main()
 			{
 				vec3	n = normalize(vNormal);
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);		// positional light
-				else
-					l = normalize((light.position).xyz);	// directional light
-				vec3	v = normalize(-vPosWorld.xyz);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
-				{
-					vec3	h = normalize(l + v);
-					specular = light.specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-//					specular = light.specular * material.specular * pow(dot(h, n), material.shininess);
-				}
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
-//				gl_FragColor = vec4(vec3(dot(h,n)+0.5), 1);
+				vec3	v = normalize(-vPosEye.xyz);
+                gl_FragColor = vec4(0.0);
+                for(int i=0 ; i<2 ; i++)
+                {
+                    if(light[i].enabled)
+                    {
+        				if(light[i].position.w == 1.0)
+        					l = normalize((light[i].position - vPosEye).xyz);		// positional light
+        				else
+        					l = normalize((light[i].position).xyz);	// directional light
+        				float	l_dot_n = max(dot(l, n), 0.0);
+        				vec3	ambient = light[i].ambient * material.ambient;
+        				vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+        				vec3	specular = vec3(0.0);
+        				if(l_dot_n > 0.0)
+        				{
+        					vec3	h = normalize(l + v);
+        					specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+        //					specular = light.specular * material.specular * pow(dot(h, n), material.shininess);
+        				}
+        				gl_FragColor += vec4(ambient + diffuse + specular, 1);
+        //				gl_FragColor = vec4(vec3(dot(h,n)+0.5), 1);
+                    }
+                }
+                gl_FragColor.w = 1.0;
 			}
 	
 	
@@ -251,10 +292,10 @@
 			uniform mat4	M;
 			uniform mat4	matNormal;
 			varying vec3	vNormal;
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			void main()
 			{
-				vPosWorld = M*aPosition;
+				vPosEye = M*aPosition;
 				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
 				gl_Position = MVP*aPosition;
 			}
@@ -264,7 +305,7 @@
             #ifdef GL_ES
             precision mediump float;
             #endif
-			varying vec4 vPosWorld;
+			varying vec4 vPosEye;
 			varying vec3	vNormal;
 			struct TMaterial
 			{
@@ -289,10 +330,10 @@
 				vec3	n = normalize(vNormal);
 				vec3	l;
 				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
+					l = normalize((light.position - vPosEye).xyz);
 				else
 					l = normalize((light.position).xyz);
-				vec3	v = normalize(light.eye_world.xyz-vPosWorld.xyz);
+				vec3	v = normalize(light.eye_world.xyz-vPosEye.xyz);
 
 				vec3	r = reflect(-l, n);
 				float	l_dot_n = max(dot(l, n), 0.0);
@@ -316,10 +357,10 @@
 			uniform mat4	MV;
 			uniform mat4	matNormal;
 			varying vec3	vNormal;
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			void main()
 			{
-				vPosWorld = MV*aPosition;
+				vPosEye = MV*aPosition;
 				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
 				gl_Position = MVP*aPosition;
 			}
@@ -329,7 +370,7 @@
             #ifdef GL_ES
             precision mediump float;
             #endif
-			varying vec4 vPosWorld;
+			varying vec4 vPosEye;
 			varying vec3	vNormal;
 			struct TMaterial
 			{
@@ -345,30 +386,39 @@
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+                bool    enabled;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			void main()
 			{
 				vec3	n = normalize(vNormal);
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(-vPosWorld.xyz);
-
-				vec3	r = reflect(-l, n);
-				float	l_dot_n = max(dot(l, n), 0.0);
-
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
-				{
-					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-				}
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
+				vec3	v = normalize(-vPosEye.xyz);
+                gl_FragColor = vec4(0.0);
+                for(int i=0 ; i<2 ; i++)
+                {
+                    if(light[i].enabled)
+                    {
+        				if(light[i].position.w == 1.0)
+        					l = normalize((light[i].position - vPosEye).xyz);
+        				else
+        					l = normalize((light[i].position).xyz);
+        
+        				vec3	r = reflect(-l, n);
+        				float	l_dot_n = max(dot(l, n), 0.0);
+        
+        				vec3	ambient = light[i].ambient * material.ambient;
+        				vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+        				vec3	specular = vec3(0.0);
+        				if(l_dot_n > 0.0)
+        				{
+        					specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+        				}
+        				gl_FragColor += vec4(ambient + diffuse + specular, 1);
+                    }
+                }
+                gl_FragColor.w = 1.0;
 			}
 	
 	

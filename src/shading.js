@@ -1,8 +1,8 @@
 var	list_shaders = [];
 
 
-var light = { position:[1.5, 1.5, 0, 0.0], ambient: [0.5, 0.5, 0.5, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0],
-                position_transformed:null};
+var light_rotating = { position:[1.5, 1.5, 0, 0.0], ambient: [0.1, 0.1, 0.1, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0], enabled:false, position_transformed:null};
+var light_static = { position:[0, 1.5, 1.5, 1.0], ambient: [0.1, 0.1, 0.1, 1.0], diffuse: [1.0, 1.0, 1.0, 1.0], specular:[1.0, 1.0, 1.0, 1.0], enabled:false, position_transformed:null};
 
 function init_shader(gl, src_vert, src_frag, attrib_names)
 {
@@ -35,7 +35,7 @@ function init_models(gl)
 		opt.text = name;
 		combo_shading.add(opt, null);
 	}
-	combo_shading.selectedIndex = 2;
+	combo_shading.selectedIndex = 0;    // XXX
 	combo_shading.onchange = function(ev) { refresh_scene(gl) };
 
 }
@@ -56,9 +56,16 @@ function init_materials(gl)
 
 function init_lights(gl)
 {
-	var	combo_light = document.getElementById("light-type");
+	var	combo_light;
+
+	combo_light = document.getElementById("light-type-rotating");
     combo_light.selectedIndex = 1;
 	combo_light.onchange = function(ev) { refresh_scene(gl) };
+    document.getElementById("light-rotating").onchange = function(ev) { refresh_scene(gl) };
+	combo_light = document.getElementById("light-type-static");
+    combo_light.selectedIndex = 1;
+	combo_light.onchange = function(ev) { refresh_scene(gl) };
+    document.getElementById("light-static").onchange = function(ev) { refresh_scene(gl) };
 };
 
 function init_objects(gl)
@@ -125,6 +132,8 @@ function refresh_scene(gl)
 
 	render_object(gl, shader_axes, axes);
 
+    light_rotating.enabled = document.getElementById("light-rotating").checked;
+    light_static.enabled = document.getElementById("light-static").checked;
 
 	var	combo_object = document.getElementById("objects");
 	var	object_name = combo_object.options[combo_object.selectedIndex].value;
@@ -135,23 +144,34 @@ function refresh_scene(gl)
 	else if(object_name == "monkey (smooth)")	render_object(gl, shader_model, monkey_smooth);
 	else if(object_name == "monkey (subdivided 2 steps, smooth)")	render_object(gl, shader_model, monkey_sub2_smooth);
 
-    render_light_source(gl);
+    render_lights(gl);
 }
 
-function render_light_source(gl)
+function render_lights(gl)
 {
     gl.useProgram(shader_axes.h_prog);
 
+    // rotating light
     var VP = new Matrix4(P); VP.multiply(V);
     gl.uniformMatrix4fv(gl.getUniformLocation(shader_axes.h_prog, "VP"), false, VP.elements);
 
     var m = new Matrix4();
     m.setRotate(angle, 0, 1, 0);
 
-    gl.vertexAttrib4fv(shader_axes.attribs["aPosition"], (m.multiplyVector4(new Vector4(light.position))).elements);
-    gl.vertexAttrib3f(shader_axes.attribs["aColor"], 1, 1, 1);
+    gl.vertexAttrib4fv(shader_axes.attribs["aPosition"], (m.multiplyVector4(new Vector4(light_rotating.position))).elements);
+    if(light_rotating.enabled)  gl.vertexAttrib3f(shader_axes.attribs["aColor"], 1, 1, 1);
+    else                        gl.vertexAttrib3f(shader_axes.attribs["aColor"], .1, .1, .1);
 
     gl.drawArrays(gl.POINTS, 0, 1);
+
+    // static light
+
+    gl.vertexAttrib4fv(shader_axes.attribs["aPosition"], new Vector4(light_static.position).elements);
+    if(light_static.enabled)  gl.vertexAttrib3f(shader_axes.attribs["aColor"], 1, 1, 1);
+    else                        gl.vertexAttrib3f(shader_axes.attribs["aColor"], .1, .1, .1);
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+
 }
 
 function render_object(gl, shader, object)
@@ -213,15 +233,29 @@ function update_xforms(gl)
 	matNormal.setInverseOf(MV);
 	matNormal.transpose();
 
-    var combo_light = document.getElementById("light-type");
-	var	light_type = combo_light.options[combo_light.selectedIndex].value;
+    var combo_light;
+	var	light_type;
+    var m;
+    
+    // rotating light
+    combo_light = document.getElementById("light-type-rotating");
+	light_type = combo_light.options[combo_light.selectedIndex].value;
 
-    var m = new Matrix4(V);
-    m.rotate(angle, 0, 1, 0);
-    if(light_type == "directional") light.position[3] = 0;
-    else                            light.position[3] = 1;
+    m = new Matrix4(V);
+    m.setRotate(angle, 0, 1, 0);
+    if(light_type == "directional") light_rotating.position[3] = 0;
+    else                            light_rotating.position[3] = 1;
 
-    light.position_xformed = m.multiplyVector4(new Vector4(light.position));
+    light_rotating.position_xformed = m.multiplyVector4(new Vector4(light_rotating.position));
+
+    // static light
+    combo_light = document.getElementById("light-type-static");
+	light_type = combo_light.options[combo_light.selectedIndex].value;
+
+    if(light_type == "directional") light_static.position[3] = 0;
+    else                            light_static.position[3] = 1;
+    light_static.position_xformed = V.multiplyVector4(new Vector4(light_static.position));
+
 }
 
 
@@ -245,10 +279,17 @@ function set_xforms(gl, h_prog)
 
 function set_light(gl, h_prog)
 {
-	gl.uniform4fv(gl.getUniformLocation(h_prog, "light.position"), light.position_xformed.elements);
-    gl.uniform3fv(gl.getUniformLocation(h_prog, "light.ambient"), (new Vector3(light.ambient)).elements);
-    gl.uniform3fv(gl.getUniformLocation(h_prog, "light.diffuse"), (new Vector3(light.diffuse)).elements);
-    gl.uniform3fv(gl.getUniformLocation(h_prog, "light.specular"), (new Vector3(light.specular)).elements);
+	gl.uniform4fv(gl.getUniformLocation(h_prog, "light[0].position"), light_rotating.position_xformed.elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[0].ambient"), (new Vector3(light_rotating.ambient)).elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[0].diffuse"), (new Vector3(light_rotating.diffuse)).elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[0].specular"), (new Vector3(light_rotating.specular)).elements);
+    gl.uniform1i(gl.getUniformLocation(h_prog, "light[0].enabled"), light_rotating.enabled);
+
+	gl.uniform4fv(gl.getUniformLocation(h_prog, "light[1].position"), light_static.position_xformed.elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[1].ambient"), (new Vector3(light_static.ambient)).elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[1].diffuse"), (new Vector3(light_static.diffuse)).elements);
+    gl.uniform3fv(gl.getUniformLocation(h_prog, "light[1].specular"), (new Vector3(light_static.specular)).elements);
+    gl.uniform1i(gl.getUniformLocation(h_prog, "light[1].enabled"), light_static.enabled);
 
 //    var V_inv = new Matrix4();
 //    V_inv.setInverseOf(V);
