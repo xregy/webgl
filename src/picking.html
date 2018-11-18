@@ -9,28 +9,9 @@
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
-		<script id="vert-axes" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec4 aColor;
-			uniform mat4 VP;
-			varying vec4 vColor;
-			void main()
-			{
-				gl_Position = VP * aPosition;
-				gl_PointSize = 10.0;
-				vColor = aColor;
-			}
-		</script>
-		<script id="frag-axes" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			varying vec4 vColor;
-			void main()
-			{
-				gl_FragColor = vColor;
-			}
-		</script>
+		<p id="output">
+			blah
+		</p>
 		<script id="vert-Blinn-Gouraud" type="x-shader/x-vertex">
 			attribute vec4	aPosition;
 			attribute vec3	aNormal;
@@ -100,10 +81,13 @@
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>
 		<script src="../lib/cuon-matrix.js"></script>
-		<script src="../resources/monkey.js"></script>
 		<script src="../resources/monkey_smooth.js"></script>
-		<script src="../resources/monkey_sub2_smooth.js"></script>
-		<script src="materials.js"></script>
+		<script src="materials_class.js"></script>
+		<script src="create_mesh_cube.js"></script>
+		<script src="create_mesh_sphere.js"></script>
+		<script src="class_shader.js"></script>
+		<script src="class_light.js"></script>
+		<script src="class_mesh.js"></script>
 		<script src="picking.js"></script>
 	</body>
 </html>

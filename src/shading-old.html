@@ -23,7 +23,7 @@
 				<td>
 					(
 					type
-					<select id="light-static-type">
+					<select id="light-type-static">
 						<option value="directional">directional</option>
 						<option value="positional">positional</option>
 					</select>
@@ -36,7 +36,7 @@
 				<td>
 					(
 					type
-					<select id="light-rotating-type">
+					<select id="light-type-rotating">
 						<option value="directional">directional</option>
 						<option value="positional">positional</option>
 					</select>
@@ -53,12 +53,31 @@
 						<option value="monkey">monkey</option>
 						<option value="monkey (subdivided 2 steps, smooth)">monkey (subdivided 2 steps, smooth)</option>
 					</select>
-					(
-					<input type="checkbox" id="mesh-rotating" >
-					rotating)
 				</td>
 			</tr>
 		</table>
+		<script id="vert-axes" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec4 aColor;
+			uniform mat4 VP;
+			varying vec4 vColor;
+			void main()
+			{
+				gl_Position = VP * aPosition;
+				gl_PointSize = 10.0;
+				vColor = aColor;
+			}
+		</script>
+		<script id="frag-axes" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec4 vColor;
+			void main()
+			{
+				gl_FragColor = vColor;
+			}
+		</script>
 		<script id="vert-Blinn-Gouraud" type="x-shader/x-vertex">
 			attribute vec4	aPosition;
 			attribute vec3	aNormal;
@@ -332,7 +351,7 @@
 		<script src="../resources/monkey.js"></script>
 		<script src="../resources/monkey_smooth.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
-		<script src="materials_class.js"></script>
-		<script src="shading_oop.js"></script>
+		<script src="materials.js"></script>
+		<script src="shading-old.js"></script>
 	</body>
 </html>

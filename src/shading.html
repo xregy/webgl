@@ -16,29 +16,36 @@
 			</tr>
 			<tr>
 				<td>shading model</td>
-				<td><select id="shading-models"></select></td>
+				<td>
+					<select id="shading-models">
+						<option value="Blinn-Gouraud" selected>Blinn-Gouraud</option>
+						<option value="Phong-Gouraud">Phong-Gouraud</option>
+						<option value="Blinn-Phong">Blinn-Phong</option>
+						<option value="Phong-Phong">Phong-Phong</option>
+					</select>
+				</td>
 			</tr>
 			<tr>
-				<td><input type="checkbox" id="light-static" checked>static light</td>
+				<td><input type="checkbox" id="light1" checked>static light</td>
 				<td>
 					(
 					type
-					<select id="light-type-static">
+					<select id="light1-type">
 						<option value="directional">directional</option>
-						<option value="positional">positional</option>
+						<option value="positional" selected>positional</option>
 					</select>
 					)
 				</td>
 				
 			</tr>
 			<tr>
-				<td><input type="checkbox" id="light-rotating" checked>rotating light</td>
+				<td><input type="checkbox" id="light0" checked>rotating light</td>
 				<td>
 					(
 					type
-					<select id="light-type-rotating">
+					<select id="light0-type">
 						<option value="directional">directional</option>
-						<option value="positional">positional</option>
+						<option value="positional" selected>positional</option>
 					</select>
 					)
 				</td>
@@ -49,35 +56,16 @@
 					<select id="objects">
 						<option value="cube">cube</option>
 						<option value="sphere">sphere</option>
-						<option value="monkey (smooth)">monkey (smooth)</option>
+						<option value="monkey (smooth)" selected>monkey (smooth)</option>
 						<option value="monkey">monkey</option>
 						<option value="monkey (subdivided 2 steps, smooth)">monkey (subdivided 2 steps, smooth)</option>
 					</select>
+					(
+					<input type="checkbox" id="mesh-rotating" >
+					rotating)
 				</td>
 			</tr>
 		</table>
-		<script id="vert-axes" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec4 aColor;
-			uniform mat4 VP;
-			varying vec4 vColor;
-			void main()
-			{
-				gl_Position = VP * aPosition;
-				gl_PointSize = 10.0;
-				vColor = aColor;
-			}
-		</script>
-		<script id="frag-axes" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			varying vec4 vColor;
-			void main()
-			{
-				gl_FragColor = vColor;
-			}
-		</script>
 		<script id="vert-Blinn-Gouraud" type="x-shader/x-vertex">
 			attribute vec4	aPosition;
 			attribute vec3	aNormal;
@@ -351,7 +339,13 @@
 		<script src="../resources/monkey.js"></script>
 		<script src="../resources/monkey_smooth.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
-		<script src="materials.js"></script>
+		<script src="materials_class.js"></script>
+		<script src="create_mesh_cube.js"></script>
+		<script src="create_mesh_sphere.js"></script>
+		<script src="class_shader.js"></script>
+		<script src="class_light.js"></script>
+		<script src="class_mesh.js"></script>
+		<script src="class_axes.js"></script>
 		<script src="shading.js"></script>
 	</body>
 </html>
