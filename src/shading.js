@@ -266,7 +266,7 @@ function update_xforms(gl)
 	light_type = combo_light.options[combo_light.selectedIndex].value;
 
 	m = new Matrix4(V);
-	m.setRotate(angle, 0, 1, 0);
+	m.rotate(angle, 0, 1, 0);
 	if(light_type == "directional") light_rotating.position[3] = 0;
 	else                            light_rotating.position[3] = 1;
 	

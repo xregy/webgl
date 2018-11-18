@@ -50,16 +50,16 @@ title: WebGL examples by Minho Kim
 			(<a href="https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_float">OES_texture_float</a>
 			extension required)
 			</li>
-            <li>
-                <tt>gl.TEXTURE_MAG_FILTER</t>,
-                <tt>gl.TEXTURE_WRAP_S</t>,
-                <tt>gl.TEXTURE_WRAP_T</t>
-                <a href="src/tex-params.html">tex-params.html</a>
-            </li>
-            <li>
-                Texture alignment
-                <a href="src/tex-alignment.html">tex-alignment.html</a>
-            </li>
+			<li>
+				<tt>gl.TEXTURE_MAG_FILTER</t>,
+				<tt>gl.TEXTURE_WRAP_S</t>,
+				<tt>gl.TEXTURE_WRAP_T</t>
+				<a href="src/tex-params.html">tex-params.html</a>
+			</li>
+			<li>
+				Texture alignment
+				<a href="src/tex-alignment.html">tex-alignment.html</a>
+			</li>
 			<li>
 				Multi-texturing
 				<a href="src/tex-multi.html">tex-multi.html</a>
@@ -73,16 +73,16 @@ title: WebGL examples by Minho Kim
 			<li>Using <tt>gl_PointCoord</tt>: <a href="src/gl_PointCoord.html">gl_PointCoord.html</a></li>
 		</ul>
 	</li>
-    <li>
-        Drawing cubes
-        <ul>
-            <li>TRIANGLES: <a href="src/cube_TRIANGLES.html">cube_TRIANGLES.html</a></li>
-            <li>TRIANGLE_FAN (1): <a href="src/cube_TRIANGLE_FAN_1.html">cube_TRIANGLE_FAN_1.html</a></li>
-            <li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html">cube_TRIANGLE_FAN_2.html</a></li>
-            <li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html">cube_TRIANGLE_STRIP.html</a></li>
-            <li>ELEMENTS: <a href="src/cube_ELEMENTS.html">cube_ELEMENTS.html</a></li>
-        </ul>
-    </li>
+	<li>
+		Drawing cubes
+		<ul>
+			<li>TRIANGLES: <a href="src/cube_TRIANGLES.html">cube_TRIANGLES.html</a></li>
+			<li>TRIANGLE_FAN (1): <a href="src/cube_TRIANGLE_FAN_1.html">cube_TRIANGLE_FAN_1.html</a></li>
+			<li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html">cube_TRIANGLE_FAN_2.html</a></li>
+			<li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html">cube_TRIANGLE_STRIP.html</a></li>
+			<li>ELEMENTS: <a href="src/cube_ELEMENTS.html">cube_ELEMENTS.html</a></li>
+		</ul>
+	</li>
 	<li>Why do we need VAOs?
 		-- Drawing two  triangles 
 		<ul>
@@ -118,6 +118,9 @@ title: WebGL examples by Minho Kim
 				<a href="src/shading.html">Shading</a> (Blinn-Phong OR Phong shading) + (Gouraud OR Phong interpolation)
 			</li>
 			<li>
+				<a href="src/shading_oop.html">Shading (in OOP style)</a> 
+			</li>
+			<li>
 				<a href="src/normal_matrix.html">Normal matrix</a> 
 			</li>
 			<li>
@@ -132,34 +135,33 @@ title: WebGL examples by Minho Kim
 		Importing 3D model files
 		<ul>
 			<li><a href="src/import_JSON_jQuery.html">Importing JSON format using jQuery</a>
-            (Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)</li>
+			(Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)</li>
 			<li><a href="src/import_JSON_http.html">Importing JSON format using XMLHttpRequest</a>
-            (Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)</li>
+			(Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)</li>
 			<li><a href="src/include_JSON.html">Importing 3d model in JSON format by
-            including the JSON in the HTML file.</a>
+			including the JSON in the HTML file.</a>
 				(Note that the model file is in fact imported as a JS file
 				in JSON format.)
 			</li>
 		</ul>
 	</li>
-    <li>
-        FBO (Framebuffer Object)
-        <ul>
-            <li><a href="src/fbo-tex.html">render-to-texture</a></li>
-            <li><a href="src/fbo-rbo.html">render-to-fbo</a>
-                (WebGL2)</li>
-            <li><a href="src/mrt.html">MRT (Multiple Render Targets)</a></li>
-            <li><a href="src/deferred_shading.html">Deferred Shading</a></li>
-        </ul>
-    </li>
+	<li>
+		FBO (Framebuffer Object)
+		<ul>
+			<li><a href="src/fbo-tex.html">render-to-texture</a></li>
+			<li><a href="src/fbo-rbo.html">render-to-fbo</a> (WebGL2)</li>
+			<li><a href="src/mrt.html">MRT (Multiple Render Targets)</a></li>
+			<li><a href="src/deferred_shading.html">Deferred Shading</a></li>
+		</ul>
+	</li>
 	<li>
 		Misc.
 		<ul>
 			<li><a href="src/multiple_viewports.html">Multiple viewports</a></li>
-            <li><a href="src/max_var_nums.html">querying maximum variable numbers (uniforms, attributes, varyings)</a></li>
-            <li><a href="src/uniform_as_loop_count.html">Uniform variable cannot be used as a loop count. (compile error)</a></li>
-            <li><a href="src/uniform_as_vector_index.html">Uniform variable cannot be used as a vector index. (compile error)</a></li>
-            <li><a href="src/uniform_as_array_index.html">Uniform variable cannot be used as an array index. (compile error)</a></li>
+			<li><a href="src/max_var_nums.html">querying maximum variable numbers (uniforms, attributes, varyings)</a></li>
+			<li><a href="src/uniform_as_loop_count.html">Uniform variable cannot be used as a loop count. (compile error)</a></li>
+			<li><a href="src/uniform_as_vector_index.html">Uniform variable cannot be used as a vector index. (compile error)</a></li>
+			<li><a href="src/uniform_as_array_index.html">Uniform variable cannot be used as an array index. (compile error)</a></li>
 		</ul>
 	</li>
     <!--
