@@ -1,6 +1,6 @@
 class Axes
 {
-	constructor(gl)
+	constructor(gl, length=2)
 	{
 		var src_shader_vert = 
 			  'attribute vec4 aPosition;\n'
@@ -22,17 +22,17 @@ class Axes
 			+ '}\n';
 		this.MVP = new Matrix4();
 		this.shader = new Shader(gl, src_shader_vert, src_shader_frag, ["aPosition", "aColor"]);
-		this.init_vbo(gl);
+		this.init_vbo(gl,length);
 	}
-	init_vbo(gl)
+	init_vbo(gl,l)
 	{
 		var vertices = new Float32Array([
-		  0,0,0, 1,0,0,
-		  2,0,0, 1,0,0,
-		  0,0,0, 0,1,0,
-		  0,2,0, 0,1,0,
-		  0,0,0, 0,0,1,
-		  0,0,2, 0,0,1,
+			0,0,0, 1,0,0,
+			l,0,0, 1,0,0,
+			0,0,0, 0,1,0,
+			0,l,0, 0,1,0,
+			0,0,0, 0,0,1,
+			0,0,l, 0,0,1,
 		]);
 		var vbo = gl.createBuffer();  
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbo);

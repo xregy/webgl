@@ -23,7 +23,7 @@ function main()
 	light = new Light
 	(
 		gl,
-		[0, 1.5, 1.5, 1.0],
+		[3, 3, 3, 1.0],
 		[0.1, 0.1, 0.1, 1.0],
 		[1.0, 1.0, 1.0, 1.0],
 		[1.0, 1.0, 1.0, 1.0],
@@ -51,11 +51,11 @@ function main()
 	ball.M.setTranslate(2.5,0,2.5);
 	monkey.M.setTranslate(0,2.5,2.5);
 
-	var list_materials = [
-		__js_materials["gold"], 
-		__js_materials["silver"], 
-		__js_materials["copper"] 
-		];
+	var list_materials = {
+		"cube":__js_materials["silver"], 
+		"ball":__js_materials["copper"],
+		"monkey":__js_materials["gold"], 
+		};
 
 	canvas.onmousedown = function(ev) 
 	{
@@ -68,7 +68,6 @@ function main()
 				document.getElementById("output").innerHTML = "The " + list_meshes[id-1].name + " is selected.";
 			else
 				document.getElementById("output").innerHTML = "Nothing is selected.";
-
 			render_scene(gl, list_meshes, shader, [light], list_materials, V, P);
 		}
 	}
@@ -83,19 +82,14 @@ function main()
 function render_scene(gl, meshes, shader, lights, materials, V, P)
 {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-	for(var i in meshes)
-	{
-		meshes[i].render(gl, shader, lights, materials[i], V, P);
-	}
+	for(light of lights)	light.render(gl, V, P);
+	for(mesh of meshes)	mesh.render(gl, shader, [light], materials[mesh.name], V, P);
 }
 
-function get_id(gl, list_meshes, pos, V, P)
+function get_id(gl, meshes, pos, V, P)
 {
-	for(var i=0 ; i<list_meshes.length ; i++)
-	{
-		list_meshes[i].render_id(gl, V, P);
-	}
+	for(mesh of meshes) mesh.render_id(gl, V, P);
+
 	var pixels = new Uint8Array(4); 
 
 	gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);

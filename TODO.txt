@@ -1,10 +1,14 @@
 - culling
 - (DONE) two-sided lighting
-- multiple objects
+- (DONE) multiple objects
 - (DONE) spot light source
 - (DONE) multiple light sources
 - (DONE) hierarchical transformation
-- picking
+- (DONE) picking
 - viewer
 - OBJ loader
-- various shading techniques (normal map, bump map, replacement map, environment map, etc.)
+- normal mapping / bump mapping
+- displacement mapping
+- environment mapping
+- projective texture
+- mipmap

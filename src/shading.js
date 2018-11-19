@@ -18,7 +18,7 @@ function main()
 	var list_shaders = [];
 
 	// initializes shaders (reflection models)
-	for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
+	for(model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
 	{
 		list_shaders[model] = new Shader(gl, 
 			document.getElementById("vert-" + model).text,
@@ -93,7 +93,7 @@ function main()
 
 		axes.render(gl, V, P);
 
-		for(var i=0 ; i<list_lights.length ; i++)
+		for(i in list_lights)
 		{
 			// for light state and render it
 			list_lights[i].turn_on(document.getElementById('light' + i).checked);
