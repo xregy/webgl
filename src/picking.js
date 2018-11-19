@@ -20,7 +20,6 @@ function main()
 			document.getElementById("frag-Blinn-Gouraud").text,
 			["aPosition", "aNormal"]);
 
-
 	light = new Light
 	(
 		gl,
@@ -33,7 +32,6 @@ function main()
 	light.turn_on(true);
 
 	// initializes the meshes
-	var list_meshes = [];
 	var id = 0;
 	var cube = create_mesh_cube(gl);
 	var ball = create_mesh_sphere(gl, 20);
@@ -47,11 +45,17 @@ function main()
 	cube.name = "cube";
 	ball.name = "ball";
 
-	list_meshes = [monkey, cube, ball];	// the order should be consistent
+	var list_meshes = [monkey, cube, ball];	// the order should be consistent
 
 	cube.M.setTranslate(2.5,2.5,0);
 	ball.M.setTranslate(2.5,0,2.5);
 	monkey.M.setTranslate(0,2.5,2.5);
+
+	var list_materials = [
+		__js_materials["gold"], 
+		__js_materials["silver"], 
+		__js_materials["copper"] 
+		];
 
 	canvas.onmousedown = function(ev) 
 	{
@@ -64,29 +68,36 @@ function main()
 				document.getElementById("output").innerHTML = "The " + list_meshes[id-1].name + " is selected.";
 			else
 				document.getElementById("output").innerHTML = "Nothing is selected.";
+
+			render_scene(gl, list_meshes, shader, [light], list_materials, V, P);
 		}
 	}
-
 	var tick = function()
 	{
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-		monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
-		cube.render(gl, shader, [light], __js_materials["silver"], V, P);
-		ball.render(gl, shader, [light], __js_materials["copper"], V, P);
-
+		render_scene(gl, list_meshes, shader, [light], list_materials, V, P);
 		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 	};
 	tick();
+}
+
+function render_scene(gl, meshes, shader, lights, materials, V, P)
+{
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	for(var i in meshes)
+	{
+		meshes[i].render(gl, shader, lights, materials[i], V, P);
+	}
 }
 
 function get_id(gl, list_meshes, pos, V, P)
 {
 	for(var i=0 ; i<list_meshes.length ; i++)
 	{
-		list_meshes[i].render_for_picking(gl, V, P);
+		list_meshes[i].render_id(gl, V, P);
 	}
 	var pixels = new Uint8Array(4); 
+
 	gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
 	return pixels[0];
