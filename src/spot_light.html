@@ -2,67 +2,51 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Spot light source</title>
+		<title>Spot Light</title>
 	</head>
-
 	<body onload="main()">
-		<h1 align=center>Spot light source</h1>
+		<h1 align=center>Spot Light</h1>
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
-        <table>
-            <tr>
-                <td>material</td>
-                <td><select id="materials"></select></td>
-            </tr>
-            <tr>
-		        <td>shading model</td>
-                <td><select id="shading-models"></select></td>
-            </tr>
+		<table>
+			<tr>
+				<td>material</td>
+				<td><select id="materials"></select></td>
+			</tr>
+			<tr>
+				<td>shading model</td>
+				<td>
+					<select id="shading-models">
+						<option value="Blinn-Gouraud">Blinn-Gouraud</option>
+						<option value="Phong-Gouraud">Phong-Gouraud</option>
+						<option value="Blinn-Phong">Blinn-Phong</option>
+						<option value="Phong-Phong" selected>Phong-Phong</option>
+					</select>
+				</td>
+			</tr>
 			<tr>
 				<td>cut-off angle</td>
 				<td>
 					<input id="cutoff-angle" type="range" min="0" max="90" value="30">
 				</td>
 			</tr>
-            <tr>
-		        <td>object</td>
-                <td>
-                    <select id="objects">
-                        <option value="cube">cube</option>
-                        <option value="sphere">sphere</option>
-                        <option value="monkey">monkey</option>
-                    </select>
-                </td>
+			<tr>
+				<td>object</td>
+				<td>
+					<select id="objects">
+						<option value="cube">cube</option>
+						<option value="sphere">sphere</option>
+						<option value="monkey (smooth)" selected>monkey (smooth)</option>
+						<option value="monkey">monkey</option>
+						<option value="monkey (subdivided 2 steps, smooth)">monkey (subdivided 2 steps, smooth)</option>
+					</select>
+				</td>
 			</tr>
-
-        </table>
-
-		<script id="vert-axes" type="x-shader/x-vertex">
-            attribute vec4 aPosition;
-            attribute vec4 aColor;
-            uniform mat4 VP;
-            varying vec4 vColor;
-            void main()
-            {
-                gl_Position = VP * aPosition;
-                gl_PointSize = 10.0;
-                vColor = aColor;
-            }
-		</script>
-		<script id="frag-axes" type="x-shader/x-fragment">
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-            varying vec4 vColor;
-            void main()
-            {
-                gl_FragColor = vColor;
-            }
-		</script>
-		<script id="vert-Blinn-Gouraud" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec3 aNormal;
+		</table>
+		<script id="vert-Blinn-Gouraud-spot" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
@@ -77,55 +61,64 @@
 			struct TLight
 			{
 				vec4	position;
-				vec4	direction;
-				float	cutoff_angle;
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+				bool	enabled;
+				vec4	direction;
+				float	cutoff_angle;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			varying vec3		vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);
-				vec4	vPosWorld = MV*aPosition;
+				vec4	vPosEye = MV*aPosition;
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(-vPosWorld.xyz);
-				vec3	h = normalize(l + v);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
+				vec3	v = normalize(-vPosEye.xyz);
+				vColor = vec3(0.0);
+				for(int i=0 ; i<2 ; i++)
 				{
-					specular = light.specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-				}
-				if(dot(-l,light.direction.xyz) < light.cutoff_angle)
-				{
-					diffuse = vec3(0);
-					specular = vec3(0);
-				}
+					if(light[i].enabled)
+					{
+						if(light[i].position.w == 1.0)
+							l = normalize((light[i].position - vPosEye).xyz);
+						else
+							l = normalize((light[i].position).xyz);
+						vec3	h = normalize(l + v);
+						float	l_dot_n = max(dot(l, n), 0.0);
+						vec3	ambient = light[i].ambient * material.ambient;
+						vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+						vec3	specular = vec3(0.0);
+						if(l_dot_n > 0.0)
+						{
+							specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+						}
+						if(dot(-l,normalize(light[i].direction).xyz) < light[i].cutoff_angle)
+						{
+							diffuse = vec3(0);
+							specular = vec3(0);
+						}
 
-				vColor = ambient + diffuse + specular;
+
+						vColor += ambient + diffuse + specular;
+					}
+				}
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Blinn-Gouraud" type="x-shader/x-fragment">
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
+		<script id="frag-Blinn-Gouraud-spot" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
 			varying vec3	vColor;
 			void main()
 			{
 				gl_FragColor = vec4(vColor, 1);
 			}
 		</script>
-		<script id="vert-Phong-Gouraud" type="x-shader/x-vertex">
+		<script id="vert-Phong-Gouraud-spot" type="x-shader/x-vertex">
 			attribute vec4 aPosition;
 			attribute vec3 aNormal;
 			uniform mat4	MVP;
@@ -142,75 +135,83 @@
 			struct TLight
 			{
 				vec4	position;
-				vec4	direction;
-				float	cutoff_angle;
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+				bool	enabled;
+				vec4	direction;
+				float	cutoff_angle;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			varying vec3	vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);	// n is the normal vector in eye coordinate system
-				vec4	vPosWorld = MV*aPosition;	// vPosWorld is the vertex position in eye coordinate system
+				vec4	vPosEye = MV*aPosition;	// vPosEye is the vertex position in eye coordinate system
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(-vPosWorld.xyz);
-				vec3	r = reflect(-l, n);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
+				vec3	v = normalize(-vPosEye.xyz);
+				vColor = vec3(0.0);
+				for(int i=0 ; i<2 ; i++)
 				{
-					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-				}
+					if(light[i].enabled)
+					{
+						if(light[i].position.w == 1.0)
+							l = normalize((light[i].position - vPosEye).xyz);
+						else
+							l = normalize((light[i].position).xyz);
+						vec3	r = reflect(-l, n);
+						float	l_dot_n = max(dot(l, n), 0.0);
+						vec3	ambient = light[i].ambient * material.ambient;
+						vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+						vec3	specular = vec3(0.0);
+						if(l_dot_n > 0.0)
+						{
+							specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+						}
+						if(dot(-l,normalize(light[i].direction).xyz) < light[i].cutoff_angle)
+						{
+							diffuse = vec3(0);
+							specular = vec3(0);
+						}
 
-				if(dot(-l,light.direction.xyz) < light.cutoff_angle)
-				{
-					diffuse = vec3(0);
-					specular = vec3(0);
-				}
-				vColor = ambient + diffuse + specular;
 
+						vColor += ambient + diffuse + specular;
+					}
+				}
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Phong-Gouraud" type="x-shader/x-fragment">
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
+		<script id="frag-Phong-Gouraud-spot" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
 			varying vec3	vColor;
 			void main()
 			{
 				gl_FragColor = vec4(vColor, 1);
 			}
 		</script>
-		<script id="vert-Blinn-Phong" type="x-shader/x-vertex">
+		<script id="vert-Blinn-Phong-spot" type="x-shader/x-vertex">
 			attribute vec4 aPosition;
 			attribute vec3 aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
 			varying vec3	vNormal;
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			void main()
 			{
-				vPosWorld = MV*aPosition;
+				vPosEye = MV*aPosition;
 				vNormal = normalize(mat3(matNormal)*aNormal);
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Blinn-Phong" type="x-shader/x-fragment">
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-			varying vec4	vPosWorld;
+		<script id="frag-Blinn-Phong-spot" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec4	vPosEye;
 			varying vec3	vNormal;
 			struct TMaterial
 			{
@@ -223,140 +224,70 @@
 			struct TLight
 			{
 				vec4	position;
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				bool	enabled;
 				vec4	direction;
 				float	cutoff_angle;
-				vec3	ambient;
-				vec3	diffuse;
-				vec3	specular;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[2];
 			void main()
 			{
 				vec3	n = normalize(vNormal);
 				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);		// positional light
-				else
-					l = normalize((light.position).xyz);	// directional light
-				vec3	v = normalize(-vPosWorld.xyz);
-				float	l_dot_n = max(dot(l, n), 0.0);
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
+				vec3	v = normalize(-vPosEye.xyz);
+				gl_FragColor = vec4(0.0);
+				for(int i=0 ; i<2 ; i++)
 				{
-					vec3	h = normalize(l + v);
-					specular = light.specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-//					specular = light.specular * material.specular * pow(dot(h, n), material.shininess);
-				}
-				if(dot(-l,light.direction.xyz) < light.cutoff_angle)
-				{
-					diffuse = vec3(0);
-					specular = vec3(0);
-				}
+					if(light[i].enabled)
+					{
+						if(light[i].position.w == 1.0)
+							l = normalize((light[i].position - vPosEye).xyz);		// positional light
+						else
+							l = normalize((light[i].position).xyz);	// directional light
+						float	l_dot_n = max(dot(l, n), 0.0);
+						vec3	ambient = light[i].ambient * material.ambient;
+						vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+						vec3	specular = vec3(0.0);
+						if(l_dot_n > 0.0)
+						{
+							vec3	h = normalize(l + v);
+							specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+						}
+						if(dot(-l,normalize(light[i].direction).xyz) < light[i].cutoff_angle)
+						{
+							diffuse = vec3(0);
+							specular = vec3(0);
+						}
 
-
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
-//				gl_FragColor = vec4(vec3(dot(h,n)+0.5), 1);
-			}
-	
-	
-		</script>
-		<!--
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
-            // world coordinate system
-			attribute vec4 aPosition;
-			attribute vec3 aNormal;
-			uniform mat4	MVP;
-			uniform mat4	M;
-			uniform mat4	matNormal;
-			varying vec3	vNormal;
-			varying vec4	vPosWorld;
-			void main()
-			{
-				vPosWorld = M*aPosition;
-				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
-				gl_Position = MVP*aPosition;
+						gl_FragColor += vec4(ambient + diffuse + specular, 1);
+					}
+				}
+				gl_FragColor.w = 1.0;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
-            // world coordinate system
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-			varying vec4 vPosWorld;
-			varying vec3	vNormal;
-			struct TMaterial
-			{
-				vec3	ambient;
-				vec3	diffuse;
-				vec3	specular;
-				vec3	emission;
-				float	shininess;
-			};
-			struct TLight
-			{
-				vec4	position;
-				vec3	ambient;
-				vec3	diffuse;
-				vec3	specular;
-				vec4	eye_world;
-			};
-			uniform TMaterial	material;
-			uniform TLight		light;
-			void main()
-			{
-				vec3	n = normalize(vNormal);
-				vec3	l;
-				if(light.position.w == 1.0)
-					l = normalize((light.position - vPosWorld).xyz);
-				else
-					l = normalize((light.position).xyz);
-				vec3	v = normalize(light.eye_world.xyz-vPosWorld.xyz);
-
-				vec3	r = reflect(-l, n);
-				float	l_dot_n = max(dot(l, n), 0.0);
-
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
-				{
-					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-				}
-				if(dot(-l,light.direction.xyz) < light.cutoff_angle)
-				{
-					diffuse = vec3(0);
-					specular = vec3(0);
-				}
-
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
-			}
-		</script>
-		-->
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
-            // eye coordinate system
-			attribute vec4 aPosition;
-			attribute vec3 aNormal;
+		<script id="vert-Phong-Phong-spot" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
 			varying vec3	vNormal;
-			varying vec4	vPosWorld;
+			varying vec4	vPosEye;
 			void main()
 			{
-				vPosWorld = MV*aPosition;
+				vPosEye = MV*aPosition;
 				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
-            // eye coordinate system
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-			varying vec4 vPosWorld;
+		<script id="frag-Phong-Phong-spot" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec4 vPosEye;
 			varying vec3	vNormal;
 			struct TMaterial
 			{
@@ -369,48 +300,63 @@
 			struct TLight
 			{
 				vec4	position;
-				vec4	direction;	
-				float	cutoff_angle; // cosine of the cut-off angle
 				vec3	ambient;
 				vec3	diffuse;
 				vec3	specular;
+				bool	enabled;
+				vec4	direction;
+				float	cutoff_angle;
 			};
 			uniform TMaterial	material;
-			uniform TLight		light;
+			uniform TLight		light[1];
 			void main()
 			{
 				vec3	n = normalize(vNormal);
-				vec3	l = normalize((light.position - vPosWorld).xyz);
-
-				vec3	v = normalize(-vPosWorld.xyz);
-
-				vec3	r = reflect(-l, n);
-				float	l_dot_n = max(dot(l, n), 0.0);
-
-				vec3	ambient = light.ambient * material.ambient;
-				vec3	diffuse = light.diffuse * material.diffuse * l_dot_n;
-				vec3	specular = vec3(0.0);
-				if(l_dot_n > 0.0)
+				vec3	l;
+				vec3	v = normalize(-vPosEye.xyz);
+				gl_FragColor = vec4(0.0);
+				for(int i=0 ; i<1 ; i++)
 				{
-					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+					if(light[i].enabled)
+					{
+						if(light[i].position.w == 1.0)
+							l = normalize((light[i].position - vPosEye).xyz);
+						else
+							l = normalize((light[i].position).xyz);
+						vec3	r = reflect(-l, n);
+						float	l_dot_n = max(dot(l, n), 0.0);
+						vec3	ambient = light[i].ambient * material.ambient;
+						vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+						vec3	specular = vec3(0.0);
+						if(l_dot_n > 0.0)
+						{
+							specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+						}
+						if(dot(-l,normalize(light[i].direction).xyz) < light[i].cutoff_angle)
+						{
+							diffuse = vec3(0);
+							specular = vec3(0);
+						}
+						gl_FragColor += vec4(ambient + diffuse + specular, 1);
+					}
 				}
-				if(dot(-l,light.direction.xyz) < light.cutoff_angle)
-				{
-					diffuse = vec3(0);
-					specular = vec3(0);
-				}
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
+				gl_FragColor.w = 1.0;
 			}
-	
-	
 		</script>
-
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>
 		<script src="../lib/cuon-matrix.js"></script>
+		<script src="../resources/monkey.js"></script>
+		<script src="../resources/monkey_smooth.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
-        <script src="materials.js"></script>
+		<script src="class_material.js"></script>
+		<script src="create_mesh_cube.js"></script>
+		<script src="create_mesh_sphere.js"></script>
+		<script src="class_shader.js"></script>
+		<script src="class_light.js"></script>
+		<script src="class_mesh.js"></script>
+		<script src="class_axes.js"></script>
 		<script src="spot_light.js"></script>
 	</body>
 </html>

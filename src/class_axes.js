@@ -2,26 +2,9 @@ class Axes
 {
 	constructor(gl, length=2)
 	{
-		var src_shader_vert = 
-			  'attribute vec4 aPosition;\n'
-			+ 'attribute vec4 aColor;\n'
-			+ 'uniform mat4 MVP;\n'
-			+ 'varying vec4 vColor;\n'
-			+ 'void main()\n'
-			+ '{\n'
-			+ '	gl_Position = MVP * aPosition;\n'
-			+ '	vColor = aColor;\n'
-			+ '}\n';
-		var src_shader_frag = '#ifdef GL_ES\n'
-			+ 'precision mediump float;\n'
-			+ '#endif\n'
-			+ 'varying vec4 vColor;\n'
-			+ 'void main()\n'
-			+ '{\n'
-			+ '	gl_FragColor = vColor;\n'
-			+ '}\n';
 		this.MVP = new Matrix4();
-		this.shader = new Shader(gl, src_shader_vert, src_shader_frag, ["aPosition", "aColor"]);
+		if(!Axes.shader)
+			Axes.shader = new Shader(gl, Axes.src_shader_vert, Axes.src_shader_frag, ["aPosition", "aColor"]);
 		this.init_vbo(gl,length);
 	}
 	init_vbo(gl,l)
@@ -51,24 +34,44 @@ class Axes
 	}
 	render(gl, V, P)
 	{
-		gl.useProgram(this.shader.h_prog);
-		this.set_uniform_matrices(gl, this.shader.h_prog, V, P);
+		gl.useProgram(Axes.shader.h_prog);
+		this.set_uniform_matrices(gl, Axes.shader.h_prog, V, P);
 		for(var attrib_name in this.attribs)
 		{
 			var attrib = this.attribs[attrib_name];
 			gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
-			gl.vertexAttribPointer(this.shader.attribs[attrib_name], attrib.size, attrib.type, 
+			gl.vertexAttribPointer(Axes.shader.attribs[attrib_name], attrib.size, attrib.type, 
 				attrib.normalized, attrib.stride, attrib.offset);
 			gl.bindBuffer(gl.ARRAY_BUFFER, null);
-			gl.enableVertexAttribArray(this.shader.attribs[attrib_name]);
+			gl.enableVertexAttribArray(Axes.shader.attribs[attrib_name]);
 		}
 		gl.drawArrays(gl.LINES, 0, 6);
 		for(var attrib_name in this.attribs)
 		{
-			gl.disableVertexAttribArray(this.shader.attribs[attrib_name]);
+			gl.disableVertexAttribArray(Axes.shader.attribs[attrib_name]);
 		}
 		gl.useProgram(null);
 	}
 }
 
+Axes.src_shader_vert = 
+	  'attribute vec4 aPosition;\n'
+	+ 'attribute vec4 aColor;\n'
+	+ 'uniform mat4 MVP;\n'
+	+ 'varying vec4 vColor;\n'
+	+ 'void main()\n'
+	+ '{\n'
+	+ '	gl_Position = MVP * aPosition;\n'
+	+ '	vColor = aColor;\n'
+	+ '}\n';
+Axes.src_shader_frag = '#ifdef GL_ES\n'
+	+ 'precision mediump float;\n'
+	+ '#endif\n'
+	+ 'varying vec4 vColor;\n'
+	+ 'void main()\n'
+	+ '{\n'
+	+ '	gl_FragColor = vColor;\n'
+	+ '}\n';
+
+Axes.shader = null;
 

@@ -1,24 +1,25 @@
-var g_last = Date.now();
-var ANGLE_STEP_LIGHT = 30.0;
-var ANGLE_STEP_MESH = 30.0;
+"use strict";
+let g_last = Date.now();
+let ANGLE_STEP_LIGHT = 30.0;
+let ANGLE_STEP_MESH = 30.0;
 function main()
 {
-	var canvas = document.getElementById('webgl');
-	var gl = getWebGLContext(canvas);
+	let canvas = document.getElementById('webgl');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-	var V = new Matrix4();
+	let V = new Matrix4();
 	V.setLookAt(3, 2, 3, 0, 0, 0, 0, 1, 0);
 
-	var P = new Matrix4();
+	let P = new Matrix4();
 	P.setPerspective(60, 1, 1, 100); 
 
-	var list_shaders = [];
+	let list_shaders = [];
 
 	// initializes shaders (reflection models)
-	for(model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
+	for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
 	{
 		list_shaders[model] = new Shader(gl, 
 			document.getElementById("vert-" + model).text,
@@ -27,10 +28,10 @@ function main()
 	}
 
 	// initializes the material combobox
-	var combo_mat = document.getElementById("materials");
-	for(matname in __js_materials)
+	let combo_mat = document.getElementById("materials");
+	for(let matname in __js_materials)
 	{
-		var opt = document.createElement("option");
+		let opt = document.createElement("option");
 		opt.value = matname;
 		opt.text = matname;
 		combo_mat.add(opt, null);
@@ -38,7 +39,7 @@ function main()
 	combo_mat.selectedIndex = 10;
 
 	// initializes two lights
-	var list_lights = 
+	let list_lights = 
 	[
 		new Light
 		(
@@ -61,27 +62,27 @@ function main()
 	];
 
 	// initializes the meshes
-	var list_meshes = [];
-	var monkey = new Mesh(gl);
+	let list_meshes = [];
+	let monkey = new Mesh(gl);
 	monkey.init_from_json_js(gl, __js_monkey);
-	var monkey_smooth = new Mesh(gl);
+	let monkey_smooth = new Mesh(gl);
 	monkey_smooth.init_from_json_js(gl, __js_monkey_smooth);
-	var monkey_sub2_smooth = new Mesh(gl);
+	let monkey_sub2_smooth = new Mesh(gl);
 	monkey_sub2_smooth.init_from_json_js(gl, __js_monkey_sub2_smooth);
-	var cube = create_mesh_cube(gl);
-	var ball = create_mesh_sphere(gl, 20);
+	let cube = create_mesh_cube(gl);
+	let ball = create_mesh_sphere(gl, 20);
 	list_meshes["cube"] = cube;
 	list_meshes["sphere"] = ball;
 	list_meshes["monkey"] = monkey;
 	list_meshes["monkey (smooth)"] = monkey_smooth;
 	list_meshes["monkey (subdivided 2 steps, smooth)"] = monkey_sub2_smooth;
 
-	var axes = new Axes(gl);
+	let axes = new Axes(gl);
 
-	var tick = function()
+	let tick = function()
 	{
-		var now = Date.now();
-		var elapsed = now - g_last;
+		let now = Date.now();
+		let elapsed = now - g_last;
 		g_last = now;
 
 		list_lights[0].M.rotate(( (ANGLE_STEP_LIGHT * elapsed) / 1000.0) % 360.0, 0, 1, 0);
@@ -93,7 +94,7 @@ function main()
 
 		axes.render(gl, V, P);
 
-		for(i in list_lights)
+		for(let i in list_lights)
 		{
 			// for light state and render it
 			list_lights[i].turn_on(document.getElementById('light' + i).checked);

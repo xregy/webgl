@@ -1,26 +1,28 @@
-var g_last = Date.now();
-var ANGLE_STEP_LIGHT = 30.0;
-var ANGLE_STEP_MESH = 30.0;
+"use strict";
+
+let g_last = Date.now();
+let ANGLE_STEP_LIGHT = 30.0;
+let ANGLE_STEP_MESH = 30.0;
 function main()
 {
-	var canvas = document.getElementById('webgl');
-	var gl = getWebGLContext(canvas);
+	let canvas = document.getElementById('webgl');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
 
-	var V = new Matrix4();
+	let V = new Matrix4();
 	V.setLookAt(6, 6, 6, 0, 0, 0, 0, 1, 0);
 
-	var P = new Matrix4();
+	let P = new Matrix4();
 	P.setPerspective(60, 1, 1, 100); 
 
-	shader = new Shader(gl, 
+	let shader = new Shader(gl, 
 			document.getElementById("vert-Blinn-Gouraud").text,
 			document.getElementById("frag-Blinn-Gouraud").text,
 			["aPosition", "aNormal"]);
 
-	light = new Light
+	let light = new Light
 	(
 		gl,
 		[2.5, 2.5, 2.5, 1.0],
@@ -32,10 +34,10 @@ function main()
 	light.turn_on(true);
 
 	// initializes the meshes
-	var id = 0;
-	var cube = create_mesh_cube(gl);
-	var ball = create_mesh_sphere(gl, 20);
-	var monkey = new Mesh(gl);			monkey.init_from_json_js(gl, __js_monkey_smooth);
+	let id = 0;
+	let cube = create_mesh_cube(gl);
+	let ball = create_mesh_sphere(gl, 20);
+	let monkey = new Mesh(gl);			monkey.init_from_json_js(gl, __js_monkey_smooth);
 
 	monkey.id = ++id;
 	cube.id = ++id;
@@ -45,29 +47,29 @@ function main()
 	cube.name = "cube";
 	ball.name = "ball";
 
-	var list_meshes = [monkey, cube, ball];	
+	let list_meshes = [monkey, cube, ball];	
 
 	cube.M.setTranslate(2.5,2.5,0);
 	ball.M.setTranslate(2.5,0,2.5);
 	monkey.M.setTranslate(0,2.5,2.5);
 
-	var list_materials = {
+	let list_materials = {
 		"cube":__js_materials["silver"], 
 		"ball":__js_materials["copper"],
 		"monkey":__js_materials["gold"], 
 		};
 
-	var axes = new Axes(gl,4);
+	let axes = new Axes(gl,4);
 
-	var lastX;
-	var lastY;
-	var angle = [0,0];
-	var dragging = false;
+	let lastX;
+	let lastY;
+	let angle = [0,0];
+	let dragging = false;
 
 	canvas.onmousedown = function(ev) 
 	{
-		var x = ev.clientX, y = ev.clientY;
-		var bb = ev.target.getBoundingClientRect();
+		let x = ev.clientX, y = ev.clientY;
+		let bb = ev.target.getBoundingClientRect();
 		if (bb.left <= x && x < bb.right && bb.top <= y && y < bb.bottom)
 		{
 			lastX = x;
@@ -79,16 +81,16 @@ function main()
 
 	canvas.onmousemove = function(ev)
 	{
-		var x = ev.clientX;
-		var y = ev.clientY;
+		let x = ev.clientX;
+		let y = ev.clientY;
 		if(dragging)
 		{
-			var offset = [x - lastX, y - lastY];
+			let offset = [x - lastX, y - lastY];
 			if(offset[0] != 0 || offset[1] != 0) // For some reason, the offset becomes zero sometimes...
 			{
-				var	VP = new Matrix4(P);
+				let	VP = new Matrix4(P);
 				VP.multiply(V);
-				var	axis = unproject_vector([offset[1], offset[0], 0], VP, 
+				let	axis = unproject_vector([offset[1], offset[0], 0], VP, 
 					gl.getParameter(gl.VIEWPORT));
 				V.rotate(length2(offset), axis[0], axis[1], axis[2]);
 			}
@@ -97,12 +99,12 @@ function main()
 		lastY = y;
 	}
 
-	var tick = function()
+	let tick = function()
 	{
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
 		light.render(gl, V, P);
-		for(mesh of list_meshes)
+		for(let mesh of list_meshes)
 			mesh.render(gl, shader, [light], list_materials[mesh.name], V, P);
 		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 	};
@@ -117,13 +119,15 @@ function length2(v)
 // https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
 function project(p_obj, MVP, viewport)
 {
-	var	tmp = MVP.multiplyVector4(new Vector4([p_obj[0], p_obj[1], p_obj[2], 1]));
+	let	tmp = MVP.multiplyVector4(new Vector4([p_obj[0], p_obj[1], p_obj[2], 1]));
 
-	for(i in [0,1,2])	tmp.elements[i] /= tmp.elements[3];
+	for(let i in [0,1,2])	tmp.elements[i] /= tmp.elements[3];
 
-//	for(var i in [0,1]) --> not working!!!???
-	for(var i=0 ; i<2 ; i++)
+//	for(let i in [0,1]) 	// --> not working!!!???
+	for(let i=0 ; i<2 ; i++)
+	{
 		tmp.elements[i] = (0.5*tmp.elements[i] + 0.5) * viewport[i+2] + viewport[i];
+	}
 
 	return tmp.elements;
 }
@@ -131,26 +135,26 @@ function project(p_obj, MVP, viewport)
 // https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
 function unproject(p_win, MVP, viewport)
 {
-	var	MVP_inv = new Matrix4();
+	let	MVP_inv = new Matrix4();
 	MVP_inv.setInverseOf(MVP);
 
-	var	tmp = new Vector4([p_win[0], p_win[1], p_win[2], 1.0]);
+	let	tmp = new Vector4([p_win[0], p_win[1], p_win[2], 1.0]);
 
-//	for(var i in [0,1]) --> not working!!!???
-	for(var i=0 ; i<2 ; i++)
+//	for(let i in [0,1]) --> not working!!!???
+	for(let i=0 ; i<2 ; i++)
 		tmp.elements[i] = 2.0*(tmp.elements[i] - viewport[i])/viewport[i+2] - 1.0;
 
-	var p_obj = MVP_inv.multiplyVector4(tmp);
+	let p_obj = MVP_inv.multiplyVector4(tmp);
 
-	for(i in [0,1,2]) p_obj.elements[i] /= p_obj.elements[3];
+	for(let i in [0,1,2]) p_obj.elements[i] /= p_obj.elements[3];
 
 	return p_obj.elements;
 }
 
 function unproject_vector(vec_win, MVP, viewport)
 {
-	var	org_win = project([0,0,0], MVP, viewport);
-	var	vec = unproject([org_win[0]+vec_win[0], org_win[1]+vec_win[1], org_win[2]+vec_win[2]],
+	let	org_win = project([0,0,0], MVP, viewport);
+	let	vec = unproject([org_win[0]+vec_win[0], org_win[1]+vec_win[1], org_win[2]+vec_win[2]],
 						MVP, viewport);
 	return vec;
 }

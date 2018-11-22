@@ -66,6 +66,8 @@ class Mesh
 			gl.uniform3fv(gl.getUniformLocation(h_prog, "light[" + i + "].diffuse"), light.diffusive.elements);
 			gl.uniform3fv(gl.getUniformLocation(h_prog, "light[" + i + "].specular"), light.specular.elements);
 			gl.uniform1i(gl.getUniformLocation(h_prog, "light[" + i + "].enabled"), light.enabled);
+			gl.uniform4fv(gl.getUniformLocation(h_prog, "light[" + i + "].direction"), MV.multiplyVector4(light.direction).elements);
+			gl.uniform1f(gl.getUniformLocation(h_prog, "light[" + i + "].cutoff_angle"), Math.cos(light.cutoff_angle*Math.PI/180.0));
 			i++;
 		}
 	}
