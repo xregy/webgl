@@ -18,17 +18,17 @@ class Mesh
 	}
 	init_from_json_js(gl, json_obj)
 	{
-		var attribs = json_obj.data.attributes;
-		var buf_position = gl.createBuffer();
+		let attribs = json_obj.data.attributes;
+		let buf_position = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribs.position.array), gl.STATIC_DRAW);
-		var buf_normal = gl.createBuffer();
+		let buf_normal = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribs.normal.array), gl.STATIC_DRAW);
-		var buf_index = gl.createBuffer();
+		let buf_index = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(json_obj.data.index.array), gl.STATIC_DRAW);
-		var attribs = [];
+		let attribs = [];
 		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		this.draw_call = "drawElements";
@@ -36,6 +36,24 @@ class Mesh
 		this.n = json_obj.data.index.array.length;
 		this.index_buffer = {id:buf_index, type:gl.UNSIGNED_SHORT};
 		this.attribs = attribs;
+	}
+	init_from_THREE_Object3D(gl, obj)
+	{
+		let mesh = obj.children[0].geometry;
+		let buf_position = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.attributes.position.array), gl.STATIC_DRAW);
+		let buf_normal = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.attributes.normal.array), gl.STATIC_DRAW);
+		let attribs = [];
+		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+		this.draw_call = "drawArrays";
+		this.draw_mode = gl.TRIANGLES;
+		this.n = mesh.attributes.position.count;
+		this.attribs = attribs;
+
 	}
 	set_uniform_matrices(gl, h_prog, V, P)
 	{
@@ -53,11 +71,11 @@ class Mesh
 	}
 	set_uniform_lights(gl, h_prog, lights, V)
 	{
-		var MV = new Matrix4();
-		var i = 0;
-		for(var name in lights)
+		let MV = new Matrix4();
+		let i = 0;
+		for(let name in lights)
 		{
-			var light = lights[name];
+			let light = lights[name];
 			MV.set(V);
 			MV.multiply(light.M);
 			gl.uniform4fv(gl.getUniformLocation(h_prog, "light[" + i + "].position"), 
@@ -84,9 +102,9 @@ class Mesh
 		this.set_uniform_matrices(gl, shader.h_prog, V, P);
 		if(lights!=null)	this.set_uniform_lights(gl, shader.h_prog, lights, V);
 		if(material!=null)	this.set_uniform_material(gl, shader.h_prog, material);
-		for(var attrib_name in this.attribs)
+		for(let attrib_name in this.attribs)
 		{
-			var attrib = this.attribs[attrib_name];
+			let attrib = this.attribs[attrib_name];
 			gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
 			gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, 
 				attrib.normalized, attrib.stride, attrib.offset);
@@ -102,7 +120,7 @@ class Mesh
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.index_buffer.id);
 			gl.drawElements(this.draw_mode, this.n, this.index_buffer.type, 0);
 		}
-		for(var attrib_name in this.attribs)
+		for(let attrib_name in this.attribs)
 		{
 			gl.disableVertexAttribArray(shader.attribs[attrib_name]);
 		}
@@ -111,7 +129,7 @@ class Mesh
 
 	render_id(gl, V, P)
 	{
-		var	h_prog = Mesh.shader_id.h_prog;
+		let	h_prog = Mesh.shader_id.h_prog;
 		gl.useProgram(h_prog);
 
 		this.MVP.set(P);
@@ -121,9 +139,9 @@ class Mesh
 
 		gl.uniform1i(gl.getUniformLocation(h_prog, "u_id"), this.id);
 
-		for(var attrib_name in Mesh.shader_id.attribs)
+		for(let attrib_name in Mesh.shader_id.attribs)
 		{
-			var attrib = this.attribs[attrib_name];
+			let attrib = this.attribs[attrib_name];
 			gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
 			gl.vertexAttribPointer(Mesh.shader_id.attribs[attrib_name], attrib.size, attrib.type, 
 				attrib.normalized, attrib.stride, attrib.offset);
@@ -139,7 +157,7 @@ class Mesh
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.index_buffer.id);
 			gl.drawElements(this.draw_mode, this.n, this.index_buffer.type, 0);
 		}
-		for(var attrib_name in Mesh.shader_id.attribs)
+		for(let attrib_name in Mesh.shader_id.attribs)
 		{
 			gl.disableVertexAttribArray(Mesh.shader_id.attribs[attrib_name]);
 		}
