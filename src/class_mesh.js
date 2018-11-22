@@ -18,16 +18,17 @@ class Mesh
 	}
 	init_from_json_js(gl, json_obj)
 	{
-		let attribs = json_obj.data.attributes;
+		let attributes = json_obj.data.attributes;
 		let buf_position = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribs.position.array), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.position.array), gl.STATIC_DRAW);
 		let buf_normal = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribs.normal.array), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.normal.array), gl.STATIC_DRAW);
 		let buf_index = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(json_obj.data.index.array), gl.STATIC_DRAW);
+
 		let attribs = [];
 		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
