@@ -17,6 +17,8 @@ function main()
 	let P = new Matrix4();
 	P.setPerspective(50, 1, 1, 100); 
 
+	let axes = new Axes(gl);
+
 	let shader = new Shader(gl, 
 			document.getElementById("vert-Blinn-Gouraud").text,
 			document.getElementById("frag-Blinn-Gouraud").text,
@@ -44,6 +46,7 @@ function main()
 			monkey.init_from_json_js(gl, JSON.parse(request.responseText));
 			let tick = function() {   // Start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+				axes.render(gl, V, P);
 				monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
 				requestAnimationFrame(tick, canvas);
 			};

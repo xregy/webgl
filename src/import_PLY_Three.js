@@ -12,10 +12,12 @@ function main()
 	gl.clearColor(0.2,0.2,0.2,1);
 
 	let V = new Matrix4();
-	V.setLookAt(2, 1, 3, 0, 0, 0, 0, 1, 0);
+	V.setLookAt(2, -3, 1, 0, 0, 0, 0, 0, 1);
 
 	let P = new Matrix4();
 	P.setPerspective(50, 1, 1, 100); 
+
+	let axes = new Axes(gl);
 
 	let shader = new Shader(gl, 
 			document.getElementById("vert-Blinn-Gouraud").text,
@@ -25,7 +27,7 @@ function main()
 	let light = new Light
 	(
 		gl,
-		[2.5, 2.5, 2.5, 1.0],
+		[2.5, -2.5, 2.5, 1.0],
 		[0.1, 0.1, 0.1, 1.0],
 		[1.0, 1.0, 1.0, 1.0],
 		[1.0, 1.0, 1.0, 1.0],
@@ -44,9 +46,10 @@ function main()
 	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.ply', 
 		function ( object )
 		{
-			monkey.init_from_THREE_geometry(gl, object.children[0].geometry);
+			monkey.init_from_THREE_geometry(gl, object);
 			let tick = function() {   // start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+				axes.render(gl, V, P);
 				monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
 				requestAnimationFrame(tick, canvas);
 			};

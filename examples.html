@@ -131,17 +131,42 @@ title: WebGL examples by Minho Kim
 	<li>
 		Importing 3D model files
 		<ul>
-			<li><a href="src/import_OBJ_Three.html">Importing OBJ format using THREE.js</a>
-			<li><a href="src/import_STL_Three.html">Importing STL format using THREE.js</a>
-			<li><a href="src/import_PLY_Three.html">Importing PLY format using THREE.js</a>
-			<li><a href="src/import_JSON_http.html">Importing JSON format using XMLHttpRequest</a>
 <!--			(Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)	-->
+			<li><a href="src/import_OBJ_Three.html"><tt>import_OBJ_Three.html</tt></a>: 
+				Importing <a href="https://en.wikipedia.org/wiki/Wavefront_.obj_file">OBJ</a> format 
+				using <a href="https://threejs.org/docs/#examples/loaders/OBJLoader"><tt>OBJLoader</tt></a> 
+				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
 			</li>
-			<li><a href="src/import_JSON_jQuery.html">Importing JSON format using jQuery</a>
-<!--			(Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)-->
+			<li><a href="src/import_STL_Three.html"><tt>import_STL_Three.html</tt></a>: 
+				Importing <a href="https://en.wikipedia.org/wiki/STL_(file_format)">STL</a> format
+				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>STLLoader</tt></a>
+				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
 			</li>
-			<li><a href="src/include_JSON.html">Importing 3d model in JSON format by
-			including the JSON in the HTML file.</a>
+			<li><a href="src/import_FBX_Three.html"><tt>import_FBX_Three.html</tt></a>: 
+				Importing <a href="https://en.wikipedia.org/wiki/FBX">FBX</a> format
+				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>FBXLoader</tt></a>
+				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+			</li>
+			<li><a href="src/import_PLY_Three.html"><tt>import_PLY_Three.html</tt></a>: 
+				Importing <a href="https://en.wikipedia.org/wiki/PLY_(file_format)">PLY</a> format
+				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>PLYLoader</tt></a>
+				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+			</li>
+			<li><a href="src/import_COLLADA_Three.html"><tt>import_COLLADA_Three.html</tt></a>: 
+				Importing <a href="https://en.wikipedia.org/wiki/COLLADA">COLLADA</a> format
+				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>ColladaLoader</tt></a>
+				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+			</li>
+			<li><a href="src/import_JSON_http.html"><tt>import_JSON_http.html</tt></a>:
+				Importing <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> format using 
+				<a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"><tt>XMLHttpRequest</tt></a>
+			</li>
+			<li><a href="src/import_JSON_jQuery.html"><tt>import_JSON_jQuery.html</tt></a>:
+				Importing <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> format using 
+				<a href="https://jquery.com">jQuery</a>
+			</li>
+			<li><a href="src/include_JSON.html"><tt>include_JSON</tt></a>:
+				Importing 3d model in JSON format by including the JSON in the HTML file.
 				(Note that the model file is in fact imported as a JS file
 				in JSON format.)
 			</li>

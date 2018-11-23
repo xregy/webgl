@@ -42,11 +42,11 @@ function main()
 		console.log( item, loaded, total );
 	};
 
-	let loader = new THREE.OBJLoader( manager );
-	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj', 
+	let loader = new THREE.ColladaLoader( manager );
+	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.dae', 
 		function ( object )
 		{
-			monkey.init_from_THREE_geometry(gl, object.children[0].geometry);
+			monkey.init_from_THREE_geometry(gl, object.scene.children[2].geometry);
 			let tick = function() {   // start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 				axes.render(gl, V, P);
