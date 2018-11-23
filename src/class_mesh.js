@@ -38,21 +38,20 @@ class Mesh
 		this.index_buffer = {id:buf_index, type:gl.UNSIGNED_SHORT};
 		this.attribs = attribs;
 	}
-	init_from_THREE_Object3D(gl, obj)
+	init_from_THREE_geometry(gl, geom)
 	{
-		let mesh = obj.children[0].geometry;
 		let buf_position = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.attributes.position.array), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geom.attributes.position.array), gl.STATIC_DRAW);
 		let buf_normal = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.attributes.normal.array), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geom.attributes.normal.array), gl.STATIC_DRAW);
 		let attribs = [];
 		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		this.draw_call = "drawArrays";
 		this.draw_mode = gl.TRIANGLES;
-		this.n = mesh.attributes.position.count;
+		this.n = geom.attributes.position.count;
 		this.attribs = attribs;
 
 	}

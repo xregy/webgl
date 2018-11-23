@@ -40,11 +40,11 @@ function main()
 		console.log( item, loaded, total );
 	};
 
-	let loader = new THREE.OBJLoader( manager );
-	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj', 
+	let loader = new THREE.STLLoader( manager );
+	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.stl', 
 		function ( object )
 		{
-			monkey.init_from_THREE_Object3D(gl, object);
+			monkey.init_from_THREE_geometry(gl, object);
 			let tick = function() {   // start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 				monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
