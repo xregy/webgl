@@ -46,7 +46,13 @@ function main()
 	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj', 
 		function ( object )
 		{
-			monkey.init_from_THREE_geometry(gl, object.children[0].geometry);
+			for(let obj of object.children)
+			{
+				if(obj.type == "Mesh")
+				{
+					monkey.init_from_THREE_geometry(gl, object.children[0].geometry);
+				}
+			}
 			let tick = function() {   // start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 				axes.render(gl, V, P);
