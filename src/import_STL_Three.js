@@ -46,6 +46,7 @@ function main()
 	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.stl', 
 		function ( object )
 		{
+			document.getElementById("output").innerHTML = 'Successfully loaded.';
 			monkey.init_from_THREE_geometry(gl, object);
 			let tick = function() {   // start drawing
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -54,6 +55,16 @@ function main()
 				requestAnimationFrame(tick, canvas);
 			};
 			tick();
+		},
+		// called when loading is in progresses
+		function ( xhr )
+		{
+			document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
+		},
+		// called when loading has errors
+		function ( error )
+		{
+			document.getElementById("output").innerHTML = 'An error happened: ' + error;
 		}
 	);
 }

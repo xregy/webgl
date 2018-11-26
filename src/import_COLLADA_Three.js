@@ -46,6 +46,7 @@ function main()
 	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.dae', 
 		function ( object )
 		{
+			document.getElementById("output").innerHTML = 'Successfully loaded.';
 			for(let obj of object.scene.children)
 			{
 				if(obj.type == "Mesh")
@@ -60,7 +61,18 @@ function main()
 				requestAnimationFrame(tick, canvas);
 			};
 			tick();
+		},
+		// called when loading is in progresses
+		function ( xhr )
+		{
+			document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
+		},
+		// called when loading has errors
+		function ( error )
+		{
+			document.getElementById("output").innerHTML = 'An error happened: ' + error;
 		}
+
 	);
 }
 
