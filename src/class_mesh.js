@@ -49,20 +49,20 @@ class Mesh
 		let attribs = [];
 		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
-        if(geom.index)
-        {
+		if(geom.index)
+		{
 		    this.draw_call = "drawElements";
 		    let buf_index = gl.createBuffer();
 		    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geom.index.array), gl.STATIC_DRAW);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geom.index.array), gl.STATIC_DRAW);
 		    this.n = geom.index.array.length;
 		    this.index_buffer = {id:buf_index, type:gl.UNSIGNED_SHORT};
-        }
-        else
-        {
+		}
+		else
+		{
 		    this.draw_call = "drawArrays";
 		    this.n = geom.attributes.position.count;
-        }
+		}
 		this.draw_mode = gl.TRIANGLES;
 		this.attribs = attribs;
 
