@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>import JSON (using THREE.js)</title>
+	</head>
+	<body onload="main()">
+		<h1 align=center>import JSON (using THREE.js)</h1>
+		<canvas id="webgl" width="512" height="512">
+			Please use a browser that supports "canvas"
+		</canvas>
+		<p id="output">
+		</p>
+		<script id="vert-Blinn-Gouraud" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aNormal;
+			uniform mat4	MVP;
+			uniform mat4	MV;
+			uniform mat4	matNormal;
+			struct TMaterial
+			{
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				vec3	emission;
+				float	shininess;
+			};
+			struct TLight
+			{
+				vec4	position;
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				bool	enabled;
+			};
+			uniform TMaterial	material;
+			uniform TLight		light[2];
+			varying vec3		vColor;
+			void main()
+			{
+				vec3	n = normalize(mat3(matNormal)*aNormal);
+				vec4	vPosEye = MV*aPosition;
+				vec3	l;
+				vec3	v = normalize(-vPosEye.xyz);
+				vColor = vec3(0.0);
+				for(int i=0 ; i<2 ; i++)
+				{
+					if(light[i].enabled)
+					{
+						if(light[i].position.w == 1.0)
+							l = normalize((light[i].position - vPosEye).xyz);
+						else
+							l = normalize((light[i].position).xyz);
+						vec3	h = normalize(l + v);
+						float	l_dot_n = max(dot(l, n), 0.0);
+						vec3	ambient = light[i].ambient * material.ambient;
+						vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+						vec3	specular = vec3(0.0);
+						if(l_dot_n > 0.0)
+						{
+							specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+						}
+						vColor += ambient + diffuse + specular;
+					}
+				}
+				gl_Position = MVP*aPosition;
+			}
+		</script>
+		<script id="frag-Blinn-Gouraud" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec3	vColor;
+			void main()
+			{
+				gl_FragColor = vec4(vColor, 1);
+			}
+		</script>
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="class_material.js"></script>
+		<script src="class_shader.js"></script>
+		<script src="class_light.js"></script>
+		<script src="class_mesh.js"></script>
+		<script src="class_axes.js"></script>
+<!--		<script src="https://threejs.org/build/three.min.js"></script>	-->
+		<script src="https://threejs.org/build/three.js"></script>
+		<script src="https://threejs.org/src/loaders/JSONLoader.js"></script>
+		<script src="import_JSON_Three.js"></script>
+	</body>
+</html>
