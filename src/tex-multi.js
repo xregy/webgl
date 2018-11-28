@@ -34,31 +34,15 @@ var g_loadComplete = [false, false];
 var ANGLE_STEP = 45.0;
 
 function main() {
-  // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+	var canvas = document.getElementById('webgl');
+	
+	var gl = getWebGLContext(canvas);
 
-  // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
-  }
+	initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+	
+	var n = initVertexBuffers(gl);
 
-  // Initialize shaders
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-
-  // Set the vertex information
-  var n = initVertexBuffers(gl);
-  if (n < 0) {
-    console.log('Failed to set the vertex information');
-    return;
-  }
-
-  // Specify the color for clearing <canvas>
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
 	var textures = [null, null];
 	var	loc_samplers = [-1, -1];
@@ -72,7 +56,6 @@ function main() {
 		return;
 	}
 	var tick_init = function() {
-		console.log('tick_init() called!');
 		if(g_loadComplete[0] && g_loadComplete[1]) 
 		{
 			uploadTextures(gl, textures, images);
@@ -81,7 +64,6 @@ function main() {
 				gl.activeTexture(texunits[i]);
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
-
 			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 		}
 		else
@@ -95,20 +77,19 @@ function main() {
 	// Model matrix
 	var modelMatrix = new Matrix4();
 
-  // Get storage location of u_ModelMatrix
-  var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-  if (!u_ModelMatrix) { 
-    console.log('Failed to get the storage location of u_ModelMatrix');
-    return;
-  }
-
+	// Get storage location of u_ModelMatrix
+	var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+	if (!u_ModelMatrix)
+	{ 
+		console.log('Failed to get the storage location of u_ModelMatrix');
+		return;
+	}
 
 	var tick = function() {
-    	currentAngle = animate(currentAngle);  // Update the rotation angle
-    	draw(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw the triangle
+		currentAngle = animate(currentAngle);  // Update the rotation angle
+		draw(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw the triangle
 		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 	};
-
 	tick_init();
 
 }
@@ -199,6 +180,10 @@ function initTextures(gl, textures, images, texunits, loc_samplers) {
 
 	images[0].src = '../resources/sky.jpg';
 	images[1].src = '../resources/circle.gif';
+
+//	let url1 = 'https://threejs.org/examples/models/obj/cerberus/Cerberus_A.jpg';
+//	images[1].crossOrigin = "anonymous";
+//	images[1].src = url1;
 
 	return true;
 

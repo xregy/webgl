@@ -42,8 +42,11 @@ function main()
 		console.log( item, loaded, total );
 	};
 
+//	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
+	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
+
 	let loader = new THREE.OBJLoader( manager );
-	loader.load( 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj', 
+	loader.load(url,
 		function ( object )
 		{
 			document.getElementById("output").innerHTML = 'Successfully loaded.';

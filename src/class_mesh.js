@@ -43,12 +43,22 @@ class Mesh
 		let buf_position = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geom.attributes.position.array), gl.STATIC_DRAW);
+
 		let buf_normal = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geom.attributes.normal.array), gl.STATIC_DRAW);
+
+
 		let attribs = [];
 		attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 		attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+		if(geom.attributes.uv != undefined)
+		{
+			let buf_texcoord = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, buf_texcoord);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geom.attributes.uv.array), gl.STATIC_DRAW);
+			attribs["aTexCoord"] = {buffer:buf_texcoord, size:2, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+		}
 		if(geom.index)
 		{
 		    this.draw_call = "drawElements";
@@ -108,12 +118,24 @@ class Mesh
 		gl.uniform3fv(gl.getUniformLocation(h_prog, "material.specular"), mat.specular.elements);
 		gl.uniform1f(gl.getUniformLocation(h_prog, "material.shininess"), mat.shininess*128.0);
 	}
-	render(gl, shader, lights, material, V, P)
+	set_uniform_texture(gl, h_prog, textures)
+	{
+		let i=0;
+		for(let texname in textures)
+		{
+			gl.activeTexture(gl.TEXTURE0 + i);
+			gl.bindTexture(gl.TEXTURE_2D, textures[texname].texid);
+			gl.uniform1i(gl.getUniformLocation(h_prog, texname), i);
+			i++;
+		}
+	}
+	render(gl, shader, lights, material, V, P, textures = null)
 	{
 		gl.useProgram(shader.h_prog);
 		this.set_uniform_matrices(gl, shader.h_prog, V, P);
-		if(lights!=null)	this.set_uniform_lights(gl, shader.h_prog, lights, V);
-		if(material!=null)	this.set_uniform_material(gl, shader.h_prog, material);
+		if(lights)	this.set_uniform_lights(gl, shader.h_prog, lights, V);
+		if(material)	this.set_uniform_material(gl, shader.h_prog, material);
+		if(textures)	this.set_uniform_texture(gl, shader.h_prog, textures);
 		for(let attrib_name in this.attribs)
 		{
 			let attrib = this.attribs[attrib_name];
