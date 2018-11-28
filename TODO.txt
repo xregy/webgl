@@ -5,10 +5,12 @@
 - (DONE) multiple light sources
 - (DONE) hierarchical transformation
 - (DONE) picking
+- (DONE) examine
 - viewer
-- OBJ loader
+- (DONE) OBJ loader
 - normal mapping / bump mapping
 - displacement mapping
 - environment mapping
 - projective texture
 - mipmap
+
