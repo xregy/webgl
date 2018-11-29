@@ -22,6 +22,7 @@ function main()
 			document.getElementById("vert-tex").text,
 			document.getElementById("frag-tex").text,
 			["aPosition", "aTexCoord"]);
+//			["aPosition", "aNormal", "aTexCoord"]);
 
 	let mesh = new Mesh(gl);
 
