@@ -8,8 +8,8 @@
 - (DONE) examine
 - viewer
 - (DONE) OBJ loader
-- normal mapping / bump mapping
-- displacement mapping
+- (DONE) normal mapping / bump mapping
+- (DONE) displacement mapping
 - environment mapping
 - projective texture
 - mipmap
