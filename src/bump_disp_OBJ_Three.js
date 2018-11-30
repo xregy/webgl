@@ -7,6 +7,7 @@ function main()
 {
 	let canvas = document.getElementById('webgl');
 	let gl = getWebGLContext(canvas);
+	gl.getExtension('OES_standard_derivatives');
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
