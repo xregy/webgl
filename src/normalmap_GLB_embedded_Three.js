@@ -153,7 +153,8 @@ function main()
 		for(let light of lights) light.render(gl, V, P);
 		gl.useProgram(shader.h_prog);
 		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_normal_map"), document.getElementById("normalmap").checked?1:0);
-		mesh.render(gl, shader, lights, __js_materials["gold"], V, P, {"tex_color":tex_color, "tex_normal":tex_normal});
+		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_color_map"), document.getElementById("colormap").checked?1:0);
+		mesh.render(gl, shader, lights, __js_materials["silver"], V, P, {"tex_color":tex_color, "tex_normal":tex_normal});
 		requestAnimationFrame(tick, canvas);
 	};
 
