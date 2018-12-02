@@ -98,18 +98,18 @@ function main()
 	};
 
 	let loaded = [];
-	loaded["texbump"] = false;
+	loaded["texnorm"] = false;
 	loaded["texdisp"] = false;
 	loaded["mesh"] = false;
 
 
-	let tex_bump, tex_disp;
+	let tex_norm, tex_disp;
 
-	let img_bump = new Image();
-	img_bump.onload = function()
+	let img_norm = new Image();
+	img_norm.onload = function()
 	{
-		tex_bump = new Texture(gl, img_bump);
-		loaded["texbump"] = true;
+		tex_norm = new Texture(gl, img_norm);
+		loaded["texnorm"] = true;
 	};
 
 	let img_disp = new Image();
@@ -120,8 +120,8 @@ function main()
 	};
 
 
-	img_bump.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
-	img_bump.src = 'https://threejs.org/examples/models/obj/ninja/normal.jpg';
+	img_norm.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
+	img_norm.src = 'https://threejs.org/examples/models/obj/ninja/normal.jpg';
 
 	img_disp.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
 	img_disp.src = 'https://threejs.org/examples/models/obj/ninja/displacement.jpg';
@@ -161,7 +161,7 @@ function main()
 	);
 
 	var tick_init = function() {
-		if(loaded["texbump"] && loaded["mesh"] && loaded["texdisp"])
+		if(loaded["texnorm"] && loaded["mesh"] && loaded["texdisp"])
 		{
 			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 		}
@@ -175,11 +175,11 @@ function main()
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
 		gl.useProgram(shader.h_prog);
-		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_bump_map"), document.getElementById("bumpmap").checked);
+		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_norm_map"), document.getElementById("normmap").checked);
 		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_disp_map"), document.getElementById("dispmap").checked);
 		gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_scale"), 2.436143);
 		gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_bias"), -0.428408);
-		mesh.render(gl, shader, lights, __js_materials["gold"], V, P, {"tex_bump":tex_bump, "tex_disp":tex_disp});
+		mesh.render(gl, shader, lights, __js_materials["gold"], V, P, {"tex_norm":tex_norm, "tex_disp":tex_disp});
 		requestAnimationFrame(tick, canvas);
 	};
 
