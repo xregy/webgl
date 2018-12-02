@@ -38,7 +38,9 @@ function main()
 		new Light
 		(
 			gl,
-			[-20, 20, 20, 0.0],		// position
+//			[20, 0, 0, 0.0],		// position
+//			[-20, 20, 20, 0.0],		// position
+			[0, 20, 20, 0.0],		// position
 			[0.1, 0.1, 0.1, 1.0],	// ambient
 			[1.0, 1.0, 1.0, 1.0],	// diffusive
 			[1.0, 1.0, 1.0, 1.0],	// specular
