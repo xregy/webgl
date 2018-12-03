@@ -16,8 +16,8 @@ function init_materials(gl)
 
 function main()
 {
-    let canvas = document.getElementById('webgl');
-    let gl = getWebGLContext(canvas);
+	let canvas = document.getElementById('webgl');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.2, 0.2, 0.2, 1.0);
@@ -47,9 +47,16 @@ function main()
 	let ball = create_mesh_sphere(gl,20);
 	ball.M.setScale(2.0, 0.7, 0.7);
 
+	let t_last = Date.now();
+	const ANGLE_STEP = 30.0;
+
 
 	let tick = function() {
-    	light.M.rotate(animate(), 0, 1, 0);
+		let now = Date.now();
+		let elapsed = now - t_last;
+		t_last = now;
+
+    	light.M.rotate((ANGLE_STEP * elapsed) / 1000.0, 0, 1, 0);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 		axes.render(gl, V, P);
@@ -137,13 +144,4 @@ function set_uniform_material(gl, mesh, h_prog, mat)
 	gl.uniform1f(gl.getUniformLocation(h_prog, "material.shininess"), mat.shininess*128.0);
 }
 
-let g_last = Date.now();
-let ANGLE_STEP = 30.0;
-function animate() {
-	let now = Date.now();
-	let elapsed = now - g_last;
-	g_last = now;
-	let angle = (ANGLE_STEP * elapsed) / 1000.0;
-	return angle %= 360;
-}
 

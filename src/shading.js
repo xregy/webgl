@@ -1,6 +1,4 @@
 "use strict";
-let ANGLE_STEP_LIGHT = 30.0;
-let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -79,6 +77,9 @@ function main()
 	let axes = new Axes(gl);
 
 	let t_last = Date.now();
+
+	const ANGLE_STEP_LIGHT = 30.0;
+	const ANGLE_STEP_MESH = 30.0;
 
 	let tick = function()
 	{
