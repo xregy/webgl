@@ -55,23 +55,28 @@ class Axes
 }
 
 Axes.src_shader_vert = 
-	  'attribute vec4 aPosition;\n'
-	+ 'attribute vec4 aColor;\n'
-	+ 'uniform mat4 MVP;\n'
-	+ 'varying vec4 vColor;\n'
-	+ 'void main()\n'
-	+ '{\n'
-	+ '	gl_Position = MVP * aPosition;\n'
-	+ '	vColor = aColor;\n'
-	+ '}\n';
-Axes.src_shader_frag = '#ifdef GL_ES\n'
-	+ 'precision mediump float;\n'
-	+ '#endif\n'
-	+ 'varying vec4 vColor;\n'
-	+ 'void main()\n'
-	+ '{\n'
-	+ '	gl_FragColor = vColor;\n'
-	+ '}\n';
+`
+	attribute vec4 aPosition;
+	attribute vec4 aColor;
+	uniform mat4 MVP;
+	varying vec4 vColor;
+	void main()
+	{
+		gl_Position = MVP * aPosition;
+		vColor = aColor;
+	}
+`;
+Axes.src_shader_frag = 
+`
+	#ifdef GL_ES
+	precision mediump float;
+	#endif
+	varying vec4 vColor;
+	void main()
+	{
+		gl_FragColor = vColor;
+	}
+`;
 
 Axes.shader = null;
 

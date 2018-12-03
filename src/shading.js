@@ -1,5 +1,4 @@
 "use strict";
-let g_last = Date.now();
 let ANGLE_STEP_LIGHT = 30.0;
 let ANGLE_STEP_MESH = 30.0;
 function main()
@@ -79,11 +78,13 @@ function main()
 
 	let axes = new Axes(gl);
 
+	let t_last = Date.now();
+
 	let tick = function()
 	{
 		let now = Date.now();
-		let elapsed = now - g_last;
-		g_last = now;
+		let elapsed = now - t_last;
+		t_last = now;
 
 		list_lights[0].M.rotate(( (ANGLE_STEP_LIGHT * elapsed) / 1000.0) % 360.0, 0, 1, 0);
 		if(document.getElementById("mesh-rotating").checked)
