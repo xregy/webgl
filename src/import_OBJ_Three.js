@@ -54,7 +54,7 @@ function main()
 			{
 				if(obj.type == "Mesh")
 				{
-					monkey.init_from_THREE_geometry(gl, object.children[0].geometry);
+					monkey.init_from_THREE_geometry(gl, obj.geometry);
 				}
 			}
 			let tick = function() {   // start drawing
