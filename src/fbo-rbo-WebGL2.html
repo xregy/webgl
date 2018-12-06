@@ -2,10 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Render-to-texture</title>
+		<title>Render-to-RBO example</title>
 	</head>
 	<body onload="main()">
-		<h1 align=center>Render-to-texture example</h1>
+		<h1 align=center>Render-to-RBO example</h1>
 		<canvas id="webgl" width="400" height="400">
 			Please use a browser that supports "canvas"
 		</canvas>
@@ -30,31 +30,10 @@
 				gl_FragColor = vColor;
 			}
 		</script>
-		<script id="shader-vert-tex" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec2 aTexcoord;
-			varying vec2 vTexcoord;
-			void main()
-			{
-				gl_Position = aPosition;
-				vTexcoord = aTexcoord;
-			}
-		</script>
-		<script id="shader-frag-tex" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			varying vec2 vTexcoord;
-			uniform sampler2D tex;
-			void main()
-			{
-				gl_FragColor = texture2D(tex, vTexcoord);
-			}
-		</script>
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>
 		<script src="../lib/cuon-matrix.js"></script>
-		<script src="fbo-tex.js"></script>
+		<script src="fbo-rbo-WebGL2.js"></script>
 	</body>
 </html>
