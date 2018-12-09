@@ -1,69 +1,56 @@
-// MultiTexture.js (c) 2012 matsuda and kanda
-// Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec2 a_TexCoord0;\n' +
-  'attribute vec2 a_TexCoord1;\n' +
-  'varying vec2 v_TexCoord0;\n' +
-  'varying vec2 v_TexCoord1;\n' +
-  'uniform mat4 u_ModelMatrix;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
-  '  v_TexCoord0 = a_TexCoord0;\n' +
-  '  v_TexCoord1 = a_TexCoord1;\n' +
-  '}\n';
+"use strict"
+const SRC_VERT_SHADER = `
+attribute vec2 aPosition;
+attribute vec2 aTexCoord0;
+attribute vec2 aTexCoord1;
+varying vec2 v_TexCoord0;
+varying vec2 v_TexCoord1;
+uniform mat4 MVP;
+void main()
+{
+	gl_Position = MVP * vec4(aPosition, 0, 1);
+	v_TexCoord0 = aTexCoord0;
+	v_TexCoord1 = aTexCoord1;
+}
+`;
 
-// Fragment shader program
-var FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'uniform sampler2D u_Sampler0;\n' +
-  'uniform sampler2D u_Sampler1;\n' +
-  'varying vec2 v_TexCoord0;\n' +
-  'varying vec2 v_TexCoord1;\n' +
-  'void main() {\n' +
-  '  vec4 color0 = texture2D(u_Sampler0, v_TexCoord0);\n' +
-  '  vec4 color1 = texture2D(u_Sampler1, v_TexCoord1);\n' +
-//  '  gl_FragColor = color0 * color1;\n' +
-  '  gl_FragColor = mix(color0, color1, 0.5);\n' +
-  '}\n';
+const SRC_FRAG_SHADER =
+`
+#ifdef GL_ES
+precision mediump float;
+#endif
+uniform sampler2D u_Sampler0;
+uniform sampler2D u_Sampler1;
+varying vec2 v_TexCoord0;
+varying vec2 v_TexCoord1;
+void main()
+{
+	vec4 color0 = texture2D(u_Sampler0, v_TexCoord0);
+	vec4 color1 = texture2D(u_Sampler1, v_TexCoord1);
+	gl_FragColor = mix(color0, color1, 0.5);
+}
+`;
 
-var g_loadComplete = [false, false];
-// Rotation angle (degrees/second)
-var ANGLE_STEP = 45.0;
+function main()
+{
+	let canvas = document.getElementById('webgl');
+	let gl = getWebGLContext(canvas);
 
-function main() {
-	var canvas = document.getElementById('webgl');
-	
-	var gl = getWebGLContext(canvas);
-
-	initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
-	
-	var n = initVertexBuffers(gl);
+	let shader = init_shader(gl,
+		SRC_VERT_SHADER, SRC_FRAG_SHADER,
+		["aPosition", "aTexCoord0", "aTexCoord1"]);
+	let obj = initVBO(gl);
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-	var textures = [null, null];
-	var	loc_samplers = [-1, -1];
-	var	texunits = [gl.TEXTURE3, gl.TEXTURE6];
-	var	images = [null, null];
+	let textures = [{texture:null, unit:3, image:new Image(), loaded:false},
+					{texture:null, unit:5, image:new Image(), loaded:false}];
 
+	let MVP = new Matrix4();
 
-  // Set texture
-	if (!initTextures(gl, textures, images, texunits, loc_samplers)) {
-		console.log('Failed to intialize the texture.');
-		return;
-	}
-	var tick_init = function() {
-		if(g_loadComplete[0] && g_loadComplete[1]) 
+	let tick_init = function() {
+		if(textures[0].loaded && textures[1].loaded)
 		{
-			uploadTextures(gl, textures, images);
-			for(var i=0 ; i<2 ; i++)
-			{
-				gl.activeTexture(texunits[i]);
-				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
-			}
 			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 		}
 		else
@@ -72,160 +59,123 @@ function main() {
 		}
 	};
 
-	// Current rotation angle
-	var currentAngle = 0.0;
-	// Model matrix
-	var modelMatrix = new Matrix4();
+	shader.set_uniforms = function(gl) 
+	{
+		for(let i in textures)
+		{
+			gl.activeTexture(gl.TEXTURE0 + textures[i].unit);
+			gl.bindTexture(gl.TEXTURE_2D, textures[i].texture);
+			gl.uniform1i(gl.getUniformLocation(shader.h_prog, "u_Sampler" + i), textures[i].unit);
+		}
+		gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, MVP.elements);
+	};
 
-	// Get storage location of u_ModelMatrix
-	var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-	if (!u_ModelMatrix)
-	{ 
-		console.log('Failed to get the storage location of u_ModelMatrix');
-		return;
-	}
+	let t_last = Date.now();
+	const ANGLE_STEP = 45;
 
-	var tick = function() {
-		currentAngle = animate(currentAngle);  // Update the rotation angle
-		draw(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw the triangle
+	let tick = function() {
+		let now = Date.now();
+		let elapsed = now - t_last;
+		t_last = now;
+
+		MVP.rotate(( (ANGLE_STEP * elapsed) / 1000.0) % 360.0, 0, 0, 1);
+
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		render_object(gl, shader, obj);
 		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
 	};
+
+	for(let tex of textures)
+	{
+		tex.image.onload = function()
+		{
+			init_texture(gl, tex);
+			tex.loaded = true;
+		};
+	}
+	textures[0].image.src = '../resources/sky.jpg';
+	textures[1].image.src = '../resources/circle.gif';
+
 	tick_init();
 
 }
 
-function initVertexBuffers(gl) {
-  var verticesTexCoords = new Float32Array([
-    // Vertex coordinate, Texture coordinate
-    -0.5,  0.5,   0.0, 1.0,  -1, 2,
-    -0.5, -0.5,   0.0, 0.0,  -1, -1,
-     0.5,  0.5,   1.0, 1.0,  2, 2,
-     0.5, -0.5,   1.0, 0.0,  2, -1
-  ]);
-  var n = 4; // The number of vertices
-
-  // Create a buffer object
-  var vertexTexCoordBuffer = gl.createBuffer();
-  if (!vertexTexCoordBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
-
-  // Write the positions of vertices to a vertex shader
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
-
-  var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
-  //Get the storage location of a_Position, assign and enable buffer
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 6, 0);
-  gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
-
-  // Get the storage location of a_TexCoord0
-  var a_TexCoord0 = gl.getAttribLocation(gl.program, 'a_TexCoord0');
-  if (a_TexCoord0 < 0) {
-    console.log('Failed to get the storage location of a_TexCoord0');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_TexCoord0, 2, gl.FLOAT, false, FSIZE * 6, FSIZE * 2);
-  gl.enableVertexAttribArray(a_TexCoord0);  // Enable the buffer assignment
-
-   // Get the storage location of a_TexCoord1
-  var a_TexCoord1 = gl.getAttribLocation(gl.program, 'a_TexCoord1');
-  if (a_TexCoord1 < 0) {
-    console.log('Failed to get the storage location of a_TexCoord1');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_TexCoord1, 2, gl.FLOAT, false, FSIZE * 6, FSIZE * 4);
-  gl.enableVertexAttribArray(a_TexCoord1);  // Enable the buffer assignment
-
-	return n;
-}
-
-
-function initTextures(gl, textures, images, texunits, loc_samplers) {
-	for(var i=0 ; i<2 ; i++)
-	{
-		textures[i] = gl.createTexture(); 
-		if (!textures[i]) {
-			console.log('Failed to create the texture object');
-			return false;
-		}
-		loc_samplers[i] = gl.getUniformLocation(gl.program, 'u_Sampler' + i);
-		if (!loc_samplers[i]) {
-			console.log('Failed to get the storage location of u_Sampler');
-			return false;
-		}
-		gl.uniform1i(loc_samplers[i], texunits[i]-gl.TEXTURE0);
-
-		gl.bindTexture(gl.TEXTURE_2D, textures[i]);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);// Flip the image's y-axis
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-		// Create the image object
-		images[i] = new Image();
-		if (!images[i]) {
-			console.log('Failed to create the image object');
-			return false;
-		}
-	}
-
-	// Register the event handler to be called when image loading is completed
-	images[0].onload = function(){ onLoadImage(0); };
-	images[1].onload = function(){ onLoadImage(1); };
-
-	images[0].src = '../resources/sky.jpg';
-	images[1].src = '../resources/circle.gif';
-
-//	let url1 = 'https://threejs.org/examples/models/obj/cerberus/Cerberus_A.jpg';
-//	images[1].crossOrigin = "anonymous";
-//	images[1].src = url1;
-
-	return true;
-
-}
-
-function onLoadImage(idx) {
-	g_loadComplete[idx] = true;
-}
-
-function uploadTextures(gl, textures, images)
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
-	for(var i=0 ; i<2 ; i++)
+	initShaders(gl, src_vert, src_frag);
+	let h_prog = gl.program;
+	let attribs = {};
+	for(let attrib of attrib_names)
 	{
-		gl.bindTexture(gl.TEXTURE_2D, textures[i]);   
-
-		// Set the image to texture
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[i]);
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
 	}
-}
-
-function draw(gl, n, currentAngle, modelMatrix, u_ModelMatrix) {
-  // Set the rotation matrix
-  modelMatrix.setRotate(currentAngle, 0, 0, 1); // Rotation angle, rotation axis (0, 0, 1)
- 
-  // Pass the rotation matrix to the vertex shader
-  gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-
-		// Clear <canvas>
-		gl.clear(gl.COLOR_BUFFER_BIT);
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);   // Draw the rectangle
-
+	return {h_prog:h_prog, attribs:attribs};
 }
 
 
-// Last time that this function was called
-var g_last = Date.now();
-function animate(angle) {
-  // Calculate the elapsed time
-  var now = Date.now();
-  var elapsed = now - g_last;
-  g_last = now;
-  // Update the current rotation angle (adjusted by the elapsed time)
-  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
-  return newAngle %= 360;
+function render_object(gl, shader, object)
+{
+	gl.useProgram(shader.h_prog);
+	shader.set_uniforms(gl);
+
+	for(let attrib_name in shader.attribs)
+	{
+		let	attrib = object.attribs[attrib_name];
+		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
+		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+	}
+	if(object.drawcall == "drawArrays")
+	{
+		gl.drawArrays(object.type, 0, object.n);
+	}
+	else if(object.drawcall == "drawElements")
+	{
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.buf_index);
+		gl.drawElements(object.type, object.n, object.type_index, 0);
+	}
+
+	for(let attrib_name in object.attribs)
+	{
+		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
+	}
+
+	gl.useProgram(null);
 }
+
+
+function initVBO(gl)
+{
+	let verts = new Float32Array([
+		-0.5,  0.5,   0, 1,  -1,  2,
+		-0.5, -0.5,   0, 0,  -1, -1,
+		 0.5,  0.5,   1, 1,   2,  2,
+		 0.5, -0.5,   1, 0,   2, -1
+	]);
+	let buf = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+	
+	let FSIZE = verts.BYTES_PER_ELEMENT;
+
+	let	attribs = [];
+	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
+	attribs["aTexCoord0"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*2};
+	attribs["aTexCoord1"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*4};
+
+	return {n:4, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, attribs:attribs};
+}
+
+
+function init_texture(gl, tex)
+{
+	tex.texture = gl.createTexture(); 
+	gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);// Flip the image's y-axis
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex.image);
+	return true;
+}
+
+

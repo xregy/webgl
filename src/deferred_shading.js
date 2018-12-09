@@ -149,7 +149,7 @@ function render_object(gl, shader, object)
 	gl.useProgram(shader.h_prog);
 	shader.set_uniforms(gl);
 
-	for(let attrib_name in object.attribs)
+	for(let attrib_name in shader.attribs)
 	{
 		let	attrib = object.attribs[attrib_name];
 		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);

@@ -12,5 +12,10 @@
 - (DONE) displacement mapping
 - environment mapping
 - projective texture
-- mipmap
+- (DONE) mipmap
+- shadow 
+
+
+WebGL2
+- dynamic loop
 
