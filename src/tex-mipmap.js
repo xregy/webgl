@@ -78,7 +78,7 @@ function main()
 		let elapsed = now - t_last;
 		t_last = now;
 //
-		x += sign * X_STEP * elapsed * 0.001;
+		x += sign * (document.getElementById("speed").value*0.01) * elapsed * 0.001;
 		if(x > X_MAX)
 		{
 			x = X_MAX;
