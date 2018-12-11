@@ -13,9 +13,13 @@
 - environment mapping
 - projective texture
 - (DONE) mipmap
-- shadow 
+- shadow map
+- (DONE) Should a texture or RBO be bound to be attached to a FBO? --> No.
 
 
 WebGL2
 - dynamic loop
+- UBO (Uniform Buffer Object)
+- depth texture
+- setting gl-FragDepth
 

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Cubemap</title>
+	</head>
+
+	<body onload="main()">
+		<h1 align=center>Cubemap</h1>
+		<canvas id="webgl" width="1024" height="1024">
+			Please use a browser that supports "canvas"
+		</canvas>
+		<script id="vert-room" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			varying vec4 vPosition;
+			uniform mat4 MVP;
+			void main()
+			{
+				gl_Position = MVP * aPosition;
+				vPosition = aPosition;
+			}
+		</script>
+		<script id="frag-room" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			uniform samplerCube sampler_cubemap;
+			varying vec4 vPosition;
+			void main()
+			{
+				gl_FragColor = textureCube(sampler_cubemap, vPosition.xyz);
+			}
+		</script>
+		<script id="vert-cubemap" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec3 aNormal;
+			varying vec4 vPosition;
+			varying vec3 vNormal;
+			uniform mat4 MVP;
+			uniform mat4 MV;
+			uniform mat4 matNormal;
+			void main()
+			{
+				gl_Position = MVP * aPosition;
+				vPosition = MV*aPosition;
+				vNormal = normalize(mat3(matNormal)*aNormal);
+			}
+		</script>
+		<script id="frag-cubemap" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			uniform samplerCube sampler_cubemap;
+			varying vec4 vPosition;
+			varying vec3 vNormal;
+			void main()
+			{
+				gl_FragColor = textureCube(sampler_cubemap, reflect(vPosition.xyz, vNormal));
+			}
+		</script>
+
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="../resources/monkey_sub2_smooth.js"></script>
+		
+		<script src="class_mesh.js"></script>
+		<script src="class_shader.js"></script>
+		<script src="tex-cubemap.js"></script>
+		<div>
+		The cubemap texture is the work of Emil Persson, aka Humus.
+			<a href="http://www.humus.name">http://www.humus.name</a>
+			humus@comhem.se
+		</div>
+	</body>
+</html>

@@ -158,11 +158,13 @@ function init_fbo(gl, width, height)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+	gl.bindTexture(gl.TEXTURE_2D, null); // Just to verify that the texture needs not be bound to be attached to a FBO
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex_color, 0);
 
 	let rbo_depth = gl.createRenderbuffer();
 	gl.bindRenderbuffer(gl.RENDERBUFFER, rbo_depth);
 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);	// Just to verify that the RBO needs not be bound to be attached to a FBO
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rbo_depth);
 
 	return {fbo:fbo, tex:tex_color, rbo:rbo_depth};
