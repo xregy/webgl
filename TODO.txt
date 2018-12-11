@@ -10,7 +10,7 @@
 - (DONE) OBJ loader
 - (DONE) normal mapping / bump mapping
 - (DONE) displacement mapping
-- environment mapping
+- (DONE) cubemapping
 - projective texture
 - (DONE) mipmap
 - shadow map
