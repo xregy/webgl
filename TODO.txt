@@ -12,7 +12,10 @@
 - (DONE) displacement mapping
 - environment mapping
 - projective texture
-- mipmap
-- stencil buffer
+- (DONE) mipmap
+- shadow 
 
+
+WebGL2
+- dynamic loop
 
