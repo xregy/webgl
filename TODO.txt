@@ -13,4 +13,6 @@
 - environment mapping
 - projective texture
 - mipmap
+- stencil buffer
+
 
