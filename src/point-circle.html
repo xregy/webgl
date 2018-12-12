@@ -1,38 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Change quad color by FragCoord</title>
-  </head>
-
-  <body onload="main()">
-    <canvas id="webgl" width="400" height="400">
-    Please use a browser that supports "canvas"
-    </canvas>
-
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script src="../lib/cuon-matrix.js"></script>
-    <script src="point-circle.js"></script>
-	<script id="shader-vert" type="x-shader/x-vertex">
-		attribute vec4 a_Position;
-		attribute vec2 a_coords;
-		varying vec2 v_coords;
-		void main() {
-			gl_Position = a_Position;
-			v_coords = a_coords;
-		}
-	</script>
-	<script id="shader-frag" type="x-shader/x-fragment">
-		precision mediump float;
-		varying vec2 v_coords;
-		void main() {
-			if(length(v_coords) < 0.5)    gl_FragColor = vec4(1,1,1,1);
-			else gl_FragColor = vec4(0,0,0,1);
-		}
-	</script>
-
-
-  </body>
+	<head>
+		<meta charset="utf-8" />
+		<title>Drawing a Circle</title>
+	</head>
+	<body onload="main()">
+		<h1 align=center>Drawing a Circle</h1>
+		<canvas id="webgl" width="400" height="400">
+			Please use a browser that supports "canvas"
+		</canvas>
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="point-circle.js"></script>
+	</body>
 </html>

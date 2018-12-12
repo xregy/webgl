@@ -1,84 +1,54 @@
-// HelloTQuad_FragCoord.js 
-// Vertex shader program
-function main() {
-  // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+"use strict"
+const SRC_VERT = `
+attribute vec4 aPosition;
+attribute vec2 aCoords;
+varying vec2 vCoords;
+void main() {
+	gl_Position = aPosition;
+	vCoords = aCoords;
+}
+`;
+const SRC_FRAG = `
+precision mediump float;
+varying vec2 vCoords;
+void main() {
+	if(length(vCoords) < 0.5)    gl_FragColor = vec4(1,0,0,1);
+	else gl_FragColor = vec4(0,0,0,1);
+}
+`;
 
-  // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
-  }
-
-  // Initialize shaders
-  if (!initShaders(gl, 
-		document.getElementById("shader-vert").text,
-		document.getElementById("shader-frag").text)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-
-  // Write the positions of vertices to a vertex shader
-  var n = initVertexBuffers(gl);
-  if (n < 0) {
-    console.log('Failed to set the positions of the vertices');
-    return;
-  }
-
-  // Specify the color for clearing <canvas>
-  gl.clearColor(0.5, 0.5, 0.5, 1.0);
-
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  // Draw the rectangle
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+function main()
+{
+	let canvas = document.getElementById('webgl');
+	let gl = getWebGLContext(canvas);
+	initShaders(gl, SRC_VERT, SRC_FRAG);
+	initVertexBuffers(gl);
+	gl.clearColor(0.5, 0.5, 0.5, 1.0);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-function initVertexBuffers(gl) {
-  var vertices = new Float32Array([
-    -0.9,  0.9, -1, 1,
+function initVertexBuffers(gl)
+{
+	let vertices = new Float32Array([
+	-0.9,  0.9, -1,  1,
 	-0.9, -0.9, -1, -1,
-	 0.9,  0.9, 1, 1,
+	 0.9,  0.9,  1,  1,
 	 0.9, -0.9,  1, -1
-  ]);
-  var n = 4; // The number of vertices
+	]);
 
-  // Create a buffer object
-  var vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
+	let vertexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  // Bind the buffer object to target
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  // Write date into the buffer object
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+	let a_Position = gl.getAttribLocation(gl.program, 'aPosition');
+	gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 4*4, 0);
+	gl.enableVertexAttribArray(a_Position);
 
-  // Pass the position of a point to a_Position variable
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 4*4, 0);
+	let a_coords = gl.getAttribLocation(gl.program, 'aCoords');
+	gl.vertexAttribPointer(a_coords, 2, gl.FLOAT, false, 4*4, 4*2);
 
-  // Enable the generic vertex attribute array
-  gl.enableVertexAttribArray(a_Position);
+	gl.enableVertexAttribArray(a_coords);
 
-  var a_coords = gl.getAttribLocation(gl.program, 'a_coords');
-  if (a_coords < 0) {
-    console.log('Failed to get the storage location of a_coords');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_coords, 2, gl.FLOAT, false, 4*4, 4*2);
-
-  gl.enableVertexAttribArray(a_coords);
-
-  // Unbind the buffer object
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  return n;
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
