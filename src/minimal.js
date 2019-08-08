@@ -1,9 +1,10 @@
+"use strict";
 function main()
 {
-    var canvas = document.getElementById('webgl');
-    var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-    var gl = null;
-    for (var i = 0; i < names.length; ++i)
+    let canvas = document.getElementById('webgl');
+    let names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    let gl = null;
+    for (let i = 0; i < names.length; ++i)
     {
           gl = canvas.getContext(names[i], []);
           if (gl) break;
