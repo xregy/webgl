@@ -6,7 +6,7 @@ let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext('webgl2');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
@@ -21,7 +21,7 @@ function main()
 	let shader = new Shader(gl, 
 			document.getElementById("vert-tex").text,
 			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:9});
+			["aPosition", "aTexCoord"]);
 
 	let mesh = new Mesh(gl);
 

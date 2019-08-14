@@ -11,10 +11,10 @@
 		</canvas>
 		<p id="output">
 		</p>
-		<script id="vert-tex" type="x-shader/x-vertex">
-			attribute vec4	aPosition;
-			attribute vec2	aTexCoord;
-			varying vec2	vTexCoord;
+		<script id="vert-tex" type="x-shader/x-vertex">#version 300 es
+			layout(location=3) in vec4	aPosition;
+			layout(location=7) in vec2	aTexCoord;
+			out vec2	vTexCoord;
 			uniform mat4	MVP;
 			void main()
 			{
@@ -22,15 +22,16 @@
 				vTexCoord = aTexCoord;
 			}
 		</script>
-		<script id="frag-tex" type="x-shader/x-fragment">
+		<script id="frag-tex" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
 			uniform sampler2D tex;
-			varying vec2	vTexCoord;
+			in vec2	vTexCoord;
+            out vec4 fColor;
 			void main()
 			{
-				gl_FragColor = texture2D(tex, vTexCoord);
+				fColor = texture(tex, vTexCoord);
 			}
 		</script>
 		<script src="../lib/webgl-utils.js"></script>
@@ -40,7 +41,7 @@
 		<script src="https://threejs.org/build/three.min.js"></script>
 		<script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
 		<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-		<script src="webgl10_class_shader.js"></script>
+		<script src="class_shader.js"></script>
 		<script src="class_mesh.js"></script>
 		<script src="class_axes.js"></script>
 		<script src="class_texture.js"></script>

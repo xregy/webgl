@@ -9,6 +9,9 @@ function main()
         return;
     }
 
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
     let vertices = new Float32Array([
                         -0.90, -0.90, // Triangle 1
                          0.85, -0.90,
@@ -57,10 +60,17 @@ function main()
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
+    gl.bindVertexArray(null);
+    // All the info we need are already stored in "vao".
+    gl.disableVertexAttribArray(loc_aPosition); 
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(h_prog);
+    gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.bindVertexArray(null);
 
 }

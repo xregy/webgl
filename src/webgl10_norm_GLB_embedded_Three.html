@@ -16,16 +16,16 @@
 		</p>
 		<p id="output">
 		</p>
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">#version 300 es
-			layout(location=2) in vec4	aPosition;
-			layout(location=4) in vec3	aNormal;
-			layout(location=6) in vec2	aTexCoord;
-			out vec2	vTexCoord;
+		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aNormal;
+			attribute vec2	aTexCoord;
+			varying vec2	vTexCoord;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
-			out vec3	vNormal;
-			out vec4	vPosEye;
+			varying vec3	vNormal;
+			varying vec4	vPosEye;
 			void main()
 			{
 				vPosEye = MV*aPosition;
@@ -34,17 +34,16 @@
 				vTexCoord = aTexCoord;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">#version 300 es
+		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
 			precision mediump float;
 			uniform sampler2D tex_color;
 			uniform highp mat4	matNormal;
 			uniform sampler2D tex_normal;
 			uniform bool	use_normal_map;
 			uniform bool	use_color_map;
-			in vec4 vPosEye;
-			in vec3	vNormal;
-			in vec2	vTexCoord;
-            out vec4 fColor;
+			varying vec4 vPosEye;
+			varying vec3	vNormal;
+			varying vec2	vTexCoord;
 			struct TMaterial
 			{
 				vec3	ambient;
@@ -67,7 +66,7 @@
 			{
 				vec3	n;
 				if(use_normal_map)
-					n = normalize((matNormal*vec4(texture(tex_normal, vTexCoord).xyz - 0.5,0)).xyz);
+					n = normalize((matNormal*vec4(texture2D(tex_normal, vTexCoord).xyz - 0.5,0)).xyz);
 				else
 					n = normalize(vNormal);
 				vec3	l;
@@ -75,7 +74,7 @@
 				TMaterial m;
 				if(use_color_map)
 				{
-					m.diffuse = texture(tex_color, vTexCoord).rgb;
+					m.diffuse = texture2D(tex_color, vTexCoord).rgb;
 					m.ambient = material.diffuse;
 					m.specular = vec3(1,1,1);
 					m.shininess = 128.0;
@@ -84,7 +83,7 @@
 				{
 					m = material;
 				}
-				fColor = vec4(0.0);
+				gl_FragColor = vec4(0.0);
 				for(int i=0 ; i<2 ; i++)
 				{
 					if(light[i].enabled)
@@ -102,10 +101,10 @@
 						{
 							specular = light[i].specular * m.specular * pow(max(dot(r, v), 0.0), m.shininess);
 						}
-						fColor += vec4(ambient + diffuse + specular, 1);
+						gl_FragColor += vec4(ambient + diffuse + specular, 1);
 					}
 				}
-				fColor.w = 1.0;
+				gl_FragColor.w = 1.0;
 			}
 		</script>
 
@@ -117,11 +116,11 @@
 		<script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
 		<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
 		<script src="class_material.js"></script>
-		<script src="class_shader.js"></script>
+		<script src="webgl10_class_shader.js"></script>
 		<script src="class_light.js"></script>
 		<script src="class_mesh.js"></script>
 		<script src="class_axes.js"></script>
 		<script src="class_texture.js"></script>
-		<script src="norm_GLB_embedded_Three.js"></script>
+		<script src="webgl10_norm_GLB_embedded_Three.js"></script>
 	</body>
 </html>

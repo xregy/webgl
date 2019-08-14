@@ -15,11 +15,11 @@
 		</p>
 		<p id="output">
 		</p>
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">#version 300 es
-			layout(location=3) in vec4	aPosition;
-			layout(location=6) in vec3	aNormal;
-			layout(location=9) in vec2	aTexCoord;
-			out vec2	vTexCoord;
+		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
+			attribute vec4	aPosition;
+			attribute vec3	aNormal;
+			attribute vec2	aTexCoord;
+			varying vec2	vTexCoord;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
@@ -27,12 +27,12 @@
 			uniform float	disp_bias;
 			uniform sampler2D tex_disp;
 			uniform bool	use_disp_map;
-			out vec3	vNormal;
-			out vec4	vPosEye;
+			varying vec3	vNormal;
+			varying vec4	vPosEye;
 			void main()
 			{
 				vPosEye = MV*aPosition;
-				float	disp = texture(tex_disp, aTexCoord).r;
+				float	disp = texture2D(tex_disp, aTexCoord).r;
 				vec4	p = aPosition;
 				if(use_disp_map) p += (disp_scale*disp + disp_bias)*vec4(aNormal, 0);
 				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
@@ -41,17 +41,16 @@
 				vTexCoord = aTexCoord;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">#version 300 es
+		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
 			#extension GL_OES_standard_derivatives : enable
 			precision mediump float;
 //			uniform sampler2D tex_color;
 			uniform highp mat4	matNormal;
 			uniform sampler2D tex_norm;
 			uniform bool	use_norm_map;
-			in vec4 vPosEye;
-			in vec3	vNormal;
-			in vec2	vTexCoord;
-            out vec4 fColor;
+			varying vec4 vPosEye;
+			varying vec3	vNormal;
+			varying vec2	vTexCoord;
 			struct TMaterial
 			{
 				vec3	ambient;
@@ -83,7 +82,7 @@
 				vec3 T = normalize( ( - q0 * st1.s + q1 * st0.s ) * scale );
 				vec3 N = normalize( surf_norm );
 				mat3 tsn = mat3( S, T, N );
-				vec3 mapN = texture( tex_norm, vTexCoord ).xyz * 2.0 - 1.0;
+				vec3 mapN = texture2D( tex_norm, vTexCoord ).xyz * 2.0 - 1.0;
 				mapN.xy *= ( float( gl_FrontFacing ) * 2.0 - 1.0 );
 				return normalize( tsn * mapN );
 			}
@@ -112,8 +111,8 @@
 			{
 				// assume N, the interpolated vertex normal and 
 				// V, the view vector (vertex to eye)
-//				vec3 map = texture( mapBump, texcoord ).xyz;
-				vec3 map = 2.0*texture( tex_norm, texcoord ).xyz - 1.0;
+//				vec3 map = texture2D( mapBump, texcoord ).xyz;
+				vec3 map = 2.0*texture2D( tex_norm, texcoord ).xyz - 1.0;
 				mat3 TBN = cotangent_frame( N, -V, texcoord );
 				return normalize( TBN * map );
 			}
@@ -130,7 +129,7 @@
 //					n = normalize(perturb_normal(n, v, vTexCoord));
 				}
 				vec3	l;
-				fColor = vec4(0.0);
+				gl_FragColor = vec4(0.0);
 				for(int i=0 ; i<2 ; i++)
 				{
 					if(light[i].enabled)
@@ -148,11 +147,11 @@
 						{
 							specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
 						}
-						fColor += vec4(ambient + diffuse + specular, 1);
+						gl_FragColor += vec4(ambient + diffuse + specular, 1);
 					}
 				}
-				fColor.w = 1.0;
-//				fColor = vec4(n, 1);
+				gl_FragColor.w = 1.0;
+//				gl_FragColor = vec4(n, 1);
 			}
 		</script>
 
@@ -165,11 +164,11 @@
 		<script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
 		<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
 		<script src="class_material.js"></script>
-		<script src="class_shader.js"></script>
+		<script src="webgl10_class_shader.js"></script>
 		<script src="class_light.js"></script>
 		<script src="class_mesh.js"></script>
 		<script src="class_axes.js"></script>
 		<script src="class_texture.js"></script>
-		<script src="norm_disp_OBJ_Three.js"></script>
+		<script src="webgl10_norm_disp_OBJ_Three.js"></script>
 	</body>
 </html>

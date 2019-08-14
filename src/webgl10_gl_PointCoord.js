@@ -1,18 +1,17 @@
 "use strict"
-const SRC_VERT = `#version 300 es
-layout(location=7) in vec4 aPosition;
+const SRC_VERT = `
+attribute vec4 aPosition;
 void main() 
 {
 	gl_Position = aPosition;
 	gl_PointSize = 100.0;
 }
 `;
-const SRC_FRAG = `#version 300 es
+const SRC_FRAG = `
 precision mediump float;
-out vec4 fColor;
 void main() 
 {
-	if(length(gl_PointCoord - vec2(.5,.5)) <= 0.4)    fColor = vec4(1,0,0,1);
+	if(length(gl_PointCoord - vec2(.5,.5)) <= 0.4)    gl_FragColor = vec4(1,0,0,1);
 	else discard;
 }
 `;
@@ -20,7 +19,7 @@ void main()
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext("webgl2");
+	let gl = getWebGLContext(canvas);
 
 	initShaders(gl, SRC_VERT, SRC_FRAG);
 

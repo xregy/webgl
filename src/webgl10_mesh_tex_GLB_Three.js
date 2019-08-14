@@ -6,28 +6,28 @@ let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext('webgl2');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
 
 	let V = new Matrix4();
-	V.setLookAt(20, 20, 20, 0, 0, 0, 0, 1, 0);
+	V.setLookAt(6, 6, 6, 0, 0, 0, 0, 1, 0);
 
 	let P = new Matrix4();
 //	P.setPerspective(60, 1, 1, 100); 
-	P.setOrtho(-15, 15, -15, 15, 1, 100);
+	P.setOrtho(-5, 5, -5, 5, 1, 100);
 
 	let shader = new Shader(gl, 
 			document.getElementById("vert-tex").text,
 			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:9});
+			["aPosition", "aTexCoord"]);
 
 	let mesh = new Mesh(gl);
 
-	mesh.M.setTranslate(0, -14, 0);
+//	mesh.M.scale(10.0, 10.0, 10.0);
 
-	let axes = new Axes(gl,10);
+	let axes = new Axes(gl,4);
 
 	let lastX;
 	let lastY;
@@ -72,14 +72,28 @@ function main()
 		console.log( item, loaded, total );
 	};
 
+	let texture_loaded = false;
+	let mesh_loaded = false;
+
+	let image = new Image();
+
 	let tex;
 
+	image.onload = function()
+	{
+		tex = new Texture(gl, image);
+		texture_loaded = true;
+		if(mesh_loaded)	resources_loaded = true;
+	};
+
+	image.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
+	image.src = 'https://threejs.org/examples/models/gltf/LeePerrySmith/Map-COL.jpg';
+//	image.src = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.jpg';
 
 	let resources_loaded = false;
 
 //	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
-//	let url = 'https://threejs.org/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb';
-	let url = 'https://threejs.org/examples/models/gltf/Nefertiti/Nefertiti.glb';
+	let url = 'https://threejs.org/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb';
 //	let url = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.gltf';
 //	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
 
@@ -93,10 +107,10 @@ function main()
 				if(obj.type == "Mesh")
 				{
 					mesh.init_from_THREE_geometry(gl, obj.geometry);
-					tex = new Texture(gl, obj.material.map.image, false);
 				}
 			}
-			resources_loaded = true;
+			mesh_loaded = true;
+			if(texture_loaded)	resources_loaded = true;
 		},
 		// called when loading is in progresses
 		function ( xhr )
@@ -126,6 +140,7 @@ function main()
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
 		mesh.render(gl, shader, null, null, V, P, {"tex":tex});
+//		mesh.render(gl, shader, [light], __js_materials["gold"], V, P);
 		requestAnimationFrame(tick, canvas);
 	};
 

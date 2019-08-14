@@ -6,7 +6,7 @@ let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext('webgl2');
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
@@ -22,7 +22,7 @@ function main()
 	let shader = new Shader(gl, 
 			document.getElementById("vert-Phong-Phong").text,
 			document.getElementById("frag-Phong-Phong").text,
-			["aPosition", "aNormal", "aTexCoord"]);
+			{aPosition:2, aNormal:4, aTexCoord:6});
 
 	let lights = 
 	[

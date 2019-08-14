@@ -39,88 +39,31 @@ title: WebGL examples by Minho Kim
 				<a href="https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)"><tt>layout</tt> qualifier</a></li>
 		</ul>
 	</li>
-	<li>Textures
-		<ul>
-			<li>Texture data as a typed array:
-				<ul>
-					<li>
-						<a href="src/tex-typed-array-ubyte.html"><tt>tex-typed-array-ubyte.html</tt></a> (<tt>Uint8Array</tt>)
-					</li>
-					<li>
-						<a href="src/tex-typed-array-float.html"><tt>tex-typed-array-float.html</tt></a> (<tt>Float32Array</tt>,
-						<a href="https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_float"><tt>OES_texture_float</tt></a>
-						extension required)
-					</li>
-				</ul>
-			</li>
-			<li>
-				<a href="src/tex-params.html"><tt>tex-params.html</tt></a>:
-				<tt>gl.TEXTURE_MAG_FILTER</tt>,
-				<tt>gl.TEXTURE_WRAP_S</tt>,
-				<tt>gl.TEXTURE_WRAP_T</tt>
-				(WebGL 1.0: <a href="src/webgl10_tex-params.html"><tt>webgl10_tex-params.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-alignment.html"><tt>tex-alignment.html</tt></a>:
-				Texture alignment
-				(<a href="src/webgl10_tex-alignment.html"><tt>webgl10_tex-alignment.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-multi.html"><tt>tex-multi.html</tt></a>:
-				Multi-texturing
-				(<a href="src/webgl10_tex-multi.html"><tt>webgl10_tex-multi.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-mipmap.html"><tt>tex-mipmap.html</tt></a>:
-				<a href="https://en.wikipedia.org/wiki/Mipmap">Mipmap</a>
-				(<a href="src/webgl10_tex-mipmap.html"><tt>webgl10_tex-mipmap.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-cubemap.html"><tt>tex-cubemap.html</tt></a>:
-				<a href="https://en.wikipedia.org/wiki/Cube_mapping">Cubemapping</a>
-				(<a href="src/webgl10_tex-cubemap.html"><tt>webgl10_tex-cubemap.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/mesh_tex_OBJ_Three.html"><tt>mesh_tex_OBJ_Three.html</tt></a>:
-				Mesh + texture (OBJ with Three.js)
-			</li>
-			<li>
-				<a href="src/mesh_tex_GLB_Three.html"><tt>mesh_tex_GLB_Three.html</tt></a>:
-				Mesh + texture (GLB with Three.js)
-			</li>
-			<li>
-				<a href="src/mesh_tex_GLB_embedded_Three.html"><tt>mesh_tex_GLB_embedded_Three.html</tt></a>:
-				Mesh + texture (GLB with embedded texture)
-			</li>
-			<li>
-				<a href="src/norm_GLB_embedded_Three.html"><tt>norm_GLB_embedded_Three.html</tt></a>:
-				(Object space) <a href="https://en.wikipedia.org/wiki/Normal_mapping">normal map</a> + color map (GLB with embedded texture)
-			</li>
-			<li>
-				<a href="src/norm_disp_OBJ_Three.html"><tt>norm_disp_OBJ_Three.html</tt></a>:
-				(Tangent space) <a href="https://en.wikipedia.org/wiki/Normal_mapping">normal mapping</a> 
-				+ <a href="https://en.wikipedia.org/wiki/Displacement_mapping">displacement mapping</a> (OBJ)
-			</li>
-
-		</ul>
-	</li>
 	<li>
 		Drawing circles
 		<ul>
-			<li>Using a quad: <a href="src/point-circle.html"><tt>point-circle.html</tt></a></li>
+			<li>Using a quad: <a href="src/point-circle.html"><tt>point-circle.html</tt></a>
+            (<a href="src/webgl10_point-circle.html"><tt>webgl10_point-circle.html</tt></a>)
+            </li>
 			<li>Using 
 			<a href="https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/gl_PointCoord.xhtml">gl_PointCoord</a>: 
-			<a href="src/gl_PointCoord.html"><tt>gl_PointCoord.html</tt></a></li>
+			<a href="src/gl_PointCoord.html"><tt>gl_PointCoord.html</tt></a>
+			(<a href="src/webgl10_gl_PointCoord.html"><tt>webgl10_gl_PointCoord.html</tt></a>)
+            </li>
 		</ul>
 	</li>
 	<li>
 		Drawing cubes
 		<ul>
-			<li>TRIANGLES: <a href="src/cube_TRIANGLES.html">cube_TRIANGLES.html</a></li>
-			<li>TRIANGLE_FAN (1): <a href="src/cube_TRIANGLE_FAN_1.html">cube_TRIANGLE_FAN_1.html</a></li>
-			<li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html">cube_TRIANGLE_FAN_2.html</a></li>
-			<li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html">cube_TRIANGLE_STRIP.html</a></li>
-			<li>ELEMENTS: <a href="src/cube_ELEMENTS.html">cube_ELEMENTS.html</a></li>
+			<li>TRIANGLES: <a href="src/cube_TRIANGLES.html"><tt>cube_TRIANGLES.html</tt></a>
+                (<a href="src/webgl10_cube_TRIANGLES.html"><tt>webgl10_cube_TRIANGLES.html</tt></a>)
+            </li>
+			<li>TRIANGLE_FAN (1): <a href="src/cube_TRIANGLE_FAN_1.html"><tt>cube_TRIANGLE_FAN_1.html</tt></a>
+                (<a href="src/webgl10_cube_TRIANGLE_FAN_1.html"><tt>webgl10_cube_TRIANGLE_FAN_1.html</tt></a>)
+            </li>
+			<li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html"><tt>cube_TRIANGLE_FAN_2.html</tt></a></li>
+			<li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html"><tt>cube_TRIANGLE_STRIP.html</tt></a></li>
+			<li>ELEMENTS: <a href="src/cube_ELEMENTS.html"><tt>cube_ELEMENTS.html</tt></a></li>
 		</ul>
 	</li>
 	<li>Why do we need VAOs?
@@ -239,6 +182,77 @@ title: WebGL examples by Minho Kim
 			</li>
 		</ul>
 	</li>
+	<li>Textures
+		<ul>
+			<li>Texture data as a typed array:
+				<ul>
+					<li>
+						<a href="src/tex-typed-array-ubyte.html"><tt>tex-typed-array-ubyte.html</tt></a> (<tt>Uint8Array</tt>)
+					</li>
+					<li>
+						<a href="src/tex-typed-array-float.html"><tt>tex-typed-array-float.html</tt></a> (<tt>Float32Array</tt>,
+						<a href="https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_float"><tt>OES_texture_float</tt></a>
+						extension required)
+					</li>
+				</ul>
+			</li>
+			<li>
+				<a href="src/tex-params.html"><tt>tex-params.html</tt></a>:
+				<tt>gl.TEXTURE_MAG_FILTER</tt>,
+				<tt>gl.TEXTURE_WRAP_S</tt>,
+				<tt>gl.TEXTURE_WRAP_T</tt>
+				(WebGL 1.0: <a href="src/webgl10_tex-params.html"><tt>webgl10_tex-params.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/tex-alignment.html"><tt>tex-alignment.html</tt></a>:
+				Texture alignment
+				(<a href="src/webgl10_tex-alignment.html"><tt>webgl10_tex-alignment.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/tex-multi.html"><tt>tex-multi.html</tt></a>:
+				Multi-texturing
+				(<a href="src/webgl10_tex-multi.html"><tt>webgl10_tex-multi.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/tex-mipmap.html"><tt>tex-mipmap.html</tt></a>:
+				<a href="https://en.wikipedia.org/wiki/Mipmap">Mipmap</a>
+				(<a href="src/webgl10_tex-mipmap.html"><tt>webgl10_tex-mipmap.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/tex-cubemap.html"><tt>tex-cubemap.html</tt></a>:
+				<a href="https://en.wikipedia.org/wiki/Cube_mapping">Cubemapping</a>
+				(<a href="src/webgl10_tex-cubemap.html"><tt>webgl10_tex-cubemap.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/mesh_tex_OBJ_Three.html"><tt>mesh_tex_OBJ_Three.html</tt></a>:
+				Mesh + texture (OBJ with Three.js)
+				(<a href="src/webgl10_mesh_tex_OBJ_Three.html"><tt>webgl10_mesh_tex_OBJ_Three.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/mesh_tex_GLB_Three.html"><tt>mesh_tex_GLB_Three.html</tt></a>:
+				Mesh + texture (GLB with Three.js)
+				(<a href="src/webgl10_mesh_tex_GLB_Three.html"><tt>webgl10_mesh_tex_GLB_Three.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/mesh_tex_GLB_embedded_Three.html"><tt>mesh_tex_GLB_embedded_Three.html</tt></a>:
+				Mesh + texture (GLB with embedded texture)
+				(<a href="src/webgl10_mesh_tex_GLB_embedded_Three.html"><tt>webgl10_mesh_tex_GLB_embedded_Three.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/norm_GLB_embedded_Three.html"><tt>norm_GLB_embedded_Three.html</tt></a>:
+				(Object space) <a href="https://en.wikipedia.org/wiki/Normal_mapping">normal map</a> + color map (GLB with embedded texture)
+				(<a href="src/webgl10_norm_GLB_embedded_Three.html"><tt>webgl10_norm_GLB_embedded_Three.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/norm_disp_OBJ_Three.html"><tt>norm_disp_OBJ_Three.html</tt></a>:
+				(Tangent space) <a href="https://en.wikipedia.org/wiki/Normal_mapping">normal mapping</a> 
+				+ <a href="https://en.wikipedia.org/wiki/Displacement_mapping">displacement mapping</a> (OBJ)
+				(<a href="src/webgl10_norm_disp_OBJ_Three.html"><tt>webgl10_norm_disp_OBJ_Three.html</tt></a>)
+			</li>
+
+		</ul>
+	</li>
+
 	<li>
 		FBO (Framebuffer Object)
 		<ul>

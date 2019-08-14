@@ -6,7 +6,7 @@ let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext('webgl2');
+	let gl = getWebGLContext(canvas);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);
@@ -18,10 +18,34 @@ function main()
 //	P.setPerspective(60, 1, 1, 100); 
 	P.setOrtho(-15, 15, -15, 15, 1, 100);
 
+
 	let shader = new Shader(gl, 
-			document.getElementById("vert-tex").text,
-			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:9});
+			document.getElementById("vert-Phong-Phong").text,
+			document.getElementById("frag-Phong-Phong").text,
+			["aPosition", "aNormal", "aTexCoord"]);
+
+	let lights = 
+	[
+		new Light
+		(
+			gl,
+			[20, 20, 20, 1.0],		// position
+			[0.1, 0.1, 0.1, 1.0],	// ambient
+			[1.0, 1.0, 1.0, 1.0],	// diffusive
+			[1.0, 1.0, 1.0, 1.0],	// specular
+			true
+		),
+		new Light
+		(
+			gl,
+			[-20, 20, 20, 0.0],		// position
+			[0.1, 0.1, 0.1, 1.0],	// ambient
+			[1.0, 1.0, 1.0, 1.0],	// diffusive
+			[1.0, 1.0, 1.0, 1.0],	// specular
+			true
+		),
+	];
+
 
 	let mesh = new Mesh(gl);
 
@@ -72,7 +96,7 @@ function main()
 		console.log( item, loaded, total );
 	};
 
-	let tex;
+	let tex_color, tex_normal;
 
 
 	let resources_loaded = false;
@@ -93,7 +117,8 @@ function main()
 				if(obj.type == "Mesh")
 				{
 					mesh.init_from_THREE_geometry(gl, obj.geometry);
-					tex = new Texture(gl, obj.material.map.image, false);
+					tex_color = new Texture(gl, obj.material.map.image, false);
+					tex_normal = new Texture(gl, obj.material.normalMap.image, false);
 				}
 			}
 			resources_loaded = true;
@@ -125,7 +150,11 @@ function main()
 	let tick = function() {   // start drawing
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
-		mesh.render(gl, shader, null, null, V, P, {"tex":tex});
+		for(let light of lights) light.render(gl, V, P);
+		gl.useProgram(shader.h_prog);
+		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_normal_map"), document.getElementById("normalmap").checked?1:0);
+		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_color_map"), document.getElementById("colormap").checked?1:0);
+		mesh.render(gl, shader, lights, __js_materials["silver"], V, P, {"tex_color":tex_color, "tex_normal":tex_normal});
 		requestAnimationFrame(tick, canvas);
 	};
 
