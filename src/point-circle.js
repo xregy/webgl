@@ -23,14 +23,19 @@ function main()
 	let canvas = document.getElementById('webgl');
 	let gl = canvas.getContext('webgl2');
 	initShaders(gl, SRC_VERT, SRC_FRAG);
-	initVertexBuffers(gl);
+	let vao = initVertexBuffers(gl);
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 	gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindVertexArray(vao);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let vertices = new Float32Array([
 	-0.9,  0.9, -1,  1,
 	-0.9, -0.9, -1, -1,
@@ -48,8 +53,10 @@ function initVertexBuffers(gl)
 
 	let a_coords = 8;
 	gl.vertexAttribPointer(a_coords, 2, gl.FLOAT, false, 4*4, 4*2);
-
 	gl.enableVertexAttribArray(a_coords);
+    gl.bindVertexArray(null);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    return vao;
 }

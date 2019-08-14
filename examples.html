@@ -25,16 +25,16 @@ title: WebGL examples by Minho Kim
 		-- How to set the attribute locations? How to connect varying variables
 		between vert &amp; frag shaders?
 		<ul>
-			<li><a href="src/plumbing_WebGL1_getAttribLocation.html">plumbing_WebGL1_getAttribLocation</a>:
+			<li><a href="src/plumbing_WebGL1_getAttribLocation.html"><tt>plumbing_WebGL1_getAttribLocation</tt></a>:
 				Querying attribute locations
 					using
 					<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getAttribLocation"><tt>getAttribLocation()</tt></a></li>
-			<li><a href="src/plumbing_WebGL1_bindAttribLocation.html">plumbing_WebGL1_bindAttribLocation</a>:
+			<li><a href="src/plumbing_WebGL1_bindAttribLocation.html"><tt>plumbing_WebGL1_bindAttribLocation</tt></a>:
 					Forcing attribute locations by host
 					using
 					<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindAttribLocation"><tt>bindAttribLocation()</tt></a>
 			-- useful when the same geometry is rendered with different shaders</li>
-			<li><a href="src/plumbing_WebGL2_layout_attrib.html">plumbing_WebGL2_layout_attrib</a>:
+			<li><a href="src/plumbing_WebGL2_layout_attrib.html"><tt>plumbing_WebGL2_layout_attrib</tt></a>:
 				(WebGL2) Setting attributes locations statically using 
 				<a href="https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)"><tt>layout</tt> qualifier</a></li>
 		</ul>
@@ -61,9 +61,15 @@ title: WebGL examples by Minho Kim
 			<li>TRIANGLE_FAN (1): <a href="src/cube_TRIANGLE_FAN_1.html"><tt>cube_TRIANGLE_FAN_1.html</tt></a>
                 (<a href="src/webgl10_cube_TRIANGLE_FAN_1.html"><tt>webgl10_cube_TRIANGLE_FAN_1.html</tt></a>)
             </li>
-			<li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html"><tt>cube_TRIANGLE_FAN_2.html</tt></a></li>
-			<li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html"><tt>cube_TRIANGLE_STRIP.html</tt></a></li>
-			<li>ELEMENTS: <a href="src/cube_ELEMENTS.html"><tt>cube_ELEMENTS.html</tt></a></li>
+			<li>TRIANGLE_FAN (2): <a href="src/cube_TRIANGLE_FAN_2.html"><tt>cube_TRIANGLE_FAN_2.html</tt></a>
+                (<a href="src/webgl10_cube_TRIANGLE_FAN_2.html"><tt>webgl10_cube_TRIANGLE_FAN_2.html</tt></a>)
+            </li>
+			<li>TRIANGLE_STRIP: <a href="src/cube_TRIANGLE_STRIP.html"><tt>cube_TRIANGLE_STRIP.html</tt></a>
+                (<a href="src/webgl10_cube_TRIANGLE_STRIP.html"><tt>webgl10_cube_TRIANGLE_STRIP.html</tt></a>)
+            </li>
+			<li>ELEMENTS: <a href="src/cube_ELEMENTS.html"><tt>cube_ELEMENTS.html</tt></a>
+                (<a href="src/webgl10_cube_ELEMENTS.html"><tt>webgl10_cube_ELEMENTS.html</tt></a>)
+            </li>
 		</ul>
 	</li>
 	<li>Why do we need VAOs?
@@ -83,8 +89,12 @@ title: WebGL examples by Minho Kim
 	<li>
 		Transformation matrix libraries
 		<ul>
-			<li><a href="src/RotatedTranslatedTriangle_glMatrix.html"><tt>RotatedTranslatedTriangle_glMatrix.html</tt></a> using <a href="http://glmatrix.net">glMatrix</a></li>
-			<li><a href="src/RotatedTranslatedTriangle_J3DI.html"><tt>RotatedTranslatedTriangle_J3DI.html</tt></a> using <a href="https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/webkit/resources/J3DIMath.js">J3DIMath.js</a></li>
+			<li><a href="src/RotatedTranslatedTriangle_glMatrix.html"><tt>RotatedTranslatedTriangle_glMatrix.html</tt></a> using <a href="http://glmatrix.net">glMatrix</a>
+                (<a href="src/webgl10_RotatedTranslatedTriangle_glMatrix.html"><tt>webgl10_RotatedTranslatedTriangle_glMatrix.html</tt></a>)
+            </li>
+			<li><a href="src/RotatedTranslatedTriangle_J3DI.html"><tt>RotatedTranslatedTriangle_J3DI.html</tt></a> using <a href="https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/webkit/resources/J3DIMath.js">J3DIMath.js</a>
+                (<a href="src/webgl10_RotatedTranslatedTriangle_J3DI.html"><tt>webgl10_RotatedTranslatedTriangle_J3DI.html</tt></a>)
+            </li>
 		</ul>
 	</li>
 
@@ -92,10 +102,11 @@ title: WebGL examples by Minho Kim
 		Transformations
 		<ul>
 			<li>
-				<a href="src/xfm_hierarchy.html">Hierarchical transformations</a>
+				<a href="src/xfm_hierarchy.html"><tt>xfm_hierarchy.html</tt></a> Hierarchical transformations
+				(<a href="src/webgl10_xfm_hierarchy.html"><tt>webgl10_xfm_hierarchy.html</tt></a>)
 			</li>
 			<li>
-				<a href="src/xfm_hierarchy_stack.html">Hierarchical transformations (using a stack)</a>
+				<a href="src/xfm_hierarchy_stack.html"><tt>xfm_hierarchy_stack.html</tt></a>: Hierarchical transformations (using a stack)
 			</li>
 			<li>
 				<a href="src/luxo.html">Hierarchical transformations with a light</a>

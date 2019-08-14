@@ -1,14 +1,19 @@
+"use strict";
 function main() {
-	 canvas = document.getElementById('webgl');
-	 gl = getWebGLContext(canvas);
-	var shader = init_shader(gl, ["aPosition"]);
+    let canvas = document.getElementById('webgl');
+    let gl = getWebGLContext(canvas);
+
+	let shader = new Shader(gl, 
+	            document.getElementById("shader-vert").text,
+	            document.getElementById("shader-frag").text,
+                ["aPosition"]);
+
+	let quad = init_vbo_quad(gl);
 	
-	quad = init_vbo_quad(gl);
-	
-	// Specify the color for clearing <canvas>
+	shader.loc_uniforms = {MVP:gl.getUniformLocation(shader.h_prog, "MVP"),
+                            color:gl.getUniformLocation(shader.h_prog, "color")};
+
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	
-	// Clear <canvas>
 	
 	set_slider_callbacks("x_R", function(ev) {render_scene(gl, shader, quad);});
 	set_slider_callbacks("y_R", function(ev) {render_scene(gl, shader, quad);});
@@ -20,7 +25,6 @@ function main() {
 	set_slider_callbacks("angle_B", function(ev) {render_scene(gl, shader, quad);});
 
 	render_scene(gl, shader, quad);
-
 }
 
 function set_slider_callbacks(id, fn)
@@ -29,27 +33,27 @@ function set_slider_callbacks(id, fn)
 	document.getElementById(id).oninput = fn;
 }
 
-var WIDTH_RED = 0.3;
-var WIDTH_GREEN	= 0.2;
-var LENGTH_GREEN = 0.8;
-var WIDTH_BLUE = (WIDTH_GREEN/2.0);
-var LENGTH_BLUE	= 0.3;
+let WIDTH_RED = 0.3;
+let WIDTH_GREEN	= 0.2;
+let LENGTH_GREEN = 0.8;
+let WIDTH_BLUE = (WIDTH_GREEN/2.0);
+let LENGTH_BLUE	= 0.3;
 
-var x_R = 0;
-var y_R = 0;
-var length_R = 1.0;
-var angle_R = 10;
-var length_G;
-var angle_G = -10;
-var length_B;
-var angle_B = 30;
+let x_R = 0;
+let y_R = 0;
+let length_R = 1.0;
+let angle_R = 10;
+let length_G;
+let angle_G = -10;
+let length_B;
+let angle_B = 30;
 
-function render_quad(gl, shader, object, loc_MVP, MVP, loc_color, color)
+function render_quad(gl, shader, object, uniforms)
 {
-	set_uniforms(gl, loc_MVP, MVP, loc_color, color);
-	for(var attrib_name in shader.attribs)
+	set_uniforms(gl, shader.loc_uniforms, uniforms);
+	for(let attrib_name in shader.attribs)
 	{
-		var	attrib = object.attribs[attrib_name];
+		let	attrib = object.attribs[attrib_name];
 		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
 		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -59,10 +63,10 @@ function render_quad(gl, shader, object, loc_MVP, MVP, loc_color, color)
 
 }
 
-function set_uniforms(gl, loc_MVP, MVP, loc_color, color)
+function set_uniforms(gl, loc_uniforms, uniforms)
 {
-	gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
-	gl.uniform3fv(loc_color, (new Vector3(color)).elements);
+	gl.uniformMatrix4fv(loc_uniforms.MVP, false, uniforms.MVP.elements);
+	gl.uniform3fv(loc_uniforms.color, (new Vector3(uniforms.color)).elements);
 }
 
 function refresh_values()
@@ -84,12 +88,8 @@ function render_scene(gl, shader, quad)
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.useProgram(shader.h_prog);
 
-
-	var loc_MVP = gl.getUniformLocation(shader.h_prog, "MVP");
-	var loc_color = gl.getUniformLocation(shader.h_prog, "color");
-
-	var MatStack = [];
-	var MVP = new Matrix4();
+	let MatStack = [];
+	let MVP = new Matrix4();
 
     /*
                      P
@@ -128,7 +128,7 @@ function render_scene(gl, shader, quad)
 	MatStack.push(new Matrix4(MVP));
 		MVP.translate((length_R-WIDTH_RED)/2.0, 0, 0.1);    // Tr_low
 		MVP.scale(length_R, WIDTH_RED, 1);  // Sr
-		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [1,0,0]);    // red quad
+		render_quad(gl, shader, quad, {MVP:MVP, color:[1,0,0]});    // red quad
 	MVP = MatStack.pop();
 	
 	MVP.translate(length_R - WIDTH_RED, 0, 0);  // Tr_high
@@ -136,7 +136,7 @@ function render_scene(gl, shader, quad)
 	MatStack.push(new Matrix4(MVP));
 		MVP.translate((length_G - WIDTH_GREEN)/2.0, 0, 0);  // Tg_low
 		MVP.scale(length_G, WIDTH_GREEN, 1);    // Sg
-		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,1,0]);    // green quad
+		render_quad(gl, shader, quad, {MVP:MVP, color:[0,1,0]});    // green quad
 	MVP = MatStack.pop();
 	
 	MatStack.push(new Matrix4(MVP));
@@ -144,7 +144,7 @@ function render_scene(gl, shader, quad)
 		MVP.rotate(angle_B, 0, 0, 1);    // Rb1
 		MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
 		MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
-		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);    // blue quad
+		render_quad(gl, shader, quad, {MVP:MVP, color:[0,0,1]});    // blue quad
 	MVP = MatStack.pop();
 	
 	MatStack.push(new Matrix4(MVP));
@@ -152,36 +152,13 @@ function render_scene(gl, shader, quad)
 		MVP.rotate(-angle_B, 0, 0, 1);   // Rb2
 		MVP.translate((length_B - WIDTH_BLUE)/2.0, 0, 0.3);   // Tb
 		MVP.scale(length_B, WIDTH_BLUE, 1);   // Sb
-		render_quad(gl, shader, quad, loc_MVP, MVP, loc_color, [0,0,1]);    // blue quad
+		render_quad(gl, shader, quad, {MVP:MVP, color:[0,0,1]});    // blue quad
 	MVP = MatStack.pop();
 
-
-
-}
-
-function init_shader(gl, attrib_names)
-{
-
-	var src_vert = document.getElementById("shader-vert").text;
-	var src_frag = document.getElementById("shader-frag").text;
-	// Initialize shaders
-	if (!initShaders(gl, src_vert, src_frag)) {
-		console.log('Failed to intialize shaders.');
-		return;
-	}
-
-	h_prog = gl.program;
-
-	var	attribs = {};
-	for(let attrib of attrib_names)
-	{
-		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
-	}
-	return {h_prog:h_prog, attribs:attribs};
 }
 
 function init_vbo_quad(gl) {
-	var verts = new Float32Array([
+	let verts = new Float32Array([
 	  -0.5, -0.5,
 	   0.5, -0.5, 
 	   0.5,  0.5,
@@ -189,14 +166,14 @@ function init_vbo_quad(gl) {
 	]);
 	
 	// Create a buffer object
-	var buf = gl.createBuffer();
+	let buf = gl.createBuffer();
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 	
-	var	attribs = [];
+	let	attribs = [];
 	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:0, offset:0};
-	
+    
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	
 	return {n:4, type:gl.TRIANGLE_FAN, attribs:attribs};

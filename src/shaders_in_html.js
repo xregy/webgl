@@ -33,6 +33,9 @@ function main()
     gl.attachShader(h_prog, h_frag);
     gl.linkProgram(h_prog);
 
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
     let vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -41,10 +44,15 @@ function main()
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
+    gl.bindVertexArray(null);
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(h_prog);
+
+    gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.bindVertexArray(null);
 
 }

@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 const SRC_VERT = `#version 300 es
 layout(location=7) in vec4 aPosition;
 void main() 
@@ -24,15 +24,21 @@ function main()
 
 	initShaders(gl, SRC_VERT, SRC_FRAG);
 
-	initVertexBuffers(gl);
+	let vao = initVertexBuffers(gl);
 
 	gl.clearColor(0.2, 0.2, 0.2, 1.0);
 	gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.bindVertexArray(vao);
 	gl.drawArrays(gl.POINTS, 0, 3);
+    gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let vertices = new Float32Array([
 	 .9,  .2,
 	-.3, -.7,
@@ -47,5 +53,9 @@ function initVertexBuffers(gl)
 	gl.vertexAttribPointer(locPosition, 2, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(locPosition);
 
+    gl.bindVertexArray(null);
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    return vao;
 }

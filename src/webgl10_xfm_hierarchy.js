@@ -1,17 +1,17 @@
 "use strict";
 function main() {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext("webgl2");
-	let shader = new Shader(gl, 
-	        document.getElementById("shader-vert").text,
-	        document.getElementById("shader-frag").text,
-            {aPosition:3});
+	let gl = getWebGLContext(canvas);
+	let shader = new Shader(gl,
+	                document.getElementById("shader-vert").text,
+	                document.getElementById("shader-frag").text,
+                    ["aPosition"]);
+
+    shader.loc_uniforms = {MVP:gl.getUniformLocation(shader.h_prog, "MVP"),
+                            color:gl.getUniformLocation(shader.h_prog, "color")};
 	
 	let quad = init_vbo_quad(gl);
-
-	shader.loc_uniforms = {MVP:gl.getUniformLocation(shader.h_prog, "MVP"),
-	                    color:gl.getUniformLocation(shader.h_prog, "color")};
-
+	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	
 	set_slider_callbacks("x_R", function(ev) {render_scene(gl, shader, quad);});
@@ -24,6 +24,7 @@ function main() {
 	set_slider_callbacks("angle_B", function(ev) {render_scene(gl, shader, quad);});
 
 	render_scene(gl, shader, quad);
+
 }
 
 function set_slider_callbacks(id, fn)
@@ -47,12 +48,19 @@ let angle_G  = -10;
 let length_B;
 let angle_B  = 30;
 
-function render_quad(gl, shader, vao, uniforms)
+function render_quad(gl, shader, object, uniforms)
 {
 	set_uniforms(gl, shader.loc_uniforms, uniforms);
-    gl.bindVertexArray(vao);
-	gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-    gl.bindVertexArray(null);
+	for(let attrib_name in shader.attribs)
+	{
+		let	attrib = object.attribs[attrib_name];
+		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
+		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+	}
+	gl.drawArrays(object.type, 0, object.n);
+
 }
 
 function set_uniforms(gl, loc_uniforms, uniforms)
@@ -142,28 +150,44 @@ function render_scene(gl, shader, quad)
 	render_quad(gl, shader, quad, {matrices:[P,V,T_base,Rr,Tr_high,Rg,Tg_high2,Rb2,Tb,Sb], color:[0,0,1]});
 }
 
-function init_vbo_quad(gl) {
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
+function init_shader(gl, attrib_names)
+{
+	let src_vert = document.getElementById("shader-vert").text;
+	let src_frag = document.getElementById("shader-frag").text;
+	// Initialize shaders
+	if (!initShaders(gl, src_vert, src_frag)) {
+		console.log('Failed to intialize shaders.');
+		return;
+	}
 
+	let h_prog = gl.program;
+
+	let	attribs = {};
+	for(let attrib of attrib_names)
+	{
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+	}
+	return {h_prog:h_prog, attribs:attribs};
+}
+
+function init_vbo_quad(gl) {
 	let verts = new Float32Array([
 	  -0.5, -0.5,
 	   0.5, -0.5, 
 	   0.5,  0.5,
 	  -0.5,  0.5
 	]);
-
+	
+	// Create a buffer object
 	let buf = gl.createBuffer();
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 	
-    let loc_aPosition = 3;
-    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    gl.bindVertexArray(null);
+	let	attribs = [];
+	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+	
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	
-	return vao;
+	return {n:4, type:gl.TRIANGLE_FAN, attribs:attribs};
 }

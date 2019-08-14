@@ -1,3 +1,4 @@
+"use strict";
 function main() {
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
