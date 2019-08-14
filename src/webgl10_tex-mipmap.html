@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mipmap (Webgl 1.0)</title>
+  </head>
+
+  <body onload="main()">
+  	<h1 align=center>Mipmap (Webgl 1.0)</h1>
+    <canvas id="webgl" width="1024" height="1024">
+    Please use a browser that supports "canvas"
+    </canvas>
+	<table>
+		<tr>
+			<td>texture:</td>
+			<td><tt>
+					<select id="texture">
+						<option value="checkerboard">checkerboard</option>
+						<option value="separate_colors">separate colors</option>
+					</select>
+				</tt>
+			</td>
+		</tr>
+		<tr>
+			<td><tt>gl.TEXTURE_MAG_FILTER:</tt></td>
+			<td><tt>
+					<select id="mag-filter">
+						<option id="mag-LINEAR">LINEAR</option>
+						<option id="mag-NEAREST" selected>NEAREST</option>
+					</select>
+				</tt>
+			</td>
+		</tr>
+		<tr>
+			<td><tt>gl.TEXTURE_MIN_FILTER:</tt></td>
+			<td><tt>
+					<select id="min-filter">
+						<option id="min-LINEAR">LINEAR</option>
+						<option id="min-NEAREST" selected>NEAREST</option>
+						<option id="min-NEAREST_MIPMAP_NEAREST">NEAREST_MIPMAP_NEAREST</option>
+						<option id="min-LINEAR_MIPMAP_NEAREST">LINEAR_MIPMAP_NEAREST</option>
+						<option id="min-NEAREST_MIPMAP_LINEAR">NEAREST_MIPMAP_LINEAR</option>
+						<option id="min-LINEAR_MIPMAP_LINEAR">LINEAR_MIPMAP_LINEAR</option>
+					</select>
+				</tt>
+			</td>
+		</tr>
+		<tr>
+			<td>speed</td>
+			<td>
+				<input type="range" id="speed", min=0 max=200 value=100>
+			</td>
+		</tr>
+
+	</table>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="webgl10_tex-mipmap.js"></script>
+  </body>
+</html>

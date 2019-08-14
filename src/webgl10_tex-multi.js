@@ -1,48 +1,44 @@
 "use strict";
-const SRC_VERT_SHADER = 
-`#version 300 es
-layout(location=3) in vec2 aPosition;
-layout(location=8) in vec2 aTexCoord0;
-layout(location=6) in vec2 aTexCoord1;
-out vec2 vTexCoord0;
-out vec2 vTexCoord1;
+const SRC_VERT_SHADER = `
+attribute vec2 aPosition;
+attribute vec2 aTexCoord0;
+attribute vec2 aTexCoord1;
+varying vec2 v_TexCoord0;
+varying vec2 v_TexCoord1;
 uniform mat4 MVP;
 void main()
 {
     gl_Position = MVP * vec4(aPosition, 0, 1);
-    vTexCoord0 = aTexCoord0;
-    vTexCoord1 = aTexCoord1;
+    v_TexCoord0 = aTexCoord0;
+    v_TexCoord1 = aTexCoord1;
 }
 `;
 
 const SRC_FRAG_SHADER =
-`#version 300 es
+`
 #ifdef GL_ES
 precision mediump float;
 #endif
-uniform sampler2D uSampler0;
-uniform sampler2D uSampler1;
-in vec2 vTexCoord0;
-in vec2 vTexCoord1;
-out vec4 fColor;
+uniform sampler2D u_Sampler0;
+uniform sampler2D u_Sampler1;
+varying vec2 v_TexCoord0;
+varying vec2 v_TexCoord1;
 void main()
 {
-    vec4 color0 = texture(uSampler0, vTexCoord0);
-    vec4 color1 = texture(uSampler1, vTexCoord1);
-    fColor = mix(color0, color1, 0.5);
+    vec4 color0 = texture2D(u_Sampler0, v_TexCoord0);
+    vec4 color1 = texture2D(u_Sampler1, v_TexCoord1);
+    gl_FragColor = mix(color0, color1, 0.5);
 }
 `;
 
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext('webgl2');
+	let gl = getWebGLContext(canvas);
 
-	let shader = 
-    {
-        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER),
-        attribs:{"aPosition":3, "aTexCoord0":8, "aTexCoord1":6}
-    };
+	let shader = init_shader(gl,
+		SRC_VERT_SHADER, SRC_FRAG_SHADER,
+		["aPosition", "aTexCoord0", "aTexCoord1"]);
 	let obj = initVBO(gl);
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -69,7 +65,7 @@ function main()
 		{
 			gl.activeTexture(gl.TEXTURE0 + textures[i].unit);
 			gl.bindTexture(gl.TEXTURE_2D, textures[i].texture);
-			gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler" + i), textures[i].unit);
+			gl.uniform1i(gl.getUniformLocation(shader.h_prog, "u_Sampler" + i), textures[i].unit);
 		}
 		gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, MVP.elements);
 	};
@@ -104,11 +100,16 @@ function main()
 
 }
 
-function init_shader(gl, src_vert, src_frag)
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
 	let h_prog = gl.program;
-	return h_prog;
+	let attribs = {};
+	for(let attrib of attrib_names)
+	{
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+	}
+	return {h_prog:h_prog, attribs:attribs};
 }
 
 

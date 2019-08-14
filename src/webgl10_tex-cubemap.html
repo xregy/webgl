@@ -16,9 +16,9 @@
 			humus@comhem.se
 		</div>
 
-		<script id="vert-room" type="x-shader/x-vertex">#version 300 es
-			layout(location=7) in vec4 aPosition;
-			out vec4 vPosition;
+		<script id="vert-room" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			varying vec4 vPosition;
 			uniform mat4 MVP;
 			void main()
 			{
@@ -26,23 +26,22 @@
 				vPosition = aPosition;
 			}
 		</script>
-		<script id="frag-room" type="x-shader/x-fragment">#version 300 es
+		<script id="frag-room" type="x-shader/x-fragment">
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
 			uniform samplerCube sampler_cubemap;
-			in vec4 vPosition;
-            out vec4 fColor;
+			varying vec4 vPosition;
 			void main()
 			{
-				fColor = texture(sampler_cubemap, vPosition.xyz);
+				gl_FragColor = textureCube(sampler_cubemap, vPosition.xyz);
 			}
 		</script>
-		<script id="vert-cubemap" type="x-shader/x-vertex">#version 300 es
-			layout(location=4) in vec4 aPosition;
-			layout(location=8) in vec3 aNormal;
-			out vec4 vPosition;
-			out vec3 vNormal;
+		<script id="vert-cubemap" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec3 aNormal;
+			varying vec4 vPosition;
+			varying vec3 vNormal;
 			uniform mat4 MVP;
 			uniform mat4 MV;
 			uniform mat4 matNormal;
@@ -53,17 +52,16 @@
 				vNormal = normalize(mat3(matNormal)*aNormal);
 			}
 		</script>
-		<script id="frag-cubemap" type="x-shader/x-fragment">#version 300 es
+		<script id="frag-cubemap" type="x-shader/x-fragment">
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
 			uniform samplerCube sampler_cubemap;
-			in vec4 vPosition;
-			in vec3 vNormal;
-            out vec4 fColor;
+			varying vec4 vPosition;
+			varying vec3 vNormal;
 			void main()
 			{
-				fColor = texture(sampler_cubemap, reflect(vPosition.xyz, vNormal));
+				gl_FragColor = textureCube(sampler_cubemap, reflect(vPosition.xyz, vNormal));
 			}
 		</script>
 
@@ -74,7 +72,7 @@
 		<script src="../resources/monkey_sub2_smooth.js"></script>
 		
 		<script src="class_mesh.js"></script>
-		<script src="class_shader.js"></script>
+		<script src="webgl10_class_shader.js"></script>
 		<script src="class_texture.js"></script>
 		<script src="tex-cubemap.js"></script>
 	</body>

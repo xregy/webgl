@@ -1,8 +1,8 @@
-"use strict";
+"use strict"
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext('webgl2');
+	let gl = getWebGLContext(canvas);
 
 	gl.cullFace(gl.BACK);
 	gl.enable(gl.CULL_FACE);
@@ -11,12 +11,12 @@ function main()
 	let shader_room = new Shader(gl,
 		document.getElementById("vert-room").text,
 		document.getElementById("frag-room").text,
-		{aPosition:7});
+		["aPosition"]);
 
 	let shader_cubemap = new Shader(gl,
 		document.getElementById("vert-cubemap").text,
 		document.getElementById("frag-cubemap").text,
-		{aPosition:4, aNormal:8});
+		["aPosition", "aNormal"]);
 
 	let room = create_mesh_room_cubemap(gl);
 	room.M.setScale(2.0, 2.0, 2.0);

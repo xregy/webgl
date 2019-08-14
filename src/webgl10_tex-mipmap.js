@@ -1,35 +1,33 @@
-"use strict";
-const SRC_VERT_SHADER = 
-`#version 300 es
-layout(location=3) in vec2 aPosition;
-layout(location=7) in vec2 aTexCoord;
-out vec2 vTexCoord;
+"use strict"
+const SRC_VERT_SHADER = `
+attribute vec2 aPosition;
+attribute vec2 aTexCoord;
+varying vec2 v_TexCoord;
 uniform mat4 MVP;
 void main()
 {
 	gl_Position = MVP * vec4(aPosition, 0, 1);
-	vTexCoord = aTexCoord;
+	v_TexCoord = aTexCoord;
 }
 `;
 
 const SRC_FRAG_SHADER =
-`#version 300 es
+`
 #ifdef GL_ES
 precision mediump float;
 #endif
-uniform sampler2D uSampler;
-in vec2 vTexCoord;
-out vec4 fColor;
+uniform sampler2D u_Sampler;
+varying vec2 v_TexCoord;
 void main()
 {
-	fColor = texture(uSampler, vTexCoord);
+	gl_FragColor = texture2D(u_Sampler, v_TexCoord);
 }
 `;
 
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = canvas.getContext("webgl2");
+	let gl = getWebGLContext(canvas);
 
 	document.getElementById("mag-LINEAR").value = gl.LINEAR;
 	document.getElementById("mag-NEAREST").value = gl.NEAREST;
@@ -41,11 +39,9 @@ function main()
 	document.getElementById("min-NEAREST_MIPMAP_LINEAR").value = gl.NEAREST_MIPMAP_LINEAR;
 	document.getElementById("min-LINEAR_MIPMAP_LINEAR").value = gl.LINEAR_MIPMAP_LINEAR;
 
-	let shader = {
-        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER),
-        attribs:{"aPosition":3, "aTexCoord":7}
-    };
-
+	let shader = init_shader(gl,
+		SRC_VERT_SHADER, SRC_FRAG_SHADER,
+		["aPosition", "aTexCoord"]);
 	let obj = initVBO(gl);
 
 	gl.clearColor(0.2, 0.2, 0.2, 1.0);
@@ -64,7 +60,7 @@ function main()
 		gl.bindTexture(gl.TEXTURE_2D, textures[document.getElementById("texture").value]);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, document.getElementById("min-filter").value);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, document.getElementById("mag-filter").value);
-		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler"), 3);
+		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "u_Sampler"), 3);
 		gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, MVP.elements);
 	};
 
@@ -106,11 +102,16 @@ function main()
 
 }
 
-function init_shader(gl, src_vert, src_frag)
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
 	let h_prog = gl.program;
-	return h_prog;
+	let attribs = {};
+	for(let attrib of attrib_names)
+	{
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+	}
+	return {h_prog:h_prog, attribs:attribs};
 }
 
 function generate_tex_checkerboard(gl, N)
@@ -153,7 +154,7 @@ function generate_tex_mipmap(gl, levels, colors, max_level)
 				for(let k=0 ; k<3 ; k++) img[3*(i*N + j) + k] = colors[level][k];
 			}
 		}
-//		console.log(level + ',' + N + ':' );
+		console.log(level + ',' + N + ':' );
 		gl.texImage2D(gl.TEXTURE_2D, level, gl.RGB, N, N, 0, gl.RGB, gl.UNSIGNED_BYTE, img);
 	}
 	return tex;

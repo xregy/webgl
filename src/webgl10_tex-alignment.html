@@ -14,33 +14,36 @@
         <script src="../lib/webgl-debug.js"></script>
         <script src="../lib/cuon-utils.js"></script>
         <script src="../lib/cuon-matrix.js"></script>
-        <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-            layout(location=0) in vec4 a_Position;
-            layout(location=1) in vec2 a_TexCoord;
-            out vec2 v_TexCoord;
+        <script id="shader-vert" type="x-shader/x-vertex">
+            attribute vec4 a_Position;
+            attribute vec2 a_TexCoord;
+            varying vec2 v_TexCoord;
             void main()
             {
                 gl_Position = a_Position;
                 v_TexCoord = a_TexCoord;
             }
         </script>
-        <script id="shader-frag" type="x-shader/x-fragment">#version 300 es
+        <script id="shader-frag" type="x-shader/x-fragment">
             #ifdef GL_ES
             precision mediump float;
             #endif
             uniform sampler2D u_Sampler;
-            in vec2 v_TexCoord;
-            out vec4 f_Color;
+            varying vec2 v_TexCoord;
             void main()
             {
-                f_Color = texture(u_Sampler, v_TexCoord);
+                gl_FragColor = texture2D(u_Sampler, v_TexCoord);
             }
         </script>
         <script type="text/javascript">
             function main()
             {
                   var canvas = document.getElementById('webgl');
-                  var gl = canvas.getContext('webgl2');
+                  var gl = getWebGLContext(canvas);
+                  if(!gl.getExtension("OES_texture_float")) {
+                    alert("no OES_texture_float");
+                    return;
+                  }
                   initShaders(gl, document.getElementById("shader-vert").text,
                                     document.getElementById("shader-frag").text);
                   initVertexBuffers(gl);
@@ -70,11 +73,11 @@
                 
                 var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
                 
-                var a_Position = 0;
+                var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
                 gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
                 gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
                 
-                var a_TexCoord = 1;
+                var a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
                 gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
                 gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
                 
