@@ -2,7 +2,23 @@
 function main()
 {
     let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    let names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    let gl = null;
+    for (let i = 0; i < names.length; ++i)
+    {
+        try
+        {
+            gl = canvas.getContext(names[i], []);
+        }
+        catch(e)
+        {
+        }
+        if (gl)
+        {
+            break;
+        }
+    }
+
     if (!gl)  
     {
         console.log('Failed to get the rendering context for WebGL'); 
@@ -17,8 +33,8 @@ function main()
                          0.90,  0.90,
                         -0.85,  0.90]);
 
-    let src_vert = document.getElementById("shader-vert").text;
-    let src_frag = document.getElementById("shader-frag").text;
+	let src_vert = document.getElementById("shader-vert").text;
+	let src_frag = document.getElementById("shader-frag").text;
 
     let h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
@@ -37,7 +53,7 @@ function main()
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    let loc_aPosition = 7;
+    let loc_aPosition = gl.getAttribLocation(h_prog, 'aPosition');
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 

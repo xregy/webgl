@@ -2,23 +2,7 @@
 function main()
 {
     let canvas = document.getElementById('webgl');
-    let names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-    let gl = null;
-    for (let i = 0; i < names.length; ++i)
-    {
-        try
-        {
-            gl = canvas.getContext(names[i], []);
-        }
-        catch(e)
-        {
-        }
-        if (gl)
-        {
-            break;
-        }
-    }
-
+    gl = canvas.getContext("webgl2");
     if (!gl)  
     {
         console.log('Failed to get the rendering context for WebGL'); 
@@ -34,19 +18,22 @@ function main()
                         -0.85,  0.90]);
 
     let src_vert = 
-        'attribute vec4 aPosition;	\n' +
-        'void	\n' +
-        'main()	\n' +
-        '{	\n' +
-        '\t	gl_Position = aPosition;	\n' +
-        '}	\n';
+    `#version 300 es
+        layout(location=7) in vec4 aPosition;
+        void main()
+        {
+            gl_Position = aPosition;
+        }
+    `;
     let src_frag = 
-        'precision mediump float;\n' +
-        'void\n' +
-        'main()\n' +
-        '{\n' +
-        '\tgl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n' +
-        '}\n';
+    `#version 300 es
+        precision mediump float;
+        out vec4 fColor;
+        void main()
+        {
+            fColor = vec4(0.0, 0.0, 1.0, 1.0);
+        }
+    `;
 
     let h_prog = gl.createProgram();
 
@@ -66,7 +53,7 @@ function main()
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    let loc_aPosition = gl.getAttribLocation(h_prog, 'aPosition');
+    let loc_aPosition = 7;
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 

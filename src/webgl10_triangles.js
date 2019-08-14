@@ -1,8 +1,24 @@
-"use strict";
+"use stricrt";
 function main()
 {
     let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    let names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    let gl = null;
+    for (let i = 0; i < names.length; ++i)
+    {
+        try
+        {
+            gl = canvas.getContext(names[i], []);
+        }
+        catch(e)
+        {
+        }
+        if (gl)
+        {
+            break;
+        }
+    }
+
     if (!gl)  
     {
         console.log('Failed to get the rendering context for WebGL'); 
@@ -17,27 +33,40 @@ function main()
                          0.90,  0.90,
                         -0.85,  0.90]);
 
-    let src_vert = document.getElementById("shader-vert").text;
-    let src_frag = document.getElementById("shader-frag").text;
+    let src_vert = 
+        'attribute vec4 aPosition;	\n' +
+        'void	\n' +
+        'main()	\n' +
+        '{	\n' +
+        '\t	gl_Position = aPosition;	\n' +
+        '}	\n';
+    let src_frag = 
+        'precision mediump float;\n' +
+        'void\n' +
+        'main()\n' +
+        '{\n' +
+        '\tgl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n' +
+        '}\n';
+
+    let h_prog = gl.createProgram();
 
     let h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
     gl.compileShader(h_vert);
+    gl.attachShader(h_prog, h_vert);
 
     let	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
-
-    let h_prog = gl.createProgram();
-    gl.attachShader(h_prog, h_vert);
     gl.attachShader(h_prog, h_frag);
+
     gl.linkProgram(h_prog);
 
     let vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    let loc_aPosition = 7;
+    let loc_aPosition = gl.getAttribLocation(h_prog, 'aPosition');
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
