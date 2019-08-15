@@ -1,10 +1,10 @@
 "use strict";
 let src_vert_axes = 
-`#version 300 es
-    layout(location=3) in vec4 aPosition;
-    layout(location=7) in vec4 aColor;
+`
+    attribute vec4 aPosition;
+    attribute vec4 aColor;
     uniform mat4 VP;
-    out vec4 vColor;
+    varying vec4 vColor;
     void main()
     {
         gl_Position = VP * aPosition;
@@ -13,27 +13,26 @@ let src_vert_axes =
     }
 `;
 let src_frag_axes =
-`#version 300 es
+`
     #ifdef GL_ES
     precision mediump float;
     #endif
-    in vec4 vColor;
-    out vec4 fColor;
+    varying vec4 vColor;
     void main()
     {
-        fColor = vColor;
+        gl_FragColor = vColor;
     }
 `;
 let src_vert_lighting =
-`#version 300 es
+`
      // eye coordinate system
-    layout(location=2) in vec4 aPosition;
-    layout(location=5) in vec3 aNormal;
+    attribute vec4 aPosition;
+    attribute vec3 aNormal;
     uniform mat4 MVP;
     uniform mat4 MV;
     uniform mat4 matNormal;
-    out vec3 vNormal;
-    out vec4 vPosWorld;
+    varying vec3 vNormal;
+    varying vec4 vPosWorld;
     void main()
     {
         vPosWorld = MV*aPosition;
@@ -42,14 +41,13 @@ let src_vert_lighting =
     }
 `;
 let src_frag_lighting =
-`#version 300 es
+`
      // eye coordinate system
      #ifdef GL_ES
      precision mediump float;
      #endif
-    in vec4 vPosWorld;
-    in vec3 vNormal;
-    out vec4 fColor;
+    varying vec4 vPosWorld;
+    varying vec3 vNormal;
     struct TMaterial
     {
         vec3    ambient;
@@ -73,7 +71,7 @@ let src_frag_lighting =
     {
         vec3 n = normalize(vNormal);
         vec3 v = normalize(-vPosWorld.xyz);
-         fColor = vec4(0,0,0,1);
+         gl_FragColor = vec4(0,0,0,1);
          for(int i=0 ; i<2 ; i++)
          {
             vec3    l = normalize((lights[i].position - vPosWorld).xyz);
@@ -91,7 +89,7 @@ let src_frag_lighting =
                 diffuse = vec3(0);
                 specular = vec3(0);
             }
-            fColor.rgb += ambient + diffuse + specular;
+            gl_FragColor.rgb += ambient + diffuse + specular;
          }
     }
 `;
@@ -115,10 +113,15 @@ let P;
 let g_last = Date.now();
 
 
-function init_shader(gl, src_vert, src_frag, attribs)
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
     initShaders(gl, src_vert, src_frag);
     let h_prog = gl.program;
+    let	attribs = {};
+    for(let attrib of attrib_names)
+    {
+        attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+    }
     return {h_prog:h_prog, attribs:attribs};
 }
 
@@ -164,11 +167,11 @@ function init_lights(gl)
 function main()
 {
     let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    let gl = getWebGLContext(canvas);
 
     gl.enable(gl.DEPTH_TEST);
     
-    shader_axes = init_shader(gl, src_vert_axes, src_frag_axes, {aPosition:3, aColor:7});
+    shader_axes = init_shader(gl, src_vert_axes, src_frag_axes, ["aPosition", "aColor"]);
     
     axes = init_vbo_axes(gl);
     walls = init_vbo_walls(gl);
@@ -177,7 +180,7 @@ function main()
     
     init_xforms(gl);
     
-    shader_model = init_shader(gl, src_vert_lighting, src_frag_lighting, {aPosition:2, aNormal:5});
+    shader_model = init_shader(gl, src_vert_lighting, src_frag_lighting, ["aPosition", "aNormal"]);
     
     init_materials(gl);
     init_lights(gl);
@@ -229,13 +232,31 @@ function refresh_scene(gl)
 function render_object(gl, shader, object, mat_name=null, mtrx_model=new Matrix4())
 {
     gl.useProgram(shader.h_prog);
-    gl.bindVertexArray(object.vao);
     set_uniforms(gl, shader.h_prog, mat_name, mtrx_model);
     
-    if(object.drawcall == "drawArrays")         gl.drawArrays(object.type, 0, object.n);
-    else if(object.drawcall == "drawElements")  gl.drawElements(object.type, object.n, object.type_index, 0);
-   
-    gl.bindVertexArray(null);
+    for(let attrib_name in object.attribs)
+    {
+        let	attrib = object.attribs[attrib_name];
+        gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
+        gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+    }
+    if(object.drawcall == "drawArrays")
+    {
+        gl.drawArrays(object.type, 0, object.n);
+    }
+    else if(object.drawcall == "drawElements")
+    {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.buf_index);
+        gl.drawElements(object.type, object.n, object.type_index, 0);
+    }
+    
+    for(let attrib_name in object.attribs)
+    {
+        gl.disableVertexAttribArray(shader.attribs[attrib_name]);
+    }
+    
     gl.useProgram(null);
 }
 
@@ -307,8 +328,6 @@ function set_material(gl, h_prog, mat_name)
 }
 function init_vbo_axes(gl)
 {
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
     let vertices = new Float32Array([
       // Vertex coordinates and color
       0,0,0, 1,0,0,
@@ -329,28 +348,22 @@ function init_vbo_axes(gl)
     
     let SZ = vertices.BYTES_PER_ELEMENT;
     
-    let loc_aPosition = 3;
-    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    let loc_aNormal = 7;
-    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
-    gl.enableVertexAttribArray(loc_aNormal);
-
-    gl.bindVertexArray(null);
+    let	attribs = [];
+    attribs["aPosition"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:0};
+    attribs["aColor"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:SZ*3};
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
    
-    return {vao:vao, n:6, drawcall:"drawArrays", type:gl.LINES};
+    return {n:6, drawcall:"drawArrays", type:gl.LINES, attribs:attribs};
 }
+
+
+
 
 const ROOM_WIDTH_HALF = 1;
 
 function init_vbo_walls(gl)
 {
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-
     let verts = new Float32Array(
                 [-ROOM_WIDTH_HALF, -ROOM_WIDTH_HALF, 0, 0, 1,
                   ROOM_WIDTH_HALF, -ROOM_WIDTH_HALF, 0, 0, 1,
@@ -364,16 +377,10 @@ function init_vbo_walls(gl)
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
     let SZ = verts.BYTES_PER_ELEMENT;
+    let	attribs = [];
+    attribs["aPosition"] = {buffer:vbo, size:2, type:gl.FLOAT, normalized:false, stride:SZ*5, offset:0};
+    attribs["aNormal"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:SZ*5, offset:SZ*2};
 
-    let loc_aPosition = 2;
-    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*5, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    let loc_aNormal = 5;
-    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*5, SZ*2);
-    gl.enableVertexAttribArray(loc_aNormal);
-
-    gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     let walls = [];
@@ -404,7 +411,7 @@ function init_vbo_walls(gl)
     m.rotate(-90, 1, 0, 0);
     walls["bottom"] = {M:m, material:"copper"};
 
-    return {walls:walls, object:{vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN}};
+    return {walls:walls, object:{n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN, attribs:attribs}};
 }
 
 function render_walls(gl, shader, walls)
@@ -430,8 +437,6 @@ function animate(angle)
 }
 
 function init_vbo_luxo(gl) {
-    let vao_cube = gl.createVertexArray();
-    gl.bindVertexArray(vao_cube);
     let x = .5;
     // Create a cube
     //    v6----- v5
@@ -498,22 +503,11 @@ function init_vbo_luxo(gl) {
     gl.bufferData(gl.ARRAY_BUFFER, verts_cube, gl.STATIC_DRAW);
 
     let SZ = verts_cube.BYTES_PER_ELEMENT;
+    let	attribs_cube = [];
+    attribs_cube["aPosition"] = {buffer:vbo_cube, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:0};
+    attribs_cube["aNormal"] = {buffer:vbo_cube, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:SZ*3};
 
-    let loc_aPosition = 2;
-    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    let loc_aNormal = 5;
-    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
-    gl.enableVertexAttribArray(loc_aNormal);
-
-    gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    ///////////////////////////////////////////////////////////////////////
-
-    let vao_cone = gl.createVertexArray();
-    gl.bindVertexArray(vao_cone);
 
     const RADIUS_SMALL = .1;
     const RADIUS_LARGE = .2;
@@ -561,25 +555,19 @@ function init_vbo_luxo(gl) {
     gl.bufferData(gl.ARRAY_BUFFER, verts_head, gl.STATIC_DRAW);
 
     SZ = verts_head.BYTES_PER_ELEMENT;
+    let	attribs_head = [];
+    attribs_head["aPosition"] = {buffer:vbo_head, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:0};
+    attribs_head["aNormal"] = {buffer:vbo_head, size:3, type:gl.FLOAT, normalized:false, stride:SZ*6, offset:SZ*3};
 
-    loc_aPosition = 2;
-    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    loc_aNormal = 5;
-    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
-    gl.enableVertexAttribArray(loc_aNormal);
-
-    gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 
     let luxo = [];
 
-    luxo["base"] = {vao:vao_cube, n:36, drawcall:"drawArrays", type:gl.TRIANGLES, material:"gold"};
-    luxo["lower"] = {vao:vao_cube, n:36, drawcall:"drawArrays", type:gl.TRIANGLES, material:"silver"};
-    luxo["upper"] = {vao:vao_cube, n:36, drawcall:"drawArrays", type:gl.TRIANGLES, material:"copper"};
-    luxo["head"] = {vao:vao_cone, n:(steps+1)*2, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, material:"chrome"};
+    luxo["base"] = {n:36, drawcall:"drawArrays", type:gl.TRIANGLES, attribs:attribs_cube, material:"gold"};
+    luxo["lower"] = {n:36, drawcall:"drawArrays", type:gl.TRIANGLES, attribs:attribs_cube, material:"silver"};
+    luxo["upper"] = {n:36, drawcall:"drawArrays", type:gl.TRIANGLES, attribs:attribs_cube, material:"copper"};
+    luxo["head"] = {n:(steps+1)*2, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, attribs:attribs_head, material:"chrome"};
 
     luxo.base.M = new Matrix4();
     luxo.lower.M = new Matrix4();

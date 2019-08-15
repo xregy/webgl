@@ -1,12 +1,12 @@
 "use strict";
 function main() {
     let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    let gl = getWebGLContext(canvas);
 
     let shader = new Shader(gl, 
                 document.getElementById("shader-vert").text,
                 document.getElementById("shader-frag").text,
-                {aPosition:3});
+                ["aPosition"]);
     
     let quad = init_vbo_quad(gl);
     
@@ -50,10 +50,16 @@ let angle_B = 30;
 
 function render_quad(gl, shader, object, uniforms)
 {
-    gl.bindVertexArray(object.vao);
     set_uniforms(gl, shader.loc_uniforms, uniforms);
+    for(let attrib_name in shader.attribs)
+    {
+        let	attrib = object.attribs[attrib_name];
+        gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
+        gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+    }
     gl.drawArrays(object.type, 0, object.n);
-    gl.bindVertexArray(null);
 }
 
 function set_uniforms(gl, loc_uniforms, uniforms)
@@ -152,9 +158,6 @@ function render_scene(gl, shader, quad)
 
 function init_vbo_quad(gl)
 {
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-
     let verts = new Float32Array([
       -0.5, -0.5,
        0.5, -0.5, 
@@ -162,17 +165,16 @@ function init_vbo_quad(gl)
       -0.5,  0.5
     ]);
     
+    // Create a buffer object
     let buf = gl.createBuffer();
     
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
     
-    let loc_aPosition = 3;
-    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-    gl.bindVertexArray(null);
+    let attribs = [];
+    attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+    
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-    return {vao:vao, n:4, type:gl.TRIANGLE_FAN};
+    return {n:4, type:gl.TRIANGLE_FAN, attribs:attribs};
 }
