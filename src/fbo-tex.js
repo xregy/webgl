@@ -1,22 +1,17 @@
-"use strict"
+"use strict";
 
-function init_shader(gl, src_vert, src_frag, attrib_names)
+function init_shader(gl, src_vert, src_frag)
 {
 	initShaders(gl, src_vert, src_frag);
 	let h_prog = gl.program;
-	var	attribs = {};
-	for(let attrib of attrib_names)
-	{
-		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
-	}
-	return {h_prog:h_prog, attribs:attribs};
+	return h_prog;
 }
 
 
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext("webgl2");
 	
 	const FBO_WIDTH = 256;
 	const FBO_HEIGHT = 256;
@@ -30,15 +25,13 @@ function main()
 	let MVP = new Matrix4();
 	MVP.setOrtho(-1,1,-1,1,-1,1);
 	
-	let shader_simple = init_shader(gl,
+	let shader_simple = {h_prog:init_shader(gl,
 		document.getElementById("shader-vert-simple").text,
-		document.getElementById("shader-frag-simple").text,
-		["aPosition", "aColor"]);
+		document.getElementById("shader-frag-simple").text)};
 	
-	let shader_tex = init_shader(gl,
+	let shader_tex = {h_prog:init_shader(gl,
 		document.getElementById("shader-vert-tex").text,
-		document.getElementById("shader-frag-tex").text,
-		["aPosition", "aTexcoord"]);
+		document.getElementById("shader-frag-tex").text)};
 	
 	shader_simple.set_uniforms = function(gl) {
 			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
@@ -65,34 +58,22 @@ function main()
 function render_object(gl, shader, object)
 {
 	gl.useProgram(shader.h_prog);
+    gl.bindVertexArray(object.vao);
+
 	shader.set_uniforms(gl);
 
-	for(let attrib_name in shader.attribs)
-	{
-		let attrib = object.attribs[attrib_name];
-		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
-		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
-	}
-	if(object.drawcall == "drawArrays")
-	{
-		gl.drawArrays(object.type, 0, object.n);
-	}
-	else if(object.drawcall == "drawElements")
-	{
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.buf_index);
-		gl.drawElements(object.type, object.n, object.type_index, 0);
-	}
-	for(let attrib_name in shader.attribs)
-	{
-		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
-	}
+	if(object.drawcall == "drawArrays") gl.drawArrays(object.type, 0, object.n);
+	else if(object.drawcall == "drawElements") gl.drawElements(object.type, object.n, object.type_index, 0);
+
+    gl.bindVertexArray(null);
 	gl.useProgram(null);
 }
 
 function init_triangles(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let verts = new Float32Array([
 		 -0.50, -0.50,  0.1, 0, 0, 1 ,
 		  0.90, -0.50,  0.1, 0, 0, 1 ,
@@ -112,18 +93,27 @@ function init_triangles(gl)
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-	let FSIZE = verts.BYTES_PER_ELEMENT;
-	let attribs = [];
-	attribs["aPosition"] = {buffer:buf, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
-	attribs["aColor"] = {buffer:buf, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*3};
+	let SZ = verts.BYTES_PER_ELEMENT;
 
+    let loc_aPosition = 3;
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+
+    let loc_aColor = 7;
+    gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, SZ*6, SZ*3);
+    gl.enableVertexAttribArray(loc_aColor);
+
+    gl.bindVertexArray(null);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-	return {n:9, drawcall:"drawArrays", type:gl.TRIANGLES, attribs:attribs};
+	return {vao:vao, n:9, drawcall:"drawArrays", type:gl.TRIANGLES};
 }
 
 function init_quad(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let verts = new Float32Array([
 		 -0.90,  0.00, 0, 0 , 
 		  0.00, -0.90, 1, 0 ,
@@ -135,14 +125,21 @@ function init_quad(gl)
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-	let FSIZE = verts.BYTES_PER_ELEMENT;
-	let attribs = [];
-	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*4, offset:0};
-	attribs["aTexcoord"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*4, offset:FSIZE*2};
+	let SZ = verts.BYTES_PER_ELEMENT;
+
+    let loc_aPosition = 2;
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*4, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+
+    let loc_aTexCoord = 5;
+    gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, SZ*4, SZ*2);
+    gl.enableVertexAttribArray(loc_aTexCoord);
+
+    gl.bindVertexArray(null);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-	return {n:4, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, attribs:attribs};
+	return {vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP};
 }
 
 

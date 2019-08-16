@@ -12,8 +12,8 @@
 		<p id="output">
 		</p>
 		<script id="vert-tex" type="x-shader/x-vertex">#version 300 es
-			layout(location=3) in vec4	aPosition;
-			layout(location=9) in vec2	aTexCoord;
+			layout(location=0) in vec4	aPosition;
+			layout(location=2) in vec2	aTexCoord;
 			out vec2	vTexCoord;
 			uniform mat4	MVP;
 			void main()

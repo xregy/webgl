@@ -1,8 +1,9 @@
 "use strict";
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext("webgl2");
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.2, 0.2, 0.2, 1.0);
@@ -21,7 +22,7 @@ function main()
 		list_shaders[model] = new Shader(gl, 
 			document.getElementById("vert-" + model).text,
 			document.getElementById("frag-" + model).text,
-			["aPosition", "aNormal"]);
+			{aPosition:0, aNormal:1});
 	}
 
 	// initializes the material combobox

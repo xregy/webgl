@@ -1,10 +1,9 @@
 "use strict"
 
-
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext("webgl2");
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
@@ -73,6 +72,9 @@ function set_uniform_material(gl, h_prog, vname, mat)
 
 function create_mesh_quad(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let verts = new Float32Array([
 		-1,-1, 0,    0, 0, 1,
 		 1,-1, 0,    0, 0, 1,
@@ -85,14 +87,21 @@ function create_mesh_quad(gl)
 	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-	let FSIZE = verts.BYTES_PER_ELEMENT;
-	let	attribs = [];
-	attribs["aPosition"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
-	attribs["aNormal"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*3};
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    var SZ = verts.BYTES_PER_ELEMENT;
     
-	return new Mesh(gl, "drawArrays", gl.TRIANGLE_FAN, 4, attribs, -1, null);
+    const loc_aPosition = 0;
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+    
+    const loc_aNormal = 1;
+    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
+    gl.enableVertexAttribArray(loc_aNormal);
+ 
+    gl.bindVertexArray(null);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    
+	return new Mesh(gl, vao, "drawArrays", gl.TRIANGLE_FAN, 4, null);
 }
 
 

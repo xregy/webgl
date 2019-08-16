@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Deferred Shading (WebGL 1.0)</title>
+	</head>
+	<body onload="main()">
+		<h1 align=center>Deferred Shading (WebGL 1.0)</h1>
+		<canvas id="webgl" width="512" height="512">
+			Please use a browser that supports "canvas"
+		</canvas>
+		<script id="shader-vert-preproc" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec4 aNormal;
+			uniform mat4    MVP;
+			uniform mat4	MV;
+			uniform mat4	N;
+			varying vec4	vPosition;
+			varying	vec3	vNormal;
+			void main()
+			{
+				gl_Position = MVP*aPosition;
+				vPosition = MV*aPosition;
+				vNormal = normalize((N*vec4(aNormal.xyz, 0)).xyz);
+			}
+		</script>
+		<script id="shader-frag-preproc" type="x-shader/x-fragment">
+			#extension GL_EXT_draw_buffers : require 
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec4	vPosition;
+			varying	vec3	vNormal;
+			uniform vec4	diffuse;
+			void main()
+			{
+				gl_FragData[0] = vPosition;
+				gl_FragData[1] = vec4(normalize(vNormal),1);
+				gl_FragData[2] = diffuse;
+			}
+		</script>
+		<script id="vert-tex" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec2 aTexcoord;
+			varying vec2 vTexcoord;
+			void main()
+			{
+				gl_Position = aPosition;
+				vTexcoord = aTexcoord;
+			}
+		</script>
+		<script id="frag-tex" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec2 vTexcoord;
+			uniform sampler2D tex;
+			void main()
+			{
+				gl_FragColor = texture2D(tex, vTexcoord);
+			}
+		</script>
+		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec2 aTexcoord;
+			varying vec2 vTexcoord;
+			void main()
+			{
+				gl_Position = aPosition;
+				vTexcoord = aTexcoord;
+			}
+		</script>
+		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec2 vTexcoord;
+			uniform sampler2D	tex_position;
+			uniform sampler2D	tex_normal;
+			uniform sampler2D	tex_diffuse;
+			struct TMaterial
+			{
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				vec3	emission;
+				float	shininess;
+			};
+			struct TLight
+			{
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+			};
+			TLight		light;
+			TMaterial	material;
+			uniform vec4	light_position;
+			void main()
+			{
+				vec3	n = texture2D(tex_normal, vTexcoord).xyz;
+				vec4	p = texture2D(tex_position, vTexcoord);
+				
+				material.diffuse = texture2D(tex_diffuse, vTexcoord).rgb;
+				material.shininess = 12.8;
+				material.specular = vec3(.7);
+				material.ambient = vec3(.1);
+
+				light.ambient = vec3(.1);
+				light.diffuse = vec3(1);
+				light.specular = vec3(1);
+
+				vec3	l;
+				if(light_position.w == 1.0)
+					l = normalize((light_position - p).xyz);
+				else
+					l = normalize((light_position).xyz);
+				vec3	v = normalize(-p.xyz);
+
+				vec3	r = reflect(-l, n);
+				float	l_dot_n = max(dot(l, n), 0.0);
+
+				vec3	ambient = light.ambient * material.ambient;
+				vec3	diffuse = light.diffuse * material.diffuse.rgb * l_dot_n;
+				vec3	specular = vec3(0.0);
+				if(l_dot_n > 0.0)
+				{
+					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+				}
+				gl_FragColor = vec4(ambient + diffuse + specular, 1);
+			}
+		</script>
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="../resources/monkey_sub2_smooth.js"></script>
+		<script src="../resources/sphere.js"></script>
+		<script src="webgl10_deferred_shading.js"></script>
+	</body>
+</html>

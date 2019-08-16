@@ -1,4 +1,8 @@
-function create_mesh_cube(gl) {
+"use strict";
+function create_mesh_cube(gl) 
+{
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
     // Create a cube
     //    v6----- v5
     //   /|      /|
@@ -7,64 +11,73 @@ function create_mesh_cube(gl) {
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
-	var verts = new Float32Array([
-		 1, 1, 1,    1, 0, 0,  // v0 White
-		 1,-1, 1,    1, 0, 0,  // v3 Yellow
-		 1,-1,-1,    1, 0, 0,  // v4 Green
-		
-		 1, 1, 1,    1, 0, 0,  // v0 White
-		 1,-1,-1,    1, 0, 0,  // v4 Green
-		 1, 1,-1,    1, 0, 0,  // v5 Cyan
-		
-		 1, 1, 1,    0, 1, 0,  // v0 White
-		 1, 1,-1,    0, 1, 0,  // v5 Cyan
-		-1, 1,-1,    0, 1, 0,  // v6 Blue
-		
-		 1, 1, 1,    0, 1, 0,  // v0 White
-		-1, 1,-1,    0, 1, 0,  // v6 Blue
-		-1, 1, 1,    0, 1, 0,  // v1 Magenta
-		
-		 1, 1, 1,    0, 0, 1,  // v0 White
-		-1, 1, 1,    0, 0, 1,  // v1 Magenta
-		-1,-1, 1,    0, 0, 1,  // v2 Red
-		
-		 1, 1, 1,    0, 0, 1,  // v0 White
-		-1,-1, 1,    0, 0, 1,  // v2 Red
-		 1,-1, 1,    0, 0, 1,  // v3 Yellow
-		
-		-1,-1,-1,   -1, 0, 0,  // v7 Black
-		-1,-1, 1,   -1, 0, 0,  // v2 Red
-		-1, 1, 1,   -1, 0, 0,  // v1 Magenta
-		
-		-1,-1,-1,   -1, 0, 0,  // v7 Black
-		-1, 1, 1,   -1, 0, 0,  // v1 Magenta
-		-1, 1,-1,   -1, 0, 0,  // v6 Blue
-		
-		-1,-1,-1,    0, 0,-1,  // v7 Black
-		-1, 1,-1,    0, 0,-1,  // v6 Blue
-		 1, 1,-1,    0, 0,-1,  // v5 Cyan
-		
-		-1,-1,-1,    0, 0,-1,  // v7 Black
-		 1, 1,-1,    0, 0,-1,  // v5 Cyan
-		 1,-1,-1,    0, 0,-1,  // v4 Green
-		
-		-1,-1,-1,    0,-1, 0,  // v7 Black
-		 1,-1,-1,    0,-1, 0,  // v4 Green
-		 1,-1, 1,    0,-1, 0,  // v3 Yellow
-		
-		-1,-1,-1,    0,-1, 0,  // v7 Black
-		 1,-1, 1,    0,-1, 0,  // v3 Yellow
-		-1,-1, 1,    0,-1, 0,  // v2 Red
-	]);
-	var vbo = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-	var FSIZE = verts.BYTES_PER_ELEMENT;
-	var attribs = [];
-	attribs["aPosition"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
-	attribs["aNormal"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*3};
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	return new Mesh(gl, "drawArrays", gl.TRIANGLES, 36, attribs, -1, null);
+    var verts = new Float32Array([
+    	 1, 1, 1,    1, 0, 0,  // v0 White
+    	 1,-1, 1,    1, 0, 0,  // v3 Yellow
+    	 1,-1,-1,    1, 0, 0,  // v4 Green
+    	
+    	 1, 1, 1,    1, 0, 0,  // v0 White
+    	 1,-1,-1,    1, 0, 0,  // v4 Green
+    	 1, 1,-1,    1, 0, 0,  // v5 Cyan
+    	
+    	 1, 1, 1,    0, 1, 0,  // v0 White
+    	 1, 1,-1,    0, 1, 0,  // v5 Cyan
+    	-1, 1,-1,    0, 1, 0,  // v6 Blue
+    	
+    	 1, 1, 1,    0, 1, 0,  // v0 White
+    	-1, 1,-1,    0, 1, 0,  // v6 Blue
+    	-1, 1, 1,    0, 1, 0,  // v1 Magenta
+    	
+    	 1, 1, 1,    0, 0, 1,  // v0 White
+    	-1, 1, 1,    0, 0, 1,  // v1 Magenta
+    	-1,-1, 1,    0, 0, 1,  // v2 Red
+    	
+    	 1, 1, 1,    0, 0, 1,  // v0 White
+    	-1,-1, 1,    0, 0, 1,  // v2 Red
+    	 1,-1, 1,    0, 0, 1,  // v3 Yellow
+    	
+    	-1,-1,-1,   -1, 0, 0,  // v7 Black
+    	-1,-1, 1,   -1, 0, 0,  // v2 Red
+    	-1, 1, 1,   -1, 0, 0,  // v1 Magenta
+    	
+    	-1,-1,-1,   -1, 0, 0,  // v7 Black
+    	-1, 1, 1,   -1, 0, 0,  // v1 Magenta
+    	-1, 1,-1,   -1, 0, 0,  // v6 Blue
+    	
+    	-1,-1,-1,    0, 0,-1,  // v7 Black
+    	-1, 1,-1,    0, 0,-1,  // v6 Blue
+    	 1, 1,-1,    0, 0,-1,  // v5 Cyan
+    	
+    	-1,-1,-1,    0, 0,-1,  // v7 Black
+    	 1, 1,-1,    0, 0,-1,  // v5 Cyan
+    	 1,-1,-1,    0, 0,-1,  // v4 Green
+    	
+    	-1,-1,-1,    0,-1, 0,  // v7 Black
+    	 1,-1,-1,    0,-1, 0,  // v4 Green
+    	 1,-1, 1,    0,-1, 0,  // v3 Yellow
+    	
+    	-1,-1,-1,    0,-1, 0,  // v7 Black
+    	 1,-1, 1,    0,-1, 0,  // v3 Yellow
+    	-1,-1, 1,    0,-1, 0,  // v2 Red
+    ]);
+    var vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+    
+    var SZ = verts.BYTES_PER_ELEMENT;
+    
+    const loc_aPosition = 0;
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+    
+    const loc_aNormal = 1;
+    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
+    gl.enableVertexAttribArray(loc_aNormal);
+    
+    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    
+    return new Mesh(gl, vao, "drawArrays", gl.TRIANGLES, 36, null);
 }
 
 

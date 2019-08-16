@@ -20,8 +20,7 @@ function main()
 
 	let shader = new Shader(gl, 
 			document.getElementById("vert-tex").text,
-			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:7});
+			document.getElementById("frag-tex").text);
 
 	let mesh = new Mesh(gl);
 

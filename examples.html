@@ -116,23 +116,6 @@ title: WebGL examples by Minho Kim
 		</ul>
 	</li>
 	<li>
-		Lighting/shading
-		<ul>
-			<li>
-				<a href="src/shading.html">Shading</a> (Blinn-Phong OR Phong shading) + (Gouraud OR Phong interpolation)
-			</li>
-			<li>
-				<a href="src/normal_matrix.html">Normal matrix</a> 
-			</li>
-			<li>
-				<a href="src/spot_light.html">Spot light source</a>
-			</li>
-			<li>
-				<a href="src/two_sided_lighting.html">Two-sided lighting</a>
-			</li>
-		</ul>
-	</li>
-	<li>
 		Importing 3D model files
 		<ul>
 <!--			(Requires <a href="https://github.com/koenbok/Framer/wiki/LocalLoading">local file access</a> to be executed locally.)	-->
@@ -142,32 +125,44 @@ title: WebGL examples by Minho Kim
 				format 
 				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>GLTFLoader</tt></a>
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+                <br>
+                (<a href="src/webgl10_import_GLB_Three.html"><tt>webgl10_import_GLB_Three.html</tt></a>)
 			</li>
 
 			<li><a href="src/import_OBJ_Three.html"><tt>import_OBJ_Three.html</tt></a>: 
 				Importing <a href="https://en.wikipedia.org/wiki/Wavefront_.obj_file">OBJ</a> format 
 				using <a href="https://threejs.org/docs/#examples/loaders/OBJLoader"><tt>OBJLoader</tt></a> 
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+			    <br>
+                (<a href="src/webgl10_import_OBJ_Three.html"><tt>webgl10_import_OBJ_Three.html</tt></a>)
 			</li>
 			<li><a href="src/import_STL_Three.html"><tt>import_STL_Three.html</tt></a>: 
 				Importing <a href="https://en.wikipedia.org/wiki/STL_(file_format)">STL</a> format
 				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>STLLoader</tt></a>
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+                <br>
+                (<a href="src/webgl10_import_STL_Three.html"><tt>webgl10_import_STL_Three.html</tt></a>)
 			</li>
 			<li><a href="src/import_FBX_Three.html"><tt>import_FBX_Three.html</tt></a>: 
 				Importing <a href="https://en.wikipedia.org/wiki/FBX">FBX</a> format
 				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>FBXLoader</tt></a>
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+			    <br>
+                (<a href="src/webgl10_import_FBX_Three.html"><tt>webgl10_import_FBX_Three.html</tt></a>)
 			</li>
 			<li><a href="src/import_PLY_Three.html"><tt>import_PLY_Three.html</tt></a>: 
 				Importing <a href="https://en.wikipedia.org/wiki/PLY_(file_format)">PLY</a> format
 				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>PLYLoader</tt></a>
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+                <br>
+			    (<a href="src/webgl10_import_PLY_Three.html"><tt>webgl10_import_PLY_Three.html</tt></a>)
 			</li>
 			<li><a href="src/import_COLLADA_Three.html"><tt>import_COLLADA_Three.html</tt></a>: 
 				Importing <a href="https://en.wikipedia.org/wiki/COLLADA">COLLADA</a> format
 				using <a href="https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders"><tt>ColladaLoader</tt></a>
 				provided by <a href="https://threejs.org"><tt>THREE.js</tt></a> library.
+                <br>
+                (<a href="src/webgl10_import_COLLADA_Three.html"><tt>webgl10_import_COLLADA_Three.html</tt></a>)
 			</li>
 			<!--
 			<li><a href="src/import_JSON_Three.html"><tt>import_JSON_Three.html</tt></a>:
@@ -183,15 +178,43 @@ title: WebGL examples by Minho Kim
 			<li><a href="src/import_JSON_http.html"><tt>import_JSON_http.html</tt></a>:
 				Importing <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> format using 
 				<a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"><tt>XMLHttpRequest</tt></a>
+                <br>
+                (<a href="src/webgl10_import_JSON_http.html"><tt>webgl10_import_JSON_http.html</tt></a>)
 			</li>
 			<li><a href="src/import_JSON_jQuery.html"><tt>import_JSON_jQuery.html</tt></a>:
 				Importing <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> format using 
 				<a href="https://jquery.com">jQuery</a>
+			    <br>
+                (<a href="src/webgl10_import_JSON_jQuery.html"><tt>webgl10_import_JSON_jQuery.html</tt></a>)
 			</li>
 			<li><a href="src/include_JSON.html"><tt>include_JSON</tt></a>:
 				Importing 3d model in JSON format by including the JSON in the HTML file.
 				(Note that the model file is in fact imported as a JS file
 				in JSON format.)
+			    <br>
+                (<a href="src/webgl10_include_JSON.html"><tt>webgl10_include_JSON</tt></a>)
+			</li>
+		</ul>
+	</li>
+
+	<li>
+		Lighting/shading
+		<ul>
+			<li>
+				<a href="src/shading.html"><tt>shading.html</tt></a> (Blinn-Phong OR Phong shading) + (Gouraud OR Phong interpolation)
+				(<a href="src/webgl10_shading.html"><tt>webgl10_shading.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/normal_matrix.html"><tt>normal_matrix.html</tt></a>: Normal matrix
+				(<a href="src/webgl10_normal_matrix.html"><tt>webgl10_normal_matrix.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/spot_light.html"><tt>spot_light.html</tt></a>: Spot light source
+				(<a href="src/webgl10_spot_light.html"><tt>webgl10_spot_light.html</tt></a>)
+			</li>
+			<li>
+				<a href="src/two_sided_lighting.html"><tt>two_sided_lighting.html</tt></a>: Two-sided lighting
+				(<a href="src/webgl10_two_sided_lighting.html"><tt>webgl10_two_sided_lighting.html</tt></a>)
 			</li>
 		</ul>
 	</li>
@@ -201,9 +224,13 @@ title: WebGL examples by Minho Kim
 				<ul>
 					<li>
 						<a href="src/tex-typed-array-ubyte.html"><tt>tex-typed-array-ubyte.html</tt></a> (<tt>Uint8Array</tt>)
+                        <br>
+						(<a href="src/webgl10_tex-typed-array-ubyte.html"><tt>webgl10_tex-typed-array-ubyte.html</tt></a>)
 					</li>
 					<li>
 						<a href="src/tex-typed-array-float.html"><tt>tex-typed-array-float.html</tt></a> (<tt>Float32Array</tt>,
+                        <br>
+						(<a href="src/webgl10_tex-typed-array-float.html"><tt>webgl10_tex-typed-array-float.html</tt></a>:
 						<a href="https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_float"><tt>OES_texture_float</tt></a>
 						extension required)
 					</li>
@@ -269,25 +296,45 @@ title: WebGL examples by Minho Kim
 	<li>
 		FBO (Framebuffer Object)
 		<ul>
-			<li><a href="src/fbo-tex.html">render-to-texture example</a></li>
-			<li><a href="src/fbo-rbo-WebGL2.html">render-to-RBO example</a> (WebGL2)</li>
-			<li><a href="src/mrt.html">MRT (Multiple Render Targets)</a> 
-			(requires <a href="https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers">WEBGL_draw_buffers</a> extension, official in WebGL2)</li>
-			<li><a href="src/deferred_shading.html">Deferred Shading</a>
-			(requires <a href="https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers">WEBGL_draw_buffers</a> extension, official in WebGL2)</li>
+			<li><a href="src/fbo-tex.html"><tt>fbo-tex.html</tt></a>: render-to-texture example
+                (<a href="src/webgl10_fbo-tex.html"><tt>webgl10_fbo-tex.html</tt></a>)
+            </li>
+			<li>
+                <a href="src/fbo-rbo-WebGL2.html"><tt>fbo-rbo-WebGL2.html</tt></a>: render-to-RBO example (WebGL2)
+            </li>
+			<li>
+                <a href="src/mrt.html"><tt>mrt.html</tt></a>:
+                MRT (Multiple Render Targets)
+			(requires <a href="https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers">WEBGL_draw_buffers</a> extension, official in WebGL2)
+                <br>
+                (<a href="src/webgl10_mrt.html"><tt>webgl10_mrt.html</tt></a>)
+            </li>
+			<li><a href="src/deferred_shading.html"><tt>deterred_shading.html</tt></a>: Deferred Shading
+			(requires <a href="https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers">WEBGL_draw_buffers</a> extension, official in WebGL2)
+                <br>
+                (<a href="src/webgl10_deferred_shading.html"><tt>webgl10_deterred_shading.html</tt></a>)
+            </li>
 		</ul>
 	</li>
 	<li>
 		UI
 		<ul>
-			<li><a href="src/picking.html">Picking</a></li>
-			<li><a href="src/examine-rotate.html">Examine (rotation only)</a></li>
+			<li><a href="src/picking.html"><tt>picking.html</tt></a>: Picking
+			    (<a href="src/webgl10_picking.html"><tt>webgl10_picking.html</tt></a>)
+            </li>
+			<li><a href="src/examine-rotate.html"><tt>examine-rotate.html</tt></a>: 
+            Examine (rotation only)</a>
+                (<a href="src/webgl10_examine-rotate.html"><tt>webgl10_examine-rotate.html</tt></a>)
+            </li>
 		</ul>
 	</li>
 	<li>
 		Misc.
 		<ul>
-			<li><a href="src/multiple_viewports.html">Multiple viewports</a></li>
+			<li>
+                <a href="src/multiple_viewports.html"><tt>multiple_viewports.html</tt></a>: Multiple viewports
+                (<a href="src/webgl10_multiple_viewports.html"><tt>webgl10_multiple_viewports.html</tt></a>)
+            </li>
 			<li><a href="src/max_var_nums.html">querying maximum variable numbers (uniforms, attributes, varyings)</a></li>
 			<li><a href="src/uniform_as_loop_count.html">Uniform variable cannot be used as a loop count. (compile error)</a></li>
 			<li><a href="src/uniform_as_vector_index.html">Uniform variable cannot be used as a vector index. (compile error)</a></li>

@@ -1,12 +1,9 @@
 "use strict";
 
-let g_last = Date.now();
-let ANGLE_STEP_LIGHT = 30.0;
-let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext("webgl2");
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.2,0.2,0.2,1);
@@ -21,8 +18,7 @@ function main()
 
 	let shader = new Shader(gl, 
 			document.getElementById("vert-Blinn-Gouraud").text,
-			document.getElementById("frag-Blinn-Gouraud").text,
-			["aPosition", "aNormal"]);
+			document.getElementById("frag-Blinn-Gouraud").text);
 
 	let light = new Light
 	(
@@ -42,8 +38,7 @@ function main()
 		console.log( item, loaded, total );
 	};
 
-//	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
-	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
+	let url = '../resources/monkey_sub2_smooth.obj'; 
 
 	let loader = new THREE.OBJLoader( manager );
 	loader.load(url,

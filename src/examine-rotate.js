@@ -1,12 +1,9 @@
 "use strict";
 
-let g_last = Date.now();
-let ANGLE_STEP_LIGHT = 30.0;
-let ANGLE_STEP_MESH = 30.0;
 function main()
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
+	let gl = canvas.getContext("webgl2");
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(0.9, 0.9, 0.9, 1.0);

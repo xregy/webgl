@@ -2,22 +2,22 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Two-sided lighting</title>
+		<title>Two-sided lighting (WebGL 2.0)</title>
 	</head>
 
 	<body onload="main()">
-		<h1 align=center>Two-sided lighting</h1>
+		<h1 align=center>Two-sided lighting (WebGL 2.0)</h1>
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
-			attribute vec4	aPosition;
-			attribute vec3	aNormal;
+		<script id="vert-Phong-Phong" type="x-shader/x-vertex">#version 300 es
+			layout(location=0) in vec4	aPosition;
+			layout(location=1) in vec3	aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
-			varying vec3	vNormal;
-			varying vec4	vPosEye;
+			out vec3	vNormal;
+			out vec4	vPosEye;
 			void main()
 			{
 				vPosEye = MV*aPosition;
@@ -25,12 +25,13 @@
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
+		<script id="frag-Phong-Phong" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec4 vPosEye;
-			varying vec3	vNormal;
+			in vec4 vPosEye;
+			in vec3	vNormal;
+            out vec4 fColor;
 			struct TMaterial
 			{
 				vec3	ambient;
@@ -65,7 +66,7 @@
 				}
 				vec3	l;
 				vec3	v = normalize(-vPosEye.xyz);
-				gl_FragColor = vec4(0.0);
+				fColor = vec4(0.0);
 				for(int i=0 ; i<2 ; i++)
 				{
 					if(light[i].enabled)
@@ -83,10 +84,10 @@
 						{
 							specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
 						}
-						gl_FragColor += vec4(ambient + diffuse + specular, 1);
+						fColor += vec4(ambient + diffuse + specular, 1);
 					}
 				}
-				gl_FragColor.w = 1.0;
+				fColor.w = 1.0;
 			}
 		</script>
 

@@ -1,31 +1,21 @@
-"use strict"
-function init_shader(gl, src_vert, src_frag, attrib_names)
+"use strict";
+
+function init_shader(gl, src_vert, src_frag)
 {
 	initShaders(gl, src_vert, src_frag);
-	let h_prog = gl.program;
-	let attribs = {};
-	for(let attrib of attrib_names)
-	{
-		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
-	}
-	return {h_prog:h_prog, attribs:attribs};
+	return gl.program;
 }
 
 function main() 
 {
 	let canvas = document.getElementById('webgl');
-	let gl = getWebGLContext(canvas);
-	let ext = gl.getExtension('WEBGL_draw_buffers');
-	if(ext == null)
-	{
-		console.log('WEBGL_draw_buffers extension not supported.');
-		return;
-	}
+	let gl = canvas.getContext("webgl2");
+
 	const FBO_WIDTH = canvas.width/2;
 	const FBO_HEIGHT = canvas.height/2;
 
 	let quad = init_quad(gl);
-	let fbo = init_fbo(gl, ext, FBO_HEIGHT, FBO_HEIGHT);
+	let fbo = init_fbo(gl, FBO_HEIGHT, FBO_HEIGHT);
 
 	gl.enable(gl.DEPTH_TEST);
 
@@ -34,27 +24,25 @@ function main()
 	let	MVP;
 	let	MV;
 	let	N;
-	let tex_unit_position = 3;
-	let tex_unit_normal = 2;
-	let tex_unit_diffuse = 1;
+
+	const tex_unit_position = 3;
+	const tex_unit_normal = 2;
+	const tex_unit_diffuse = 1;
 
 	P.setPerspective(50, 1, 1, 20); 
 	V.setLookAt(0,3,7,0,0,0,0,1,0);
 
-	let shader_preproc = init_shader(gl,
+	let shader_preproc = {h_prog:init_shader(gl,
 		document.getElementById("shader-vert-preproc").text,
-		document.getElementById("shader-frag-preproc").text,
-		["aPosition", "aNormal"]);
+		document.getElementById("shader-frag-preproc").text)};
 
-	let shader_shading = init_shader(gl,
+	let shader_shading = {h_prog:init_shader(gl,
 		document.getElementById("vert-Phong-Phong").text,
-		document.getElementById("frag-Phong-Phong").text,
-		["aPosition", "aTexcoord"]);
+		document.getElementById("frag-Phong-Phong").text)};
 
-	let shader_tex = init_shader(gl,
+	let shader_tex = {h_prog:init_shader(gl,
 		document.getElementById("vert-tex").text,
-		document.getElementById("frag-tex").text,
-		["aPosition", "aTexcoord"]);
+		document.getElementById("frag-tex").text)};
 
 	shader_preproc.set_uniforms = function(gl) {
 			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
@@ -80,10 +68,10 @@ function main()
 	let	sphere = parse_json(gl, __js_sphere);
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
-	ext.drawBuffersWEBGL([
-			ext.COLOR_ATTACHMENT0_WEBGL, 
-			ext.COLOR_ATTACHMENT1_WEBGL, 
-			ext.COLOR_ATTACHMENT2_WEBGL, 
+	gl.drawBuffers([
+			gl.COLOR_ATTACHMENT0, 
+			gl.COLOR_ATTACHMENT1, 
+			gl.COLOR_ATTACHMENT2, 
 			]);
 	gl.viewport(0, 0, FBO_HEIGHT, FBO_HEIGHT);
 	gl.clearColor(0, 0, 0, 1);
@@ -147,37 +135,22 @@ function main()
 function render_object(gl, shader, object)
 {
 	gl.useProgram(shader.h_prog);
+    gl.bindVertexArray(object.vao);
 	shader.set_uniforms(gl);
 
-	for(let attrib_name in shader.attribs)
-	{
-		let	attrib = object.attribs[attrib_name];
-		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
-		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
-	}
-	if(object.drawcall == "drawArrays")
-	{
-		gl.drawArrays(object.type, 0, object.n);
-	}
-	else if(object.drawcall == "drawElements")
-	{
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.buf_index);
-		gl.drawElements(object.type, object.n, object.type_index, 0);
-	}
+	if(object.drawcall == "drawArrays") gl.drawArrays(object.type, 0, object.n);
+	else if(object.drawcall == "drawElements") gl.drawElements(object.type, object.n, object.type_index, 0);
 
-	for(let attrib_name in object.attribs)
-	{
-		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
-	}
-
+    gl.bindVertexArray(null);
 	gl.useProgram(null);
 }
 
 
 function init_quad(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let verts = new Float32Array([
 		 -1, -1, 0, 0 , 
 		  1, -1, 1, 0 ,
@@ -189,17 +162,23 @@ function init_quad(gl)
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-	let FSIZE = verts.BYTES_PER_ELEMENT;
-	let	attribs = [];
-	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*4, offset:0};
-	attribs["aTexcoord"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*4, offset:FSIZE*2};
+	let SZ = verts.BYTES_PER_ELEMENT;
 
+    let loc_aPosition = 6;
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*4, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+
+    let loc_aTexCoord = 9;
+    gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, SZ*4, SZ*2);
+    gl.enableVertexAttribArray(loc_aTexCoord);
+
+    gl.bindVertexArray(null);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-	return {n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN, attribs:attribs};
+	return {vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN};
 }
 
-function init_fbo(gl, ext, fbo_width, fbo_height)
+function init_fbo(gl, fbo_width, fbo_height)
 {
 	let fbo = gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
@@ -221,7 +200,7 @@ function init_fbo(gl, ext, fbo_width, fbo_height)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fbo_width, fbo_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, tex_color1, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, tex_color1, 0);
 
 	let tex_color2 = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, tex_color2);
@@ -230,7 +209,7 @@ function init_fbo(gl, ext, fbo_width, fbo_height)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fbo_width, fbo_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D, tex_color2, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, tex_color2, 0);
 
 	let rbo_depth = gl.createRenderbuffer();
 	gl.bindRenderbuffer(gl.RENDERBUFFER, rbo_depth);
@@ -243,25 +222,34 @@ function init_fbo(gl, ext, fbo_width, fbo_height)
 }
 function parse_json(gl, obj)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
 	let	attributes = obj.data.attributes;
 
 	let	buf_position = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.position.array), gl.STATIC_DRAW);
+    let loc_aPosition = 3;
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+
 
 	let	buf_normal = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.normal.array), gl.STATIC_DRAW);
+    let loc_aNormal = 7;
+    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc_aNormal);
+
 
 	let	buf_index = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(obj.data.index.array), gl.STATIC_DRAW);
 
-	let	attribs = [];
-	attribs["aPosition"] = {buffer:buf_position, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
-	attribs["aNormal"] = {buffer:buf_normal, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+    gl.bindVertexArray(null);
 
-	return {n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES, attribs:attribs};
+	return {vao:vao, n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES};
 }
 
 

@@ -2,10 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Spot Light</title>
+		<title>Spot Light (WebGL 2.0)</title>
 	</head>
 	<body onload="main()">
-		<h1 align=center>Spot Light</h1>
+		<h1 align=center>Spot Light (WebGL 2.0)</h1>
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
@@ -44,9 +44,9 @@
 				</td>
 			</tr>
 		</table>
-		<script id="vert-Blinn-Gouraud-spot" type="x-shader/x-vertex">
-			attribute vec4	aPosition;
-			attribute vec3	aNormal;
+		<script id="vert-Blinn-Gouraud-spot" type="x-shader/x-vertex">#version 300 es
+			layout(location=0) in vec4	aPosition;
+			layout(location=1) in vec3	aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
@@ -70,7 +70,7 @@
 			};
 			uniform TMaterial	material;
 			uniform TLight		light[2];
-			varying vec3		vColor;
+			out vec3		vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);
@@ -108,19 +108,20 @@
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Blinn-Gouraud-spot" type="x-shader/x-fragment">
+		<script id="frag-Blinn-Gouraud-spot" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec3	vColor;
+			in vec3	vColor;
+            out vec4 fColor;
 			void main()
 			{
-				gl_FragColor = vec4(vColor, 1);
+				fColor = vec4(vColor, 1);
 			}
 		</script>
-		<script id="vert-Phong-Gouraud-spot" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec3 aNormal;
+		<script id="vert-Phong-Gouraud-spot" type="x-shader/x-vertex">#version 300 es
+			layout(location=0) in vec4 aPosition;
+			layout(location=1) in vec3 aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
@@ -144,7 +145,7 @@
 			};
 			uniform TMaterial	material;
 			uniform TLight		light[2];
-			varying vec3	vColor;
+			out vec3	vColor;
 			void main()
 			{
 				vec3	n = normalize(mat3(matNormal)*aNormal);	// n is the normal vector in eye coordinate system
@@ -182,24 +183,25 @@
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Phong-Gouraud-spot" type="x-shader/x-fragment">
+		<script id="frag-Phong-Gouraud-spot" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec3	vColor;
+			in vec3	vColor;
+            out vec4 fColor;
 			void main()
 			{
-				gl_FragColor = vec4(vColor, 1);
+				fColor = vec4(vColor, 1);
 			}
 		</script>
-		<script id="vert-Blinn-Phong-spot" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec3 aNormal;
+		<script id="vert-Blinn-Phong-spot" type="x-shader/x-vertex">#version 300 es
+			layout(location=0) in vec4 aPosition;
+			layout(location=1) in vec3 aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
-			varying vec3	vNormal;
-			varying vec4	vPosEye;
+			out vec3	vNormal;
+			out vec4	vPosEye;
 			void main()
 			{
 				vPosEye = MV*aPosition;
@@ -207,12 +209,13 @@
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Blinn-Phong-spot" type="x-shader/x-fragment">
+		<script id="frag-Blinn-Phong-spot" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec4	vPosEye;
-			varying vec3	vNormal;
+			in vec4	vPosEye;
+			in vec3	vNormal;
+            out vec4 fColor;
 			struct TMaterial
 			{
 				vec3	ambient;
@@ -238,7 +241,7 @@
 				vec3	n = normalize(vNormal);
 				vec3	l;
 				vec3	v = normalize(-vPosEye.xyz);
-				gl_FragColor = vec4(0.0);
+				fColor = vec4(0.0);
 				for(int i=0 ; i<2 ; i++)
 				{
 					if(light[i].enabled)
@@ -262,20 +265,20 @@
 							specular = vec3(0);
 						}
 
-						gl_FragColor += vec4(ambient + diffuse + specular, 1);
+						fColor += vec4(ambient + diffuse + specular, 1);
 					}
 				}
-				gl_FragColor.w = 1.0;
+				fColor.w = 1.0;
 			}
 		</script>
-		<script id="vert-Phong-Phong-spot" type="x-shader/x-vertex">
-			attribute vec4	aPosition;
-			attribute vec3	aNormal;
+		<script id="vert-Phong-Phong-spot" type="x-shader/x-vertex">#version 300 es
+			layout(location=0) in vec4	aPosition;
+			layout(location=1) in vec3	aNormal;
 			uniform mat4	MVP;
 			uniform mat4	MV;
 			uniform mat4	matNormal;
-			varying vec3	vNormal;
-			varying vec4	vPosEye;
+			out vec3	vNormal;
+			out vec4	vPosEye;
 			void main()
 			{
 				vPosEye = MV*aPosition;
@@ -283,12 +286,13 @@
 				gl_Position = MVP*aPosition;
 			}
 		</script>
-		<script id="frag-Phong-Phong-spot" type="x-shader/x-fragment">
+		<script id="frag-Phong-Phong-spot" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec4 vPosEye;
-			varying vec3	vNormal;
+			in vec4 vPosEye;
+			in vec3	vNormal;
+            out vec4 fColor;
 			struct TMaterial
 			{
 				vec3	ambient;
@@ -314,7 +318,7 @@
 				vec3	n = normalize(vNormal);
 				vec3	l;
 				vec3	v = normalize(-vPosEye.xyz);
-				gl_FragColor = vec4(0.0);
+				fColor = vec4(0.0);
 				for(int i=0 ; i<1 ; i++)
 				{
 					if(light[i].enabled)
@@ -337,10 +341,10 @@
 							diffuse = vec3(0);
 							specular = vec3(0);
 						}
-						gl_FragColor += vec4(ambient + diffuse + specular, 1);
+						fColor += vec4(ambient + diffuse + specular, 1);
 					}
 				}
-				gl_FragColor.w = 1.0;
+				fColor.w = 1.0;
 			}
 		</script>
 		<script src="../lib/webgl-utils.js"></script>
@@ -351,12 +355,12 @@
 		<script src="../resources/monkey_smooth.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
 		<script src="class_material.js"></script>
-		<script src="create_mesh_cube.js"></script>
-		<script src="create_mesh_sphere.js"></script>
-		<script src="class_shader.js"></script>
-		<script src="class_light.js"></script>
-		<script src="class_mesh.js"></script>
-		<script src="class_axes.js"></script>
+		<script src="webgl10_create_mesh_cube.js"></script>
+		<script src="webgl10_create_mesh_sphere.js"></script>
+		<script src="webgl10_class_shader.js"></script>
+		<script src="webgl10_class_light.js"></script>
+		<script src="webgl10_class_mesh.js"></script>
+		<script src="webgl10_class_axes.js"></script>
 		<script src="spot_light.js"></script>
 	</body>
 </html>

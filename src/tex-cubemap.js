@@ -10,13 +10,11 @@ function main()
 
 	let shader_room = new Shader(gl,
 		document.getElementById("vert-room").text,
-		document.getElementById("frag-room").text,
-		{aPosition:7});
+		document.getElementById("frag-room").text);
 
 	let shader_cubemap = new Shader(gl,
 		document.getElementById("vert-cubemap").text,
-		document.getElementById("frag-cubemap").text,
-		{aPosition:4, aNormal:8});
+		document.getElementById("frag-cubemap").text);
 
 	let room = create_mesh_room_cubemap(gl);
 	room.M.setScale(2.0, 2.0, 2.0);
@@ -95,6 +93,8 @@ function main()
 
 function create_mesh_room_cubemap(gl)
 {
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
 	// Create a cube
 	//    v6----- v5
 	//   /|      /|
@@ -103,7 +103,7 @@ function create_mesh_room_cubemap(gl)
 	//  | |v7---|-|v4
 	//  |/      |/
 	//  v2------v3
-	var verts = new Float32Array([
+	let verts = new Float32Array([
 	// Note the triangles are facing inside.
 		 1, 1, 1,	// v0
 		 1,-1,-1,	// v4
@@ -153,13 +153,18 @@ function create_mesh_room_cubemap(gl)
 		-1,-1, 1,	// v2
 		 1,-1, 1,	// v3
 	]);
-	var vbo = gl.createBuffer();
+	let vbo = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-	var attribs = [];
-	attribs["aPosition"] = {buffer:vbo, size:3, type:gl.FLOAT, normalized:false, stride:0, offset:0};
+
+    let loc_aPosition = 7;
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+ 
+    gl.bindVertexArray(null);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	return new Mesh(gl, "drawArrays", gl.TRIANGLES, 36, attribs, -1, null);
+
+	return new Mesh(gl, vao, "drawArrays", gl.TRIANGLES, 36, null);
 }
 
 

@@ -15,8 +15,8 @@
         <script src="../lib/cuon-utils.js"></script>
         <script src="../lib/cuon-matrix.js"></script>
         <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-            layout(location=0) in vec4 a_Position;
-            layout(location=1) in vec2 a_TexCoord;
+            layout(location=3) in vec4 a_Position;
+            layout(location=8) in vec2 a_TexCoord;
             out vec2 v_TexCoord;
             void main()
             {
@@ -70,11 +70,11 @@
                 
                 var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
                 
-                var a_Position = 0;
+                var a_Position = 3;
                 gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
                 gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
                 
-                var a_TexCoord = 1;
+                var a_TexCoord = 8;
                 gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
                 gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
                 

@@ -2,21 +2,21 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Deferred Shading</title>
+		<title>Deferred Shading (WebGL 2.0)</title>
 	</head>
 	<body onload="main()">
-		<h1 align=center>Deferred Shading</h1>
+		<h1 align=center>Deferred Shading (WebGL 2.0)</h1>
 		<canvas id="webgl" width="512" height="512">
 			Please use a browser that supports "canvas"
 		</canvas>
-		<script id="shader-vert-preproc" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec4 aNormal;
+		<script id="shader-vert-preproc" type="x-shader/x-vertex">#version 300 es
+			layout(location=3) in vec4 aPosition;
+			layout(location=7) in vec4 aNormal;
 			uniform mat4    MVP;
 			uniform mat4	MV;
 			uniform mat4	N;
-			varying vec4	vPosition;
-			varying	vec3	vNormal;
+			out vec4	vPosition;
+			out	vec3	vNormal;
 			void main()
 			{
 				gl_Position = MVP*aPosition;
@@ -24,57 +24,61 @@
 				vNormal = normalize((N*vec4(aNormal.xyz, 0)).xyz);
 			}
 		</script>
-		<script id="shader-frag-preproc" type="x-shader/x-fragment">
-			#extension GL_EXT_draw_buffers : require 
+		<script id="shader-frag-preproc" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec4	vPosition;
-			varying	vec3	vNormal;
+			in vec4	vPosition;
+			in	vec3	vNormal;
 			uniform vec4	diffuse;
+            layout(location=0) out vec4 fPosition;
+            layout(location=1) out vec4 fNormal;
+            layout(location=2) out vec4 fDiffuse;
 			void main()
 			{
-				gl_FragData[0] = vPosition;
-				gl_FragData[1] = vec4(normalize(vNormal),1);
-				gl_FragData[2] = diffuse;
+				fPosition = vPosition;
+				fNormal = vec4(normalize(vNormal),1);
+				fDiffuse = diffuse;
 			}
 		</script>
-		<script id="vert-tex" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec2 aTexcoord;
-			varying vec2 vTexcoord;
+		<script id="vert-tex" type="x-shader/x-vertex">#version 300 es
+			layout(location=6) in vec4 aPosition;
+			layout(location=9) in vec2 aTexcoord;
+			out vec2 vTexcoord;
 			void main()
 			{
 				gl_Position = aPosition;
 				vTexcoord = aTexcoord;
 			}
 		</script>
-		<script id="frag-tex" type="x-shader/x-fragment">
+		<script id="frag-tex" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec2 vTexcoord;
+			in vec2 vTexcoord;
+            out vec4 fColor;
 			uniform sampler2D tex;
 			void main()
 			{
-				gl_FragColor = texture2D(tex, vTexcoord);
+				fColor = texture(tex, vTexcoord);
 			}
 		</script>
-		<script id="vert-Phong-Phong" type="x-shader/x-vertex">
-			attribute vec4 aPosition;
-			attribute vec2 aTexcoord;
-			varying vec2 vTexcoord;
+		<script id="vert-Phong-Phong" type="x-shader/x-vertex">#version 300 es
+			layout(location=6) in vec4 aPosition;
+			layout(location=9) in vec2 aTexcoord;
+			out vec2 vTexcoord;
 			void main()
 			{
 				gl_Position = aPosition;
 				vTexcoord = aTexcoord;
 			}
 		</script>
-		<script id="frag-Phong-Phong" type="x-shader/x-fragment">
+		<script id="frag-Phong-Phong" type="x-shader/x-fragment">#version 300 es
 			#ifdef GL_ES
 			precision mediump float;
 			#endif
-			varying vec2 vTexcoord;
+			in vec2 vTexcoord;
+            out vec4 fColor;
 			uniform sampler2D	tex_position;
 			uniform sampler2D	tex_normal;
 			uniform sampler2D	tex_diffuse;
@@ -97,10 +101,10 @@
 			uniform vec4	light_position;
 			void main()
 			{
-				vec3	n = texture2D(tex_normal, vTexcoord).xyz;
-				vec4	p = texture2D(tex_position, vTexcoord);
+				vec3	n = texture(tex_normal, vTexcoord).xyz;
+				vec4	p = texture(tex_position, vTexcoord);
 				
-				material.diffuse = texture2D(tex_diffuse, vTexcoord).rgb;
+				material.diffuse = texture(tex_diffuse, vTexcoord).rgb;
 				material.shininess = 12.8;
 				material.specular = vec3(.7);
 				material.ambient = vec3(.1);
@@ -126,7 +130,7 @@
 				{
 					specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
 				}
-				gl_FragColor = vec4(ambient + diffuse + specular, 1);
+				fColor = vec4(ambient + diffuse + specular, 1);
 			}
 		</script>
 		<script src="../lib/webgl-utils.js"></script>

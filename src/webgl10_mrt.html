@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>MRT (Multi Render Target, WebGL 1.0)</title>
+	</head>
+
+	<body onload="main()">
+		<h1 align=center>MRT (Multi Render Target, WebGL 1.0)</h1>
+		<canvas id="webgl" width="400" height="400">
+			Please use a browser that supports "canvas"
+		</canvas>
+		<script id="shader-vert-simple" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec4    aColor0;
+			attribute vec4    aColor1;
+			varying vec4    vColor0;
+			varying vec4    vColor1;
+			uniform mat4    MVP;
+			void main()
+			{
+				gl_Position = MVP*aPosition;
+				vColor0 = aColor0;
+				vColor1 = aColor1;
+			}
+		</script>
+		<script id="shader-frag-simple" type="x-shader/x-fragment">
+			#extension GL_EXT_draw_buffers : require 
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec4    vColor0;
+			varying vec4    vColor1;
+			void main()
+			{
+				gl_FragData[0] = vColor0;
+				gl_FragData[1] = vColor1;
+			}
+		</script>
+		<script id="shader-vert-tex" type="x-shader/x-vertex">
+			attribute vec4 aPosition;
+			attribute vec2 aTexcoord;
+			varying vec2 vTexcoord;
+			uniform mat4    MVP;
+			void main()
+			{
+				gl_Position = MVP*aPosition;
+				vTexcoord = aTexcoord;
+			}
+		</script>
+		<script id="shader-frag-tex" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			varying vec2 vTexcoord;
+			uniform sampler2D tex;
+			void main()
+			{
+				gl_FragColor = texture2D(tex, vTexcoord);
+			}
+		</script>
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="../lib/cuon-matrix.js"></script>
+		<script src="webgl10_mrt.js"></script>
+	</body>
+</html>

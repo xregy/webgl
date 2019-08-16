@@ -1,9 +1,12 @@
 "use strict";
+const loc_aPosition = 3;
+const loc_aTexCoord0 = 5;
+const loc_aTexCoord1 = 6;
 const SRC_VERT_SHADER = 
 `#version 300 es
-layout(location=3) in vec2 aPosition;
-layout(location=8) in vec2 aTexCoord0;
-layout(location=6) in vec2 aTexCoord1;
+layout(location=${loc_aPosition}) in vec2 aPosition;
+layout(location=${loc_aTexCoord0}) in vec2 aTexCoord0;
+layout(location=${loc_aTexCoord1}) in vec2 aTexCoord1;
 out vec2 vTexCoord0;
 out vec2 vTexCoord1;
 uniform mat4 MVP;
@@ -40,8 +43,7 @@ function main()
 
 	let shader = 
     {
-        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER),
-        attribs:{"aPosition":3, "aTexCoord0":8, "aTexCoord1":6}
+        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER)
     };
 	let obj = initVBO(gl);
 
@@ -114,56 +116,47 @@ function init_shader(gl, src_vert, src_frag)
 
 function render_object(gl, shader, object)
 {
-	gl.useProgram(shader.h_prog);
-	shader.set_uniforms(gl);
-
-	for(let attrib_name in shader.attribs)
-	{
-		let	attrib = object.attribs[attrib_name];
-		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
-		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
-	}
-	if(object.drawcall == "drawArrays")
-	{
-		gl.drawArrays(object.type, 0, object.n);
-	}
-	else if(object.drawcall == "drawElements")
-	{
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.buf_index);
-		gl.drawElements(object.type, object.n, object.type_index, 0);
-	}
-
-	for(let attrib_name in object.attribs)
-	{
-		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
-	}
-
-	gl.useProgram(null);
+    gl.useProgram(shader.h_prog);
+    shader.set_uniforms(gl);
+    gl.bindVertexArray(object.vao);
+    
+    if(object.drawcall == "drawArrays") gl.drawArrays(object.type, 0, object.n);
+    else if(object.drawcall == "drawElements") gl.drawElements(object.type, object.n, object.type_index, 0);
+    
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
 }
 
 
 function initVBO(gl)
 {
-	let verts = new Float32Array([
-		-0.5,  0.5,   0, 1,  -1,  2,
-		-0.5, -0.5,   0, 0,  -1, -1,
-		 0.5,  0.5,   1, 1,   2,  2,
-		 0.5, -0.5,   1, 0,   2, -1
-	]);
-	let buf = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-	
-	let FSIZE = verts.BYTES_PER_ELEMENT;
-
-	let	attribs = [];
-	attribs["aPosition"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:0};
-	attribs["aTexCoord0"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*2};
-	attribs["aTexCoord1"] = {buffer:buf, size:2, type:gl.FLOAT, normalized:false, stride:FSIZE*6, offset:FSIZE*4};
-
-	return {n:4, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, attribs:attribs};
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    
+    let verts = new Float32Array([
+    	-0.5,  0.5,   0, 1,  -1,  2,
+    	-0.5, -0.5,   0, 0,  -1, -1,
+    	 0.5,  0.5,   1, 1,   2,  2,
+    	 0.5, -0.5,   1, 0,   2, -1
+    ]);
+    let buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+    
+    let SZ = verts.BYTES_PER_ELEMENT;
+    
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*6, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
+    
+    gl.vertexAttribPointer(loc_aTexCoord0, 2, gl.FLOAT, false, SZ*6, SZ*2);
+    gl.enableVertexAttribArray(loc_aTexCoord0);
+    
+    gl.vertexAttribPointer(loc_aTexCoord1, 2, gl.FLOAT, false, SZ*6, SZ*4);
+    gl.enableVertexAttribArray(loc_aTexCoord1);
+    
+    gl.bindVertexArray(null);
+    
+    return {vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP};
 }
 
 
