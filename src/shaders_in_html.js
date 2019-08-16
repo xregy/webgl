@@ -3,11 +3,6 @@ function main()
 {
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
-    if (!gl)  
-    {
-        console.log('Failed to get the rendering context for WebGL'); 
-        return;
-    }
 
     let vertices = new Float32Array([
                         -0.90, -0.90, // Triangle 1
@@ -40,7 +35,7 @@ function main()
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    let loc_aPosition = 7;
+    let loc_aPosition = 7;  // shoule be consistent with the vertex shaders
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 

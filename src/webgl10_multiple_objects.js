@@ -1,20 +1,23 @@
-"use strict";
-const loc_aPosition = 4;
-const loc_aColor = 8;
-function init_shader(gl, src_vert, src_frag)
+function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
-	return gl.program;
+	h_prog = gl.program;
+	var attribs = {};
+	for(let attrib of attrib_names)
+	{
+		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
+	}
+	return {h_prog:h_prog, attribs:attribs};
 }
 
 function main()
 {
 	var canvas = document.getElementById('webgl');
-	var gl = canvas.getContext("webgl2");
-
-	let shader = {h_prog:init_shader(gl, 
+	var gl = getWebGLContext(canvas);
+	shader = init_shader(gl, 
 		document.getElementById("shader-vert").text, 
-		document.getElementById("shader-frag").text)};
+		document.getElementById("shader-frag").text,
+		['aPosition', 'aColor']);
 	var loc_MVP = gl.getUniformLocation(shader.h_prog, 'uMVP');
 	var MVP = new Matrix4();
 	shader.set_uniforms = function(gl)
@@ -39,20 +42,27 @@ function main()
 function draw_obj(gl, shader, obj)
 {
 	gl.useProgram(shader.h_prog);
-    gl.bindVertexArray(obj.vao);
 	shader.set_uniforms(gl);
 
+	for(var i=0 ; i<obj.attribs.length ; i++)
+	{
+		var a = obj.attribs[i];
+		gl.bindBuffer(gl.ARRAY_BUFFER, a.buf);
+		gl.vertexAttribPointer(a.id, a.size, a.type, a.normalized, a.stride, a.offset);
+		gl.enableVertexAttribArray(a.id);
+	}
 	gl.drawArrays(obj.type, 0, obj.n);
 
-    gl.bindVertexArray(null);
+	for(var i=0 ; i<obj.attribs.length ; i++)
+	{
+		gl.disableVertexAttribArray(obj.attribs[i].id);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	}
 	gl.useProgram(null);
 }
 
 function init_vbo_polygon(gl, n)
 {
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-
 	var STRIDE = 2+3;
 	var RADIUS = 0.4;
 	var attribs = new Float32Array((n+2)*STRIDE);
@@ -77,14 +87,14 @@ function init_vbo_polygon(gl, n)
 	gl.bufferData(gl.ARRAY_BUFFER, attribs, gl.STATIC_DRAW);
 	
 	var SZ = attribs.BYTES_PER_ELEMENT;
-
-	gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*5, 0);
-	gl.enableVertexAttribArray(loc_aPosition);
-
-	gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, SZ*5, SZ*2);
-	gl.enableVertexAttribArray(loc_aColor);
+	
+	var loc_Position = gl.getAttribLocation(gl.program, 'aPosition');
+	var loc_Color = gl.getAttribLocation(gl.program, 'aColor');
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-	return {vao:vao, type:gl.TRIANGLE_FAN, n:n+2};
+	return {type:gl.TRIANGLE_FAN, n:n+2, attribs:[
+		{id:loc_Position, buf:vbo, size:2, type:gl.FLOAT, normalized:false, stride:SZ*5, offset:0},
+		{id:loc_Color, buf:vbo, size:3, type:gl.FLOAT, normalized:false, stride:SZ*5, offset:SZ*2}
+				]};
 }

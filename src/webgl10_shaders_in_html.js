@@ -33,14 +33,14 @@ function main()
                          0.90,  0.90,
                         -0.85,  0.90]);
 
-	let src_vert = document.getElementById("shader-vert").text;
-	let src_frag = document.getElementById("shader-frag").text;
+    let src_vert = document.getElementById("shader-vert").text;
+    let src_frag = document.getElementById("shader-frag").text;
 
     let h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
     gl.compileShader(h_vert);
 
-    let	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+    let h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
 

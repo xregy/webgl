@@ -2,7 +2,13 @@
 function main()
 {
     let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    let names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    let gl = null;
+    for (let i = 0; i < names.length; ++i)
+    {
+          gl = canvas.getContext(names[i], []);
+          if (gl) break;
+    }
     
     if (!gl)
     {

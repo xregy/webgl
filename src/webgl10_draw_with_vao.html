@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>draw_with_vao</title>
+	</head>
+	<body onload="main()">
+		<h1 align=center>(WebGL 1.0) draw with vao
+			(requires <a href="https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object"><tt>OES_vertex_array_object</tt></a> extension.)</h1>
+		<canvas id="webgl" width="512" height="512" align=center>
+			Please use a browser that supports "canvas"
+		</canvas>
+		<script id="shader-vert" type="x-shader/x-vertex">
+			attribute float x;
+			attribute float y;
+			void main()
+			{
+				gl_Position = vec4(x,y,0,1);
+			}
+		</script>
+		<script id="shader-frag-red" type="x-shader/x-fragment">
+			precision mediump float;
+			void
+			main()
+			{
+				gl_FragColor = vec4(1, 0, 0, 1);
+			}
+		</script>
+		<script id="shader-frag-blue" type="x-shader/x-fragment">
+			precision mediump float;
+			void
+			main()
+			{
+				gl_FragColor = vec4(0, 0, 1, 1);
+			}
+		</script>
+		<script src="../lib/webgl-utils.js"></script>
+		<script src="../lib/webgl-debug.js"></script>
+		<script src="../lib/cuon-utils.js"></script>
+		<script src="webgl10_draw_with_vao.js"></script>
+	</body>
+</html>

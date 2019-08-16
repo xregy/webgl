@@ -1,4 +1,21 @@
 "use stricrt";
+const src_vert = 
+`
+attribute vec4 aPosition;
+void main()
+{
+    gl_Position = aPosition;
+}
+`;
+const src_frag = 
+`
+precision mediump float;
+void main()
+{
+    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+}
+`;
+
 function main()
 {
     let canvas = document.getElementById('webgl');
@@ -33,21 +50,6 @@ function main()
                          0.90,  0.90,
                         -0.85,  0.90]);
 
-    let src_vert = 
-        'attribute vec4 aPosition;	\n' +
-        'void	\n' +
-        'main()	\n' +
-        '{	\n' +
-        '\t	gl_Position = aPosition;	\n' +
-        '}	\n';
-    let src_frag = 
-        'precision mediump float;\n' +
-        'void\n' +
-        'main()\n' +
-        '{\n' +
-        '\tgl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n' +
-        '}\n';
-
     let h_prog = gl.createProgram();
 
     let h_vert = gl.createShader(gl.VERTEX_SHADER);
@@ -55,7 +57,7 @@ function main()
     gl.compileShader(h_vert);
     gl.attachShader(h_prog, h_vert);
 
-    let	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+    let h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
     gl.attachShader(h_prog, h_frag);

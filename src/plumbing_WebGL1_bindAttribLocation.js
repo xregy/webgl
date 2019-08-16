@@ -17,17 +17,17 @@ function main()
     gl.attachShader(h_prog, h_frag);
 
     let loc_aPosition = 3;	// any uint value is ok
-	let	loc_aColor = 8;
-	gl.bindAttribLocation(h_prog, loc_aPosition, 'aPosition');	// must be called BEFORE linkProgram()!!!
-	gl.bindAttribLocation(h_prog, loc_aColor, 'aColor');	// must be called BEFORE linkProgram()!!!
+    let	loc_aColor = 8;
+    gl.bindAttribLocation(h_prog, loc_aPosition, 'aPosition');	// must be called BEFORE linkProgram()!!!
+    gl.bindAttribLocation(h_prog, loc_aColor, 'aColor');	// must be called BEFORE linkProgram()!!!
     gl.linkProgram(h_prog);
-
+    
     let vertices = new Float32Array([
                         -0.9,-0.9, 1,0,0,
                          0.9,-0.9, 0,1,0,
                          0.9, 0.9, 0,0,1,
                         -0.9, 0.9, 1,1,1]);
-	let FSIZE = vertices.BYTES_PER_ELEMENT;
+    let FSIZE = vertices.BYTES_PER_ELEMENT;
 
     let vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);

@@ -4,34 +4,34 @@
 		<meta charset="utf-8" />
 		<title>draw_with_vao</title>
 	</head>
+	
 	<body onload="main()">
-		<h1 align=center>(WebGL 1.0) draw with vao
-			(requires <a href="https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object"><tt>OES_vertex_array_object</tt></a> extension.)</h1>
+		<h1 align=center>(WebGL 2.0) draw with vao</h1>
 		<canvas id="webgl" width="512" height="512" align=center>
-			Please use a browser that supports "canvas"
+		Please use a browser that supports "canvas"
 		</canvas>
-		<script id="shader-vert" type="x-shader/x-vertex">
-			attribute float x;
-			attribute float y;
+		<script id="shader-vert" type="x-shader/x-vertex">#version 300 es
+			layout(location=3) in float x;
+			layout(location=7) in float y;
 			void main()
 			{
 				gl_Position = vec4(x,y,0,1);
 			}
 		</script>
-		<script id="shader-frag-red" type="x-shader/x-fragment">
+		<script id="shader-frag-red" type="x-shader/x-fragment">#version 300 es
 			precision mediump float;
-			void
-			main()
+            out vec4 fColor;
+			void main()
 			{
-				gl_FragColor = vec4(1, 0, 0, 1);
+				fColor = vec4(1, 0, 0, 1);
 			}
 		</script>
-		<script id="shader-frag-blue" type="x-shader/x-fragment">
+		<script id="shader-frag-blue" type="x-shader/x-fragment">#version 300 es
 			precision mediump float;
-			void
-			main()
+            out vec4 fColor;
+			void main()
 			{
-				gl_FragColor = vec4(0, 0, 1, 1);
+				fColor = vec4(0, 0, 1, 1);
 			}
 		</script>
 		<script src="../lib/webgl-utils.js"></script>
