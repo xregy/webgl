@@ -1,6 +1,6 @@
 // MultiTexture.js (c) 2012 matsuda and kanda
 // Vertex shader program
-var VSHADER_SOURCE =
+let VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
   'attribute vec2 a_TexCoord;\n' +
   'varying vec2 v_TexCoord;\n' +
@@ -10,7 +10,7 @@ var VSHADER_SOURCE =
   '}\n';
 
 // Fragment shader program
-var FSHADER_SOURCE =
+let FSHADER_SOURCE =
   '#ifdef GL_ES\n' +
   'precision mediump float;\n' +
   '#endif\n' +
@@ -25,10 +25,10 @@ var FSHADER_SOURCE =
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  let canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  let gl = getWebGLContext(canvas);
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -41,7 +41,7 @@ function main() {
   }
 
   // Set the vertex information
-  var n = initVertexBuffers(gl);
+  let n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -58,17 +58,17 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  var verticesTexCoords = new Float32Array([
+  let verticesTexCoords = new Float32Array([
     // Vertex coordinate, Texture coordinate
     -0.5,  0.5,   0.0, 1.0,
     -0.5, -0.5,   0.0, 0.0,
      0.5,  0.5,   1.0, 1.0,
      0.5, -0.5,   1.0, 0.0,
   ]);
-  var n = 4; // The number of vertices
+  let n = 4; // The number of vertices
 
   // Create a buffer object
-  var vertexTexCoordBuffer = gl.createBuffer();
+  let vertexTexCoordBuffer = gl.createBuffer();
   if (!vertexTexCoordBuffer) {
     console.log('Failed to create the buffer object');
     return -1;
@@ -78,9 +78,9 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
 
-  var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+  let FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
   //Get the storage location of a_Position, assign and enable buffer
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
   if (a_Position < 0) {
     console.log('Failed to get the storage location of a_Position');
     return -1;
@@ -89,7 +89,7 @@ function initVertexBuffers(gl) {
   gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
 
   // Get the storage location of a_TexCoord
-  var a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
+  let a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
   if (a_TexCoord < 0) {
     console.log('Failed to get the storage location of a_TexCoord');
     return -1;
@@ -102,24 +102,24 @@ function initVertexBuffers(gl) {
 
 function initTextures(gl, n) {
   // Create a texture object
-  var texture0 = gl.createTexture(); 
-  var texture1 = gl.createTexture();
+  let texture0 = gl.createTexture(); 
+  let texture1 = gl.createTexture();
   if (!texture0 || !texture1) {
     console.log('Failed to create the texture object');
     return false;
   }
 
   // Get the storage location of u_Sampler0 and u_Sampler1
-  var u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
-  var u_Sampler1 = gl.getUniformLocation(gl.program, 'u_Sampler1');
+  let u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
+  let u_Sampler1 = gl.getUniformLocation(gl.program, 'u_Sampler1');
   if (!u_Sampler0 || !u_Sampler1) {
     console.log('Failed to get the storage location of u_Sampler');
     return false;
   }
 
   // Create the image object
-  var image0 = new Image();
-  var image1 = new Image();
+  let image0 = new Image();
+  let image1 = new Image();
   if (!image0 || !image1) {
     console.log('Failed to create the image object');
     return false;
@@ -134,7 +134,7 @@ function initTextures(gl, n) {
   return true;
 }
 // Specify whether the texture unit is ready to use
-var g_texUnit0 = false, g_texUnit1 = false; 
+let g_texUnit0 = false, g_texUnit1 = false; 
 function loadTexture(gl, n, texture, u_Sampler, image, texUnit) {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);// Flip the image's y-axis
   // Make the texture unit active

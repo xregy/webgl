@@ -1,30 +1,34 @@
 // ColoredTriangle.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE = 
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Color;\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  v_Color = a_Color;\n' +
-  '}\n';
+"use strict";
+const loc_aPosition = 3;
+const loc_aColor = 7;
+const VSHADER_SOURCE =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+out vec4 vColor;
+void main() {
+    gl_Position = aPosition;
+    vColor = aColor;
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE = 
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif \n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_FragColor = v_Color;\n' +
-  '}\n';
+const FSHADER_SOURCE =
+`#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main() {
+    fColor = vColor;
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -37,7 +41,7 @@ function main() {
   }
 
   // 
-  var n = initVertexBuffers(gl);
+  let {vao, n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -49,21 +53,26 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+    gl.bindVertexArray(vao);
   // Draw the rectangle
   gl.drawArrays(gl.TRIANGLES, 0, n);
+    gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl) {
-  var verticesColors = new Float32Array([
+  let verticesColors = new Float32Array([
     // Vertex coordinates and color
      0.0,  0.5,  1.0,  0.0,  0.0, 
     -0.5, -0.5,  0.0,  1.0,  0.0, 
      0.5, -0.5,  0.0,  0.0,  1.0, 
   ]);
-  var n = 3;
+  let n = 3;
 
+  let vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  
   // Create a buffer object
-  var vertexColorBuffer = gl.createBuffer();  
+  let vertexColorBuffer = gl.createBuffer();  
   if (!vertexColorBuffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -73,27 +82,16 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, verticesColors, gl.STATIC_DRAW);
 
-  var FSIZE = verticesColors.BYTES_PER_ELEMENT;
-  //Get the storage location of a_Position, assign and enable buffer
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 5, 0);
-  gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+  let FSIZE = verticesColors.BYTES_PER_ELEMENT;
+  //Get the storage location of aPosition, assign and enable buffer
+  gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, FSIZE*5, 0);
+  gl.enableVertexAttribArray(loc_aPosition);
 
-  // Get the storage location of a_Position, assign buffer and enable
-  var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
-  if(a_Color < 0) {
-    console.log('Failed to get the storage location of a_Color');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, FSIZE * 5, FSIZE * 2);
-  gl.enableVertexAttribArray(a_Color);  // Enable the assignment of the buffer object
+  gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, FSIZE*5, FSIZE*2);
+  gl.enableVertexAttribArray(loc_aColor);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  return n;
+  return {vao, n};
 }

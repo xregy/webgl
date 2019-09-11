@@ -1,8 +1,8 @@
 // ScaledTriangle_Matrix.js (c) 2012 matsuda
 // Vertex shader program
 "use strict";
-let loc_aPosition = 3;
-let VSHADER_SOURCE =
+const loc_aPosition = 3;
+const VSHADER_SOURCE =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform mat4 uXformMatrix;
@@ -11,7 +11,7 @@ void main() {
 }`;
 
 // Fragment shader program
-let FSHADER_SOURCE =
+const FSHADER_SOURCE =
 `#version 300 es
 precision mediump float;
 out vec4 fColor;
@@ -20,14 +20,14 @@ void main() {
 }`;
 
 // The scaling factor
-var Sx = 1.0, Sy = 1.5, Sz = 1.0;
+const Sx = 1.0, Sy = 1.5, Sz = 1.0;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = canvas.getContext('webgl2');
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -40,14 +40,14 @@ function main() {
   }
  
   // Write the positions of vertices to a vertex shader
-  var n = initVertexBuffers(gl);
+  let {vao, n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
   }
 
   // Note: WebGL is column major order
-  var xformMatrix = new Float32Array([
+  const xformMatrix = new Float32Array([
       Sx,   0.0,  0.0,  0.0,
       0.0,  Sy,   0.0,  0.0,
       0.0,  0.0,  Sz,   0.0,
@@ -55,7 +55,7 @@ function main() {
   ]);
 
   // Pass the rotation matrix to the vertex shader
-  var loc_uXformMatrix = gl.getUniformLocation(gl.program, 'uXformMatrix');
+  const loc_uXformMatrix = gl.getUniformLocation(gl.program, 'uXformMatrix');
   if (!loc_uXformMatrix) {
     console.log('Failed to get the storage location of uXformMatrix');
     return;
@@ -68,18 +68,22 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+    gl.bindVertexArray(vao);
   // Draw the rectangle
   gl.drawArrays(gl.TRIANGLES, 0, n);
+    gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl) {
-  var vertices = new Float32Array([
+  const vertices = new Float32Array([
     0, 0.5,   -0.5, -0.5,   0.5, -0.5
   ]);
-  var n = 3; // The number of vertices
+  const n = 3; // The number of vertices
 
+  let vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
   // Create a buffer object
-  var vertexBuffer = gl.createBuffer();
+  let vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -96,5 +100,7 @@ function initVertexBuffers(gl) {
   // Enable the assignment to aPosition variable
   gl.enableVertexAttribArray(loc_aPosition);
 
-  return n;
+  gl.bindVertexArray(null);
+
+  return {vao, n};
 }

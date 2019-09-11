@@ -1,28 +1,30 @@
 // ClickedPints.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
-  '}\n';
+"use strict";
+const loc_aPosition = 3;
+const VSHADER_SOURCE =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+void main() {
+    gl_Position = aPosition;
+    gl_PointSize = 10.0;
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '}\n';
-
-var gl;
-var canvas;
-var a_Position;
+const FSHADER_SOURCE =
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main() {
+    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -34,15 +36,7 @@ function main() {
     return;
   }
 
-  // // Get the storage location of a_Position
-  a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return;
-  }
-
-  // Register function (event handler) to be called on a mouse press
-//  canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
+    canvas.onmousedown = function(ev){ click(ev, gl, canvas, loc_aPosition); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -53,9 +47,7 @@ function main() {
 
 var g_points = []; // The array for the position of a mouse press
 
-function on_mouse_down(ev) {
-    console.log('client coords = (' + ev.clientX + ',' + ev.clientY + ')'
-                + ' screen coords = (' + ev.screenX + ',' + ev.screenY + ')');
+function click(ev, gl, canvas) {
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
@@ -70,8 +62,8 @@ function on_mouse_down(ev) {
 
   var len = g_points.length;
   for(var i = 0; i < len; i += 2) {
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
+    // Pass the position of a point to aPosition variable
+    gl.vertexAttrib3f(loc_aPosition, g_points[i], g_points[i+1], 0.0);
 
     // Draw
     gl.drawArrays(gl.POINTS, 0, 1);

@@ -1,8 +1,8 @@
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
 "use strict";
-let loc_aPosition = 3;
-let VSHADER_SOURCE =
+const loc_aPosition = 3;
+const VSHADER_SOURCE =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform float uPointSize;
@@ -12,7 +12,7 @@ void main() {
 }`;
 
 // Fragment shader program
-let FSHADER_SOURCE =
+const FSHADER_SOURCE =
 `#version 300 es
 precision mediump float;
 uniform vec4 uFragColor;
@@ -23,10 +23,10 @@ void main() {
 
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = canvas.getContext('webgl2');
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -39,12 +39,12 @@ function main() {
   }
 
   // Get the storage location of u_FragColor
-  let loc_uFragColor = gl.getUniformLocation(gl.program, 'uFragColor');
+  const loc_uFragColor = gl.getUniformLocation(gl.program, 'uFragColor');
   if (!loc_uFragColor) {
     console.log('Failed to get the storage location of uFragColor');
     return;
   }
-  let loc_uPointSize = gl.getUniformLocation(gl.program, 'uPointSize');
+  const loc_uPointSize = gl.getUniformLocation(gl.program, 'uPointSize');
   if (!loc_uPointSize) {
     console.log('Failed to get the storage location of uPointSize');
     return;

@@ -1,6 +1,6 @@
 // MultiAttributeColor.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
+let VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
   'attribute vec4 a_Color;\n' +
   'varying vec4 v_Color;\n' + // varying variable
@@ -11,7 +11,7 @@ var VSHADER_SOURCE =
   '}\n';
 
 // Fragment shader program
-var FSHADER_SOURCE =
+let FSHADER_SOURCE =
   '#ifdef GL_ES\n' +
   'precision mediump float;\n' + // Precision qualifier (See Chapter 6)
   '#endif GL_ES\n' +
@@ -22,10 +22,10 @@ var FSHADER_SOURCE =
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  let canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  let gl = getWebGLContext(canvas);
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -38,7 +38,7 @@ function main() {
   }
 
   // 
-  var n = initVertexBuffers(gl);
+  let n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -55,16 +55,16 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  var verticesColors = new Float32Array([
+  let verticesColors = new Float32Array([
     // Vertex coordinates and color
      0.0,  0.5,  1.0,  0.0,  0.0, 
     -0.5, -0.5,  0.0,  1.0,  0.0, 
      0.5, -0.5,  0.0,  0.0,  1.0, 
   ]);
-  var n = 3; // The number of vertices
+  let n = 3; // The number of vertices
 
   // Create a buffer object
-  var vertexColorBuffer = gl.createBuffer();  
+  let vertexColorBuffer = gl.createBuffer();  
   if (!vertexColorBuffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -74,9 +74,9 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, verticesColors, gl.STATIC_DRAW);
 
-  var FSIZE = verticesColors.BYTES_PER_ELEMENT;
+  let FSIZE = verticesColors.BYTES_PER_ELEMENT;
   //Get the storage location of a_Position, assign and enable buffer
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
   if (a_Position < 0) {
     console.log('Failed to get the storage location of a_Position');
     return -1;
@@ -85,7 +85,7 @@ function initVertexBuffers(gl) {
   gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
 
   // Get the storage location of a_Position, assign buffer and enable
-  var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+  let a_Color = gl.getAttribLocation(gl.program, 'a_Color');
   if(a_Color < 0) {
     console.log('Failed to get the storage location of a_Color');
     return -1;

@@ -1,10 +1,10 @@
 // HelloCanvas.js (c) 2012 matsuda
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = canvas.getContext("webgl2");
+  const gl = canvas.getContext("webgl2");
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;

@@ -1,8 +1,8 @@
 // RotatingTranslatedTriangle.js (c) 2012 matsuda
 // Vertex shader program
 "use strict";
-let loc_aPosition = 3;
-let VSHADER_SOURCE =
+const loc_aPosition = 3;
+const VSHADER_SOURCE =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform mat4 uModelMatrix;
@@ -11,7 +11,7 @@ void main() {
 }`;
 
 // Fragment shader program
-let FSHADER_SOURCE =
+const FSHADER_SOURCE =
 `#version 300 es
 precision mediump float;
 out vec4 fColor;
@@ -25,10 +25,10 @@ let ANGLE_STEP = 45.0;
 
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = canvas.getContext('webgl2');
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -41,7 +41,7 @@ function main() {
   }
 
   // Write the positions of vertices to a vertex shader
-  let n = initVertexBuffers(gl);
+  let {vao, n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
@@ -51,7 +51,7 @@ function main() {
   gl.clearColor(0, 0, 0, 1);
 
   // Get storage location of uModelMatrix
-  let loc_uModelMatrix = gl.getUniformLocation(gl.program, 'uModelMatrix');
+  const loc_uModelMatrix = gl.getUniformLocation(gl.program, 'uModelMatrix');
   if (!loc_uModelMatrix) { 
     console.log('Failed to get the storage location of uModelMatrix');
     return;
@@ -65,17 +65,17 @@ function main() {
   // Start drawing
   let tick = function() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
-    draw(gl, n, currentAngle, modelMatrix, loc_uModelMatrix);   // Draw the triangle
+    draw(gl, vao, n, currentAngle, modelMatrix, loc_uModelMatrix);   // Draw the triangle
     requestAnimationFrame(tick, canvas);   // Request that the browser ?calls tick
   };
   tick();
 }
 
 function initVertexBuffers(gl) {
-  let vertices = new Float32Array ([
+  const vertices = new Float32Array ([
     0, 0.5,   -0.5, -0.5,   0.5, -0.5
   ]);
-  let n = 3;   // The number of vertices
+  const n = 3;   // The number of vertices
 
   // Create a buffer object
   let vertexBuffer = gl.createBuffer();
@@ -84,6 +84,8 @@ function initVertexBuffers(gl) {
     return -1;
   }
 
+  let vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
   // Bind the buffer object to target
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   // Write date into the buffer object
@@ -95,10 +97,12 @@ function initVertexBuffers(gl) {
   // Enable the assignment to aPosition variable
   gl.enableVertexAttribArray(loc_aPosition);
 
-  return n;
+  gl.bindVertexArray(null);
+
+  return {vao, n};
 }
 
-function draw(gl, n, currentAngle, modelMatrix, uModelMatrix) {
+function draw(gl, vao, n, currentAngle, modelMatrix, uModelMatrix) {
   // Set the rotation matrix
   modelMatrix.setRotate(currentAngle, 0, 0, 1);
   modelMatrix.translate(0.35, 0, 0);
@@ -109,8 +113,10 @@ function draw(gl, n, currentAngle, modelMatrix, uModelMatrix) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+    gl.bindVertexArray(vao);
   // Draw the rectangle
   gl.drawArrays(gl.TRIANGLES, 0, n);
+    gl.bindVertexArray(null);
 }
 
 // Last time that this function was called

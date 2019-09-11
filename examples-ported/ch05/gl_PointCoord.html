@@ -15,22 +15,5 @@
     <script src="../lib/cuon-utils.js"></script>
     <script src="../lib/cuon-matrix.js"></script>
     <script src="gl_PointCoord.js"></script>
-	<script id="shader-vert" type="x-shader/x-vertex">
-		attribute vec4 a_Position;
-		attribute vec2 a_coords;
-		void main() 
-		{
-			gl_Position = a_Position;
-			gl_PointSize = 100.0;
-		}
-	</script>
-	<script id="shader-frag" type="x-shader/x-fragment">
-		precision mediump float;
-		void main() 
-		{
-			if(length(gl_PointCoord - vec2(.5,.5)) <= 0.5)    gl_FragColor = vec4(1,1,1,1);
-			else discard;
-		}
-	</script>
   </body>
 </html>

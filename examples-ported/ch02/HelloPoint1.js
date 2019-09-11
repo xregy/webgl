@@ -1,7 +1,7 @@
 // HelloPoint1.js (c) 2012 matsuda
 // Vertex shader program
 "use strict";
-let VSHADER_SOURCE = 
+const VSHADER_SOURCE = 
 `#version 300 es
 void main() {
     gl_Position = vec4(0.0, 0.0, 0.0, 1.0); // Set the vertex coordinates of the point
@@ -10,7 +10,7 @@ void main() {
 `;
 
 // Fragment shader program
-let FSHADER_SOURCE =
+const FSHADER_SOURCE =
 `#version 300 es
 precision mediump float;
 out vec4 fColor;
@@ -21,10 +21,10 @@ void main() {
 
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = canvas.getContext("webgl2");
+  const gl = canvas.getContext("webgl2");
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;

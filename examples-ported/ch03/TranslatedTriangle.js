@@ -2,7 +2,7 @@
 // Vertex shader program
 "use strict";
 let loc_aPosition = 3;
-let VSHADER_SOURCE =
+const VSHADER_SOURCE =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform vec4 uTranslation;
@@ -11,7 +11,7 @@ void main() {
 }`;
 
 // Fragment shader program
-let FSHADER_SOURCE =
+const FSHADER_SOURCE =
 `#version 300 es
 precision mediump float;
 out vec4 fColor;
@@ -40,7 +40,7 @@ function main() {
   }
 
   // Write the positions of vertices to a vertex shader
-  let n = initVertexBuffers(gl);
+  let {vao, n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
@@ -60,8 +60,11 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+
+    gl.bindVertexArray(vao);
   // Draw the rectangle
   gl.drawArrays(gl.TRIANGLES, 0, n);
+    gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl) {
@@ -77,6 +80,8 @@ function initVertexBuffers(gl) {
     return -1;
   }
 
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
   // Bind the buffer object to target
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   // Write date into the buffer object
@@ -88,5 +93,7 @@ function initVertexBuffers(gl) {
   // Enable the assignment to aPosition variable
   gl.enableVertexAttribArray(loc_aPosition);
 
-  return n;
+  gl.bindVertexArray(null);
+
+  return {vao, n};
 }
