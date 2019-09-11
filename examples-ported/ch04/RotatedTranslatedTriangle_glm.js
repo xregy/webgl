@@ -1,13 +1,13 @@
-// RotatedTriangle_Matrix4.js (c) 2012 matsuda
+// RotatedTranslatedTriangle.js (c) 2012 matsuda
 // Vertex shader program
 "use strict";
 let loc_aPosition = 3;
 let VSHADER_SOURCE =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform mat4 uXformMatrix;
+uniform mat4 uModelMatrix;
 void main() {
-    gl_Position = uXformMatrix * aPosition;
+    gl_Position = uModelMatrix * aPosition;
 }`;
 
 // Fragment shader program
@@ -21,7 +21,7 @@ void main() {
 
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  var canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
   let gl = canvas.getContext('webgl2');
@@ -37,26 +37,29 @@ function main() {
   }
 
   // Write the positions of vertices to a vertex shader
-  let n = initVertexBuffers(gl);
+  var n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
   }
 
-  // Create Matrix4 object for the rotation matrix
-  let xformMatrix = new Matrix4();
+//  var glm = require('../lib/glm-js.min.js');
+  // Create Matrix4 object for model transformation
+  var modelMatrix = new glm.mat4();
 
-  // Set the rotation matrix
-  let ANGLE = 90.0; // The rotation angle
-  xformMatrix.setRotate(ANGLE, 0, 0, 1);
+  // Calculate a model matrix
+  var ANGLE = 60.0; // The rotation angle
+  var Tx = 0.5;     // Translation distance
+  modelMatrix.rotate(ANGLE, 0, 0, 1); // Set rotation matrix
+  modelMatrix.translate(Tx, 0, 0);        // Multiply modelMatrix by the calculated translation matrix
 
-  // Pass the rotation matrix to the vertex shader
-  let loc_uXformMatrix = gl.getUniformLocation(gl.program, 'uXformMatrix');
-  if (!loc_uXformMatrix) {
-    console.log('Failed to get the storage location of uXformMatrix');
+  // Pass the model matrix to the vertex shader
+  var loc_uModelMatrix = gl.getUniformLocation(gl.program, 'uModelMatrix');
+  if (!loc_uModelMatrix) {
+    console.log('Failed to get the storage location of u_xformMatrix');
     return;
   }
-  gl.uniformMatrix4fv(loc_uXformMatrix, false, xformMatrix.elements);
+  modelMatrix.setUniform(gl, loc_uModelMatrix, false);
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -69,13 +72,13 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  let vertices = new Float32Array([
-    0, 0.5,   -0.5, -0.5,   0.5, -0.5
+  var vertices = new Float32Array([
+    0, 0.3,   -0.3, -0.3,   0.3, -0.3
   ]);
   var n = 3; // The number of vertices
 
   // Create a buffer object
-  let vertexBuffer = gl.createBuffer();
+  var vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
     return false;
