@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>default z-axis</title>
+        <script>
+            "use stricrt";
+            const loc_aPosition = 7;
+            const loc_aColor = 9;
+            const src_vert = 
+            `#version 300 es
+                layout(location=${loc_aPosition}) in vec4 aPosition;
+                layout(location=${loc_aColor}) in vec4 aColor;
+                out vec4 vColor;
+                void main()
+                {
+                    gl_Position = aPosition;
+                    vColor = aColor;
+                }
+            `;
+            const src_frag = 
+            `#version 300 es
+                precision mediump float;
+                in vec4 vColor;
+                out vec4 fColor;
+                void main()
+                {
+                    fColor = vColor;
+                }
+            `;
+            
+            function main()
+            {
+                // Getting the WebGL context
+                let canvas = document.getElementById('webgl');
+                gl = canvas.getContext("webgl2");
+            
+                // Compiling the shaders
+                let h_prog = gl.createProgram();
+            
+                let h_vert = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(h_vert, src_vert);
+                gl.compileShader(h_vert);
+                gl.attachShader(h_prog, h_vert);
+            
+                let h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(h_frag, src_frag);
+                gl.compileShader(h_frag);
+                gl.attachShader(h_prog, h_frag);
+            
+                gl.linkProgram(h_prog);
+            
+            
+                let vertices = new Float32Array([
+                                    -0.9, -0.9, 0.0, 1.0, 0.0, 0.0, // red triangle
+                                     0.9, -0.9, 0.0, 1.0, 0.0, 0.0,
+                                    -0.9,  0.9, 0.0, 1.0, 0.0, 0.0,
+                                    -0.9, -0.9, 0.5, 0.0, 0.0, 1.0, // blue triangle
+                                     0.9, -0.9, 0.5, 0.0, 0.0, 1.0,
+                                     0.9,  0.9, 0.5, 0.0, 0.0, 1.0]);
+            
+                // Setting up the geometry data
+                let vao = gl.createVertexArray();
+                gl.bindVertexArray(vao);
+            
+                let vbo = gl.createBuffer();
+            
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
+                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            
+                let sz = vertices.BYTES_PER_ELEMENT;
+                
+                gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 6*sz, 0);
+                gl.enableVertexAttribArray(loc_aPosition);
+
+                gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, 6*sz, 3*sz);
+                gl.enableVertexAttribArray(loc_aColor);
+            
+                gl.bindVertexArray(null);   // Unbind the VAO
+                
+                gl.disableVertexAttribArray(loc_aPosition); 
+                gl.disableVertexAttribArray(loc_aColor); 
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            
+                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.useProgram(h_prog);
+                gl.bindVertexArray(vao);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                gl.bindVertexArray(null);
+            
+            }
+        </script>
+
+    </head>
+
+    <body onload="main()">
+        <h1 align=center>default z-axis</h1>
+        <canvas id="webgl" width="512" height="512" align=center>
+            Please use a browser that supports "canvas"
+        </canvas>
+    </body>
+</html>

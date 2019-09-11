@@ -40,6 +40,7 @@ function main()
     gl.enableVertexAttribArray(loc_aPosition);
 
     gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
