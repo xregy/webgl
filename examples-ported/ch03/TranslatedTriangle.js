@@ -1,27 +1,33 @@
 // TranslatedTriangle.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'uniform vec4 u_Translation;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position + u_Translation;\n' +
-  '}\n';
+"use strict";
+let loc_aPosition = 3;
+let VSHADER_SOURCE =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform vec4 uTranslation;
+void main() {
+    gl_Position = aPosition + uTranslation;
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '}\n';
+let FSHADER_SOURCE =
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main() {
+    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`;
 
 // The translation distance for x, y, and z direction
-var Tx = 0.5, Ty = 0.5, Tz = 0.0;
+let Tx = 0.5, Ty = 0.5, Tz = 0.0;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  let canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  let gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -34,19 +40,19 @@ function main() {
   }
 
   // Write the positions of vertices to a vertex shader
-  var n = initVertexBuffers(gl);
+  let n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
   }
 
   // Pass the translation distance to the vertex shader
-  var u_Translation = gl.getUniformLocation(gl.program, 'u_Translation');
-  if (!u_Translation) {
-    console.log('Failed to get the storage location of u_Translation');
+  let loc_uTranslation = gl.getUniformLocation(gl.program, 'uTranslation');
+  if (!loc_uTranslation) {
+    console.log('Failed to get the storage location of uTranslation');
     return;
   }
-  gl.uniform4f(u_Translation, Tx, Ty, Tz, 0.0);
+  gl.uniform4f(loc_uTranslation, Tx, Ty, Tz, 0.0);
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -59,13 +65,13 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  var vertices = new Float32Array([
+  let vertices = new Float32Array([
     0, 0.5,   -0.5, -0.5,   0.5, -0.5
   ]);
-  var n = 3; // The number of vertices
+  let n = 3; // The number of vertices
 
   // Create a buffer object
-  var vertexBuffer = gl.createBuffer();
+  let vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
     return -1;
@@ -76,16 +82,11 @@ function initVertexBuffers(gl) {
   // Write date into the buffer object
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  // Assign the buffer object to the attribute variable
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  // Assign the buffer object to aPosition variable
+  gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
 
-  // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
+  // Enable the assignment to aPosition variable
+  gl.enableVertexAttribArray(loc_aPosition);
 
   return n;
 }

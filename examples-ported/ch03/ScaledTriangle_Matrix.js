@@ -1,17 +1,23 @@
 // ScaledTriangle_Matrix.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_xformMatrix;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_xformMatrix * a_Position;\n' +
-  '}\n';
+"use strict";
+let loc_aPosition = 3;
+let VSHADER_SOURCE =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform mat4 uXformMatrix;
+void main() {
+    gl_Position = uXformMatrix * aPosition;
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '}\n';
+let FSHADER_SOURCE =
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main() {
+    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`;
 
 // The scaling factor
 var Sx = 1.0, Sy = 1.5, Sz = 1.0;
@@ -21,7 +27,7 @@ function main() {
   var canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  let gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -49,12 +55,12 @@ function main() {
   ]);
 
   // Pass the rotation matrix to the vertex shader
-  var u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix');
-  if (!u_xformMatrix) {
-    console.log('Failed to get the storage location of u_xformMatrix');
+  var loc_uXformMatrix = gl.getUniformLocation(gl.program, 'uXformMatrix');
+  if (!loc_uXformMatrix) {
+    console.log('Failed to get the storage location of uXformMatrix');
     return;
   }
-  gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix);
+  gl.uniformMatrix4fv(loc_uXformMatrix, false, xformMatrix);
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -84,16 +90,11 @@ function initVertexBuffers(gl) {
   // Write date into the buffer object
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  // Assign the buffer object to aPosition variable
+  gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
 
-  // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
+  // Enable the assignment to aPosition variable
+  gl.enableVertexAttribArray(loc_aPosition);
 
   return n;
 }
