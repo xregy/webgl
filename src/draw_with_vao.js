@@ -1,4 +1,35 @@
 "use strict";
+const loc_aPosition = 2;
+const loc_aPointSize = 5;
+const src_vert =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aPointSize}) in float aPointSize;
+void main()
+{
+	gl_Position = aPosition;
+    gl_PointSize = aPointSize;
+}
+`;
+const src_frag_red = 
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main()
+{
+	fColor = vec4(1, 0, 0, 1);
+}
+`;
+const src_frag_blue = 
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main()
+{
+	fColor = vec4(0, 0, 1, 1);
+}
+`;
+
 function init_shader(gl, src_vert, src_frag)
 {
 	initShaders(gl, src_vert, src_frag);
@@ -10,12 +41,8 @@ function main()
 	var canvas = document.getElementById('webgl');
 	var gl = canvas.getContext("webgl2");
 	
-	var shader_red = init_shader(gl,
-		document.getElementById('shader-vert').text,
-		document.getElementById('shader-frag-red').text);
-	var shader_blue = init_shader(gl,
-		document.getElementById('shader-vert').text,
-		document.getElementById('shader-frag-blue').text);
+	var shader_red = init_shader(gl, src_vert, src_frag_red);
+	var shader_blue = init_shader(gl, src_vert, src_frag_blue);
 	
 	var obj_red = init_triangle_red(gl, shader_red);
 	var obj_blue = init_triangle_blue(gl, shader_blue);
@@ -39,72 +66,69 @@ function render_object(gl, shader, object)
 
 function init_triangle_red(gl, shader)
 {
-	var positions_x = new Float32Array([ -0.90, 0.85, -0.90, ]);
-	var positions_y = new Float32Array([ -0.90, -0.90, 0.85, ]);
+	var position = new Float32Array([ -0.9, -0.9, 0, -0.9, -0.9, 0]);
+	var pointsize = new Float32Array([ 10, 20, 30]);
 	
 	let vao = gl.createVertexArray();
 	gl.bindVertexArray(vao); 
 	
-	var buf_x = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_x);
-	gl.bufferData(gl.ARRAY_BUFFER, positions_x, gl.STATIC_DRAW);
-    let loc_x = 3;
-	gl.vertexAttribPointer(loc_x, 1, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	gl.enableVertexAttribArray(loc_x);
+	var buf_position = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
+	gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW);
+
+	gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null); // Yes, we can unbind the BO after calling gl.vertexAttribPointer()
+	gl.enableVertexAttribArray(loc_aPosition);
 	
 	
-	var buf_y = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_y);
-	gl.bufferData(gl.ARRAY_BUFFER, positions_y, gl.STATIC_DRAW);
-    let loc_y = 7;
-	gl.vertexAttribPointer(loc_y, 1, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	gl.enableVertexAttribArray(loc_y);
+	var buf_pointsize = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_pointsize);
+	gl.bufferData(gl.ARRAY_BUFFER, pointsize, gl.STATIC_DRAW);
+
+	gl.vertexAttribPointer(loc_aPointSize, 1, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);   // Yes, we can unbind the BO after calling gl.vertexAttribPointer()
+	gl.enableVertexAttribArray(loc_aPointSize);
 	
 	gl.bindVertexArray(null); 
-	gl.disableVertexAttribArray(loc_x);
-	gl.disableVertexAttribArray(loc_y);
+	gl.disableVertexAttribArray(loc_aPosition);
+	gl.disableVertexAttribArray(loc_aPointSize);
 	
-	return {vao:vao, n:3, drawcall:'drawArrays', type:gl.TRIANGLES};
+	return {vao:vao, n:3, drawcall:'drawArrays', type:gl.POINTS};
 }
 
 function init_triangle_blue(gl, shader)
 {
-	var positions_x = new Float32Array([ 0.90, 0.90, -0.85, ]);
-	var positions_y = new Float32Array([ -0.85, 0.90, 0.90 ]);
+	var position =  new Float32Array([ 0.9, 0.9, 0, 0.9, 0.9, 0]);
+	var pointsize = new Float32Array([ 40, 50, 60 ]);
 	var indices = new Uint16Array([0,1,2]);
 
 	let vao = gl.createVertexArray();
 	gl.bindVertexArray(vao); 
 	
-	vao = gl.createVertexArray();
-	gl.bindVertexArray(vao); 
-	
-	var buf_x = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_x);
-	gl.bufferData(gl.ARRAY_BUFFER, positions_x, gl.STATIC_DRAW);
-    let loc_x = 3;
-	gl.vertexAttribPointer(loc_x, 1, gl.FLOAT, false, 0, 0);
+	var buf_position = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
+	gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW);
+
+	gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	gl.enableVertexAttribArray(loc_x);
+	gl.enableVertexAttribArray(loc_aPosition);
 	
 	
-	var buf_y = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_y);
-	gl.bufferData(gl.ARRAY_BUFFER, positions_y, gl.STATIC_DRAW);
-    let loc_y = 7;
-	gl.vertexAttribPointer(loc_y, 1, gl.FLOAT, false, 0, 0);
+	var buf_pointsize = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buf_pointsize);
+	gl.bufferData(gl.ARRAY_BUFFER, pointsize, gl.STATIC_DRAW);
+
+	gl.vertexAttribPointer(loc_aPointSize, 1, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	gl.enableVertexAttribArray(loc_y);
+	gl.enableVertexAttribArray(loc_aPointSize);
 	
 	var buf_idx = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_idx);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 	
 	gl.bindVertexArray(null); 
-	gl.disableVertexAttribArray(loc_x);
-	gl.disableVertexAttribArray(loc_y);
+	gl.disableVertexAttribArray(loc_aPosition);
+	gl.disableVertexAttribArray(loc_aPointSize);
 	
-	return {vao:vao, n:3, drawcall:'drawElements', index_type:gl.UNSIGNED_SHORT, type:gl.TRIANGLES};
+	return {vao:vao, n:3, drawcall:'drawElements', index_type:gl.UNSIGNED_SHORT, type:gl.POINTS};
 }
