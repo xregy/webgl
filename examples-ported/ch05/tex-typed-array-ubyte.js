@@ -1,5 +1,6 @@
 // TexturedQuad.js (c) 2012 matsuda and kanda
 // Vertex shader program
+"use strict";
 let VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
   'attribute vec2 a_TexCoord;\n' +

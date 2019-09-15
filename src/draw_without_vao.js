@@ -1,8 +1,38 @@
+"use strict";
+const loc_x = 2;
+const loc_y = 5;
+const src_vert =
+`#version 300 es
+layout(location=${loc_x}) in float x;
+layout(location=${loc_y}) in float y;
+void main()
+{
+	gl_Position = vec4(x,y,0,1);
+}
+`;
+const src_frag_red = 
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main()
+{
+	fColor = vec4(1, 0, 0, 1);
+}
+`;
+const src_frag_blue = 
+`#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main()
+{
+	fColor = vec4(0, 0, 1, 1);
+}
+`;
 function init_shader(gl, src_vert, src_frag, attrib_names)
 {
 	initShaders(gl, src_vert, src_frag);
-	h_prog = gl.program;
-	var attribs = {};
+	let h_prog = gl.program;
+	let attribs = {};
 	for(let attrib of attrib_names)
 	{
 		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
@@ -12,19 +42,13 @@ function init_shader(gl, src_vert, src_frag, attrib_names)
 
 function main()
 {
-	var canvas = document.getElementById('webgl');
-	var gl = canvas.getContext("webgl2");
+	let canvas = document.getElementById('webgl');
+	let gl = canvas.getContext("webgl2");
 	
-	var shader_red = init_shader(gl,
-		document.getElementById('shader-vert').text,
-		document.getElementById('shader-frag-red').text,
-		['x', 'y']);
-	var shader_blue = init_shader(gl,
-		document.getElementById('shader-vert').text,
-		document.getElementById('shader-frag-blue').text,
-		['x', 'y']);
-	var obj_red = init_triangle_red(gl);
-	var obj_blue = init_triangle_blue(gl);
+	let shader_red = init_shader(gl, src_vert, src_frag_red, ['x', 'y']);
+	let shader_blue = init_shader(gl, src_vert, src_frag_blue, ['x', 'y']);
+	let obj_red = init_triangle_red(gl);
+	let obj_blue = init_triangle_blue(gl);
 
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -37,9 +61,9 @@ function render_object(gl, shader, object)
 {
 	gl.useProgram(shader.h_prog);
 	
-	for(var attrib_name in object.attribs)
+	for(let attrib_name in object.attribs)
 	{
-		var attrib = object.attribs[attrib_name];
+		let attrib = object.attribs[attrib_name];
 		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
 		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -55,7 +79,7 @@ function render_object(gl, shader, object)
 		gl.drawArrays(object.type, 0, object.n);
 	}
 	
-	for(var attrib_name in object.attribs)
+	for(let attrib_name in object.attribs)
 	{
 		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
 	}
@@ -65,20 +89,20 @@ function render_object(gl, shader, object)
 
 function init_triangle_red(gl)
 {
-	var positions_x = new Float32Array([ -0.90, 0.85, -0.90, ]);
-	var positions_y = new Float32Array([ -0.90, -0.90, 0.85, ]);
+	let positions_x = new Float32Array([ -0.90, 0.85, -0.90, ]);
+	let positions_y = new Float32Array([ -0.90, -0.90, 0.85, ]);
 	
-	var buf_x = gl.createBuffer();
+	let buf_x = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_x);
 	gl.bufferData(gl.ARRAY_BUFFER, positions_x, gl.STATIC_DRAW);
 	
-	var buf_y = gl.createBuffer();
+	let buf_y = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_y);
 	gl.bufferData(gl.ARRAY_BUFFER, positions_y, gl.STATIC_DRAW);
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	
-	var attribs = [];
+	let attribs = [];
 	attribs["x"] = {buffer:buf_x, size:1, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 	attribs["y"] = {buffer:buf_y, size:1, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 	
@@ -87,25 +111,25 @@ function init_triangle_red(gl)
 
 function init_triangle_blue(gl)
 {
-	var positions_x = new Float32Array([ 0.90, 0.90, -0.85, ]);
-	var positions_y = new Float32Array([ -0.85, 0.90, 0.90 ]);
-	var indices = new Uint16Array([0,1,2]);
+	let positions_x = new Float32Array([ 0.90, 0.90, -0.85, ]);
+	let positions_y = new Float32Array([ -0.85, 0.90, 0.90 ]);
+	let indices = new Uint16Array([0,1,2]);
 	
-	var buf_x = gl.createBuffer();
+	let buf_x = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_x);
 	gl.bufferData(gl.ARRAY_BUFFER, positions_x, gl.STATIC_DRAW);
 	
-	var buf_y = gl.createBuffer();
+	let buf_y = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, buf_y);
 	gl.bufferData(gl.ARRAY_BUFFER, positions_y, gl.STATIC_DRAW);
 	
-	var buf_idx = gl.createBuffer();
+	let buf_idx = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_idx);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	
-	var attribs = [];
+	let attribs = [];
 	attribs["x"] = {buffer:buf_x, size:1, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 	attribs["y"] = {buffer:buf_y, size:1, type:gl.FLOAT, normalized:false, stride:0, offset:0};
 	

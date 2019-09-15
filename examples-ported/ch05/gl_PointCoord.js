@@ -24,10 +24,10 @@ void main() {
 // Vertex shader program
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = canvas.getContext('webgl2');
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -58,13 +58,13 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-  let vertices = new Float32Array([
+  const vertices = new Float32Array([
     -0.5,  0.5,
-	-0.5, -0.5,
-	 0.5,  0.5,
-	 0.5, -0.5,
+    -0.5, -0.5,
+     0.5,  0.5,
+     0.5, -0.5,
   ]);
-  let n = 4; // The number of vertices
+  const n = 4; // The number of vertices
 
   let vao = gl.createVertexArray();
   gl.bindVertexArray(vao);

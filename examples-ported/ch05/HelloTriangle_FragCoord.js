@@ -1,26 +1,31 @@
 // HelloTriangle_FragCoord.js (c) 2012 matsuda
 // Vertex shader program
+"use strict";
+const loc_aPosition = 3;
 const VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '}\n';
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+void main() {
+  gl_Position = aPosition;
+}`;
 
 // Fragment shader program
 const FSHADER_SOURCE =
-  'precision mediump float;\n' +
-  'uniform float u_Width;\n' +
-  'uniform float u_Height;\n' +
-  'void main() {\n' +
-  '  gl_FragColor = vec4(gl_FragCoord.x/u_Width, 0.0, gl_FragCoord.y/u_Height, 1.0);\n' +
-  '}\n';
+`#version 300 es
+precision mediump float;
+uniform float uWidth;
+uniform float uHeight;
+out vec4 fColor;
+void main() {
+  fColor = vec4(gl_FragCoord.x/uWidth, 0.0, gl_FragCoord.y/uHeight, 1.0);
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  let canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  let gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -33,7 +38,7 @@ function main() {
   }
 
   // Write the positions of vertices to a vertex shader
-  let n = initVertexBuffers(gl);
+  let {vao, n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the positions of the vertices');
     return;
@@ -45,15 +50,17 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+  gl.bindVertexArray(vao);
   // Draw the rectangle
-  gl.drawArrays(gl.TRIANGLES, 0, n);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+  gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl) {
-  let vertices = new Float32Array([
+  const vertices = new Float32Array([
     0, 0.5,   -0.5, -0.5,   0.5, -0.5
   ]);
-  let n = 3; // The number of vertices
+  const n = 3; // The number of vertices
 
   // Create a buffer object
   let vertexBuffer = gl.createBuffer();
@@ -62,40 +69,38 @@ function initVertexBuffers(gl) {
     return -1;
   }
 
+  let vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
   // Bind the buffer object to target
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   // Write date into the buffer object
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  // Pass the position of a point to a_Position variable
-  let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
 
-  let u_Width = gl.getUniformLocation(gl.program, 'u_Width');
-  if (!u_Width) {
-    console.log('Failed to get the storage location of u_Width');
+  const loc_uWidth = gl.getUniformLocation(gl.program, 'uWidth');
+  if (!loc_uWidth) {
+    console.log('Failed to get the storage location of uWidth');
     return;
   }
 
-  let u_Height = gl.getUniformLocation(gl.program, 'u_Height');
-  if (!u_Height) {
-    console.log('Failed to get the storage location of u_Height');
+  const loc_uHeight = gl.getUniformLocation(gl.program, 'uHeight');
+  if (!loc_uHeight) {
+    console.log('Failed to get the storage location of uHeight');
     return;
   }
 
   // Pass the width and hight of the <canvas>
-  gl.uniform1f(u_Width, gl.drawingBufferWidth);
-  gl.uniform1f(u_Height, gl.drawingBufferHeight);
+  gl.uniform1f(loc_uWidth, gl.drawingBufferWidth);
+  gl.uniform1f(loc_uHeight, gl.drawingBufferHeight);
 
   // Enable the generic vertex attribute array
-  gl.enableVertexAttribArray(a_Position);
+  gl.enableVertexAttribArray(loc_aPosition);
+
+  gl.bindVertexArray(null);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  return n;
+  return {vao, n};
 }
