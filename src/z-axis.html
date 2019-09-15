@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <title>default z-axis</title>
+        <script src="../lib/cuon-matrix.js"></script>
         <script>
             "use stricrt";
             const loc_aPosition = 7;
@@ -12,9 +13,10 @@
                 layout(location=${loc_aPosition}) in vec4 aPosition;
                 layout(location=${loc_aColor}) in vec4 aColor;
                 out vec4 vColor;
+                uniform mat4 uMVP;
                 void main()
                 {
-                    gl_Position = aPosition;
+                    gl_Position = uMVP*aPosition;
                     vColor = aColor;
                 }
             `;
@@ -34,6 +36,8 @@
                 // Getting the WebGL context
                 let canvas = document.getElementById('webgl');
                 gl = canvas.getContext("webgl2");
+
+                gl.enable(gl.DEPTH_TEST);
             
                 // Compiling the shaders
                 let h_prog = gl.createProgram();
@@ -49,7 +53,21 @@
                 gl.attachShader(h_prog, h_frag);
             
                 gl.linkProgram(h_prog);
+
+                gl.useProgram(h_prog);
             
+                let MVP = new Matrix4();
+//                MVP.setIdentity();
+//                MVP.setOrtho(-1, 1, -1, 1, -1, 1);
+
+                let loc_uMVP = gl.getUniformLocation(h_prog, "uMVP");
+                if(!loc_uMVP)
+                {
+                    console.log("Failed to get the location of uMVP.");
+                    return;
+                }
+                console.log(loc_uMVP);
+                gl.uniformMatrix4fv(loc_uMVP, false, MVP.elements);
             
                 let vertices = new Float32Array([
                                     -0.9, -0.9, 0.0, 1.0, 0.0, 0.0, // red triangle
