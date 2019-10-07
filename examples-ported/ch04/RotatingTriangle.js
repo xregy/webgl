@@ -101,12 +101,12 @@ function initVertexBuffers(gl) {
   return {vao, n};
 }
 
-function draw(gl, vao, n, currentAngle, modelMatrix, uModelMatrix) {
+function draw(gl, vao, n, currentAngle, modelMatrix, loc_uModelMatrix) {
   // Set the rotation matrix
   modelMatrix.setRotate(currentAngle, 0, 0, 1); // Rotation angle, rotation axis (0, 0, 1)
  
   // Pass the rotation matrix to the vertex shader
-  gl.uniformMatrix4fv(uModelMatrix, false, modelMatrix.elements);
+  gl.uniformMatrix4fv(loc_uModelMatrix, false, modelMatrix.elements);
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
