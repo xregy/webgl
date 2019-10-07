@@ -36,7 +36,7 @@ function main() {
     return;
   }
 
-  canvas.onmousedown = function(ev){ click(ev, gl, canvas, loc_aPosition); };
+  canvas.onmousedown = function(ev){ click(ev, gl, canvas); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);

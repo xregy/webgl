@@ -19,12 +19,15 @@ void main() {
     fColor = vec4(1.0, 0.0, 0.0, 1.0);
 }`;
 
+let canvas;
+let gl;
+
 function main() {
   // Retrieve <canvas> element
-  const canvas = document.getElementById('webgl');
+  canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  const gl = canvas.getContext('webgl2');
+  gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -36,7 +39,6 @@ function main() {
     return;
   }
 
-    canvas.onmousedown = function(ev){ click(ev, gl, canvas, loc_aPosition); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -47,7 +49,7 @@ function main() {
 
 var g_points = []; // The array for the position of a mouse press
 
-function click(ev, gl, canvas) {
+function on_mouse_down(ev) {
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
