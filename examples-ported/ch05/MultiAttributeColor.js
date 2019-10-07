@@ -55,7 +55,7 @@ function main() {
 
   gl.bindVertexArray(vao);
   // Draw the rectangle
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+  gl.drawArrays(gl.POINTS, 0, n);
   gl.bindVertexArray(null);
 }
 
