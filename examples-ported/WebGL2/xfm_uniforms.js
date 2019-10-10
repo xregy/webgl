@@ -43,8 +43,8 @@ function main() {
     gl.clearColor(0, 0, 0, 1);
 
 
-    let tick = function(ev) {
-        render(ev, gl, vao, n, loc_uMatRotate, loc_uMatTranslate, loc_uMatScale,
+    let tick = function() {
+        render(gl, vao, n, loc_uMatRotate, loc_uMatTranslate, loc_uMatScale,
             matRotate, matTranslate, matScale);
         requestAnimationFrame(tick, canvas);
     };
@@ -52,7 +52,7 @@ function main() {
     tick();
 }
 
-function render(ev, gl, vao, n, loc_uMatRotate, loc_uMatTranslate, loc_uMatScale,
+function render(gl, vao, n, loc_uMatRotate, loc_uMatTranslate, loc_uMatScale,
                 matRotate, matTranslate, matScale)
 {
     const ANGULAR_VELOCITY = 60.0;

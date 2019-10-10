@@ -45,15 +45,15 @@ function main() {
     
     gl.clearColor(0, 0, 0, 1);
 
-    let tick = function(ev) {
-        render(ev, gl, vao, n, ubo, matR, matT, matS);
+    let tick = function() {
+        render(gl, vao, n, ubo, matR, matT, matS);
         requestAnimationFrame(tick, canvas);
     };
     
     tick();
 }
 
-function render(ev, gl, vao, n, ubo, matR, matT, matS)
+function render(gl, vao, n, ubo, matR, matT, matS)
 {
     const ANGULAR_VELOCITY = 60.0;
 
