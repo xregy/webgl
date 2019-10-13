@@ -5,10 +5,12 @@ const VSHADER_SOURCE =
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform matrices
 {
-    mat4 uMat[3];
+    int  scale;
+    vec2 offset;
+    mat4 R;
 };
 void main() {
-    gl_Position = uMat[0] * uMat[1] * uMat[2] * aPosition;
+    gl_Position = R * (vec4(0.001 * float(scale)*aPosition.xyz, 1) + vec4(offset.xy, 0, 0));
 }`;
 
 const FSHADER_SOURCE =
@@ -36,36 +38,49 @@ function main() {
     let {vao, n} = initVAO(gl);
     
     let matR = new Matrix4();
-    let matT = new Matrix4();
-    let matS = new Matrix4();
+    let offset = new Float32Array(2);
+    let scale = new Int32Array(1);
 
-    let ubo = initUBO(gl, matR, matT, matS);
+    let ubo = initUBO(gl, matR, offset, scale);
     
     gl.clearColor(0, 0, 0, 1);
 
     let tick = function() {
-        render(gl, vao, n, ubo, matR, matT, matS);
+        render(gl, vao, n, ubo, matR, offset, scale);
         requestAnimationFrame(tick, canvas);
     };
     
     tick();
 }
 
-function render(gl, vao, n, ubo, matR, matT, matS)
+function render(gl, vao, n, ubo, matR, offset, scale)
 {
     const ANGULAR_VELOCITY = 60.0;
 
     let now = Date.now();
     
     matR.setRotate( (now*0.001*ANGULAR_VELOCITY)%360, 0, 0, 1);
-    matT.setTranslate(0.2*(0.5**Math.sin(0.001*now) + 1), 0, 0);
-    let s = 0.5*Math.sin(0.001*now) + 1;
-    matS.setScale(s,s,s);
+    offset[0] = 0.2*(0.5**Math.sin(0.001*now) + 1);
+    offset[1] = 0;
+    scale[0] = (0.5*Math.sin(0.001*now) + 1)*1000;
+
+    let FSIZE = 4;
     
     gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-    gl.bufferSubData(gl.UNIFORM_BUFFER, 0, matR.elements);
-    gl.bufferSubData(gl.UNIFORM_BUFFER, 4*16, matT.elements);
-    gl.bufferSubData(gl.UNIFORM_BUFFER, 4*16*2, matS.elements);
+    /*
+        | 4bytes | 4bytes | 4bytes | 4bytes |
+        +--------+--------+--------+--------+
+        | scale  |        |      offset     |
+        +--------+--------+--------+--------+
+        |                                   |
+        |                matR               |
+        |           (4x16=24bytes)          |
+        |                                   |
+        +--------+--------+--------+--------+
+    */
+    gl.bufferSubData(gl.UNIFORM_BUFFER, 0, scale);
+    gl.bufferSubData(gl.UNIFORM_BUFFER, FSIZE*2, offset);
+    gl.bufferSubData(gl.UNIFORM_BUFFER, FSIZE*4, matR.elements);
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
     
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -97,11 +112,9 @@ function initVAO(gl) {
     return {vao, n};
 }
 
-function initUBO(gl, matR, matT, matS) {
+function initUBO(gl, matR, offset, scale) {
 
     const binding_matrices = 7;
-
-    console.log('MAX_UNIFORM_BUFFER_BINDINGS=' + gl.MAX_UNIFORM_BUFFER_BINDINGS);
 
     let idx_uniform_block = gl.getUniformBlockIndex(gl.program, 'matrices');   // uniform block index
     gl.uniformBlockBinding(gl.program, idx_uniform_block, binding_matrices);

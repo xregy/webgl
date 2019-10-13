@@ -5,12 +5,10 @@ const VSHADER_SOURCE =
 layout(location=${loc_aPosition}) in vec4 aPosition;
 uniform matrices
 {
-    mat4 R;
-    mat4 T;
-    mat4 S;
+    mat4 uMat[3];
 };
 void main() {
-    gl_Position = R * T * S * aPosition;
+    gl_Position = uMat[0] * uMat[1] * uMat[2] * aPosition;
 }`;
 
 const FSHADER_SOURCE =
