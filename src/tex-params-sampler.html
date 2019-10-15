@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sampler parameters (WebGL 2)</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="tex-params-sampler.js"></script>
+    <div>TEXTURE_MAG_FILTER: 
+        <select id="mag_filter">
+            <option>gl.NEAREST</option>
+            <option>gl.LINEAR</option>
+        </select>
+    </div>
+    <div>TEXTURE_WRAP_S: 
+        <select id="wrap_s">
+            <option>gl.REPEAT</option>
+            <option>gl.CLAMP_TO_EDGE</option>
+            <option>gl.MIRRORED_REPEAT</option>
+        </select>
+    </div>
+    <div>TEXTURE_WRAP_T: 
+        <select id="wrap_t">
+            <option>gl.REPEAT</option>
+            <option>gl.CLAMP_TO_EDGE</option>
+            <option>gl.MIRRORED_REPEAT</option>
+        </select>
+    </div>
+  </body>
+</html>
