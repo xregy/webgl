@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Samplers (WebGL 2)</title>
+    <style type="text/css">
+        table
+        {
+            border-collapse:collapse;
+        }
+        table tr td
+        {
+            border:1px solid black;
+        }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <h1 align=center>Switching samplers</h1>
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="tex-sampler.js"></script>
+    <table>
+        <tr>
+            <td></td>
+            <td><input type=radio name=sampler value=0 checked>Sampler #0</input></td>
+            <td><input type=radio name=sampler value=1>Sampler #1</input></td>
+        </tr>
+        <tr>
+            <td>TEXTURE_MAG_FILTER</td>
+            <td>NEAREST</td>
+            <td>LINEAR</td>
+        </tr>
+        <tr>
+            <td>TEXTURE_WRAP_S</td>
+            <td>REPEAT</td>
+            <td>CLAMP_TO_EDGE</td>
+        </tr>
+        <tr>
+            <td>TEXTURE_WRAP_T</td> 
+            <td>MIRRORED_REPEAT</td>
+            <td>REPEAT</td>
+        </tr>
+    </table>
+  </body>
+</html>
