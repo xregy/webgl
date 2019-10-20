@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Uniform as an array index</title>
+        <title>Uniform as a vector index</title>
     </head>
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
@@ -11,7 +11,7 @@
         function main()
         {
             var canvas = document.getElementById('webgl');
-            var gl = canvas.getContext('webgl2');
+            var gl = getWebGLContext(canvas);
             var src_vert = document.getElementById("shader-vert").text;
             var src_frag = document.getElementById("shader-frag").text;
             if (!initShaders(gl, src_vert, src_frag))
@@ -26,27 +26,21 @@
             gl.drawArrays(gl.POINTS, 0, 1);
         }
     </script>
-    <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
+    <script id="shader-vert" type="x-shader/x-vertex">
         uniform int u_index;
         void main()
         {
-            float    offset[4];
-            offset[0] = -0.9;
-            offset[1] = -0.5;
-            offset[2] = 0.5;
-            offset[3] = 0.9;
+            vec4    offset = vec4(-0.9, -0.5, 0.5, 0.9);
             gl_Position = vec4(offset[u_index], 0.0, 0.0, 1.0);
             gl_PointSize = 10.0;
         }
-    </script>
-    <script id="shader-frag" type="x-shader/x-fragment">#version 300 es
-        precision mediump float;
-        out vec4 fColor;
+	</script>
+	<script id="shader-frag" type="x-shader/x-fragment">
         void main()
         {
-            fColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
         }
-    </script>
+	</script>
 
     <body onload="main()">
         <canvas id="webgl" width="400" height="400">

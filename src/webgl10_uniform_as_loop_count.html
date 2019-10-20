@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Uniform as an array index</title>
+        <title>Uniform as a loop count</title>
     </head>
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
@@ -11,7 +11,7 @@
         function main()
         {
             var canvas = document.getElementById('webgl');
-            var gl = canvas.getContext('webgl2');
+            var gl = getWebGLContext(canvas);
             var src_vert = document.getElementById("shader-vert").text;
             var src_frag = document.getElementById("shader-frag").text;
             if (!initShaders(gl, src_vert, src_frag))
@@ -19,36 +19,32 @@
                 console.log('Failed to intialize shaders.');
                 return;
             }
-            var loc_index = gl.getUniformLocation(gl.program, "u_index");
-            gl.uniform1i(loc_index, 3);
+            var loc_loop_count = gl.getUniformLocation(gl.program, "u_loop_count");
+            gl.uniform1i(loc_loop_count, 3);
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, 1);
         }
     </script>
-    <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-        uniform int u_index;
+    <script id="shader-vert" type="x-shader/x-vertex">
+        uniform int u_loop_count;
         void main()
         {
-            float    offset[4];
-            offset[0] = -0.9;
-            offset[1] = -0.5;
-            offset[2] = 0.5;
-            offset[3] = 0.9;
-            gl_Position = vec4(offset[u_index], 0.0, 0.0, 1.0);
+            float   x = 0.0;
+            for(int i=0 ; i<u_loop_count ; i++) x += 0.2;
+            gl_Position = vec4(x, 0.0, 0.0, 1.0);
             gl_PointSize = 10.0;
         }
     </script>
-    <script id="shader-frag" type="x-shader/x-fragment">#version 300 es
-        precision mediump float;
-        out vec4 fColor;
+    <script id="shader-frag" type="x-shader/x-fragment">
         void main()
         {
-            fColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
         }
     </script>
 
     <body onload="main()">
+        <h1 align=center>(WebGL1.0) Using a Uniform as a Loop Count</h1>
         <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"
         </canvas>
