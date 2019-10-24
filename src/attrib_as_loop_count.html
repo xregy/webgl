@@ -2,20 +2,24 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Uniform as a loop count</title>
+        <title>Attribute as a loop count</title>
     </head>
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
     <script src="../lib/cuon-utils.js"></script>
     <script type="text/javascript">
         "use strict";
+        const loc_aPosition = 0;
         const src_vert = `#version 300 es
-        uniform int u_loop_count;
+        layout(location=${loc_aPosition}) in ivec2 aPosition;
         void main()
         {
-            float   x = 0.0;
-            for(int i=0 ; i<u_loop_count ; i++) x += 0.2;
-            gl_Position = vec4(x, 0.0, 0.0, 1.0);
+            ivec2 n = aPosition.xy;
+            float   x=-1.0, y=-1.0;
+            for(int i=0 ; i<n.x ; i++)  x += 0.1;
+            for(int i=0 ; i<n.y ; i++)  y += 0.1;
+            gl_Position = vec4(x,y,0,1);
+
             gl_PointSize = 10.0;
         }`;
         const src_frag = `#version 300 es
@@ -29,21 +33,28 @@
         {
             const canvas = document.getElementById('webgl');
             const gl = canvas.getContext('webgl2');
-            if (!initShaders(gl, src_vert, src_frag))
-            {
-                console.log('Failed to intialize shaders.');
-                return;
-            }
-            const loc_loop_count = gl.getUniformLocation(gl.program, "u_loop_count");
-            gl.uniform1i(loc_loop_count, 3);
+            initShaders(gl, src_vert, src_frag);
+            const verts = new Int32Array([5,5, 15,5, 10,15]);
+
+            let vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            let vbo = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
+            gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+
+            gl.vertexAttribIPointer(loc_aPosition, 2, gl.INT, 0, 0);
+            gl.enableVertexAttribArray(loc_aPosition);
+
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.drawArrays(gl.POINTS, 0, 1);
+            gl.drawArrays(gl.POINTS, 0, 3);
         }
     </script>
 
     <body onload="main()">
-        <h1 align=center>Using a uniform as a loop count</h1>
+        <h1 align=center>Using an attribute  as a loop count</h1>
         <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"
         </canvas>
