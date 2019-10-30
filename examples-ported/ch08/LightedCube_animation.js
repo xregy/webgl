@@ -1,36 +1,41 @@
 // LightedCube_animation.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Color;\n' +
-  'attribute vec4 a_Normal;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'uniform mat4 u_NormalMatrix;\n' +
-  'uniform vec3 u_LightDirection;\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_MvpMatrix * a_Position;\n' +
-  '  vec4 normal = u_NormalMatrix * a_Normal;\n' +
-  '  float nDotL = max(dot(u_LightDirection, normalize(normal.xyz)), 0.0);\n' +
-  '  v_Color = vec4(a_Color.xyz * nDotL, a_Color.a);\n' + 
-  '}\n';
+"use strict";
+const loc_aPosition = 3;
+const loc_aColor = 7;
+const loc_aNormal = 5;
+const VSHADER_SOURCE = 
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+layout(location=${loc_aNormal}) in vec4 aNormal;
+uniform mat4 uMvpMatrix;
+uniform mat4 uNormalMatrix;
+uniform vec3 uLightDirection;
+out vec4 vColor;
+void main() {
+    gl_Position = uMvpMatrix * aPosition;
+    vec4 normal = uNormalMatrix * aNormal;
+    float nDotL = max(dot(uLightDirection, normalize(normal.xyz)), 0.0);
+    vColor = vec4(aColor.xyz * nDotL, aColor.a);
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_FragColor = v_Color;\n' +
-  '}\n';
+const FSHADER_SOURCE =
+`#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main() {
+    fColor = vColor;
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -43,7 +48,7 @@ function main() {
   }
 
   // 
-  var n = initVertexBuffers(gl);
+  const {vao,n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -54,53 +59,55 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   // Get the storage locations of uniform variables and so on
-  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
-  var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
-  var u_LightDirection = gl.getUniformLocation(gl.program, 'u_LightDirection');
-  if (!u_MvpMatrix || !u_NormalMatrix || !u_LightDirection) { 
+  const loc_uMvpMatrix = gl.getUniformLocation(gl.program, 'uMvpMatrix');
+  const loc_uNormalMatrix = gl.getUniformLocation(gl.program, 'uNormalMatrix');
+  const loc_uLightDirection = gl.getUniformLocation(gl.program, 'uLightDirection');
+  if (!loc_uMvpMatrix || !loc_uNormalMatrix || !loc_uLightDirection) { 
     console.log('Failed to get the storage location');
     return;
   }
 
-  var vpMatrix = new Matrix4();   // View projection matrix
+  let vpMatrix = new Matrix4();   // View projection matrix
   // Calculate the view projection matrix
   vpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 100);
   vpMatrix.lookAt(3, 3, 7, 0, 0, 0, 0, 1, 0);
   // Set the light direction (in the world coordinate)
-  var lightDirection = new Vector3([0.5, 3.0, 4.0]);
+  let lightDirection = new Vector3([0.5, 3.0, 4.0]);
   lightDirection.normalize();     // Normalize
-  gl.uniform3fv(u_LightDirection, lightDirection.elements);
+  gl.uniform3fv(loc_uLightDirection, lightDirection.elements);
   
-  var currentAngle = 0.0;  // Current rotation angle
-  var modelMatrix = new Matrix4();  // Model matrix
-  var mvpMatrix = new Matrix4();    // Model view projection matrix
-  var normalMatrix = new Matrix4(); // Transformation matrix for normals
+  let currentAngle = 0.0;  // Current rotation angle
+  let modelMatrix = new Matrix4();  // Model matrix
+  let mvpMatrix = new Matrix4();    // Model view projection matrix
+  let normalMatrix = new Matrix4(); // Transformation matrix for normals
 
-  var tick = function() {
+  const tick = function() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the model matrix
     modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
     mvpMatrix.set(vpMatrix).multiply(modelMatrix);
-    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    gl.uniformMatrix4fv(loc_uMvpMatrix, false, mvpMatrix.elements);
 
-    // Pass the matrix to transform the normal based on the model matrix to u_NormalMatrix
+    // Pass the matrix to transform the normal based on the model matrix to uNormalMatrix
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
+    gl.uniformMatrix4fv(loc_uNormalMatrix, false, normalMatrix.elements);
 
     // Clear color and depth buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.bindVertexArray(vao);
     // Draw the cube
     gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+    gl.bindVertexArray(null);
 
     requestAnimationFrame(tick, canvas); // Request that the browser ?calls tick
   };
   tick();
 }
 
-function draw(gl, n, angle, vpMatrix, u_MvpMatrix, u_NormalMatrix) {
+function draw(gl, n, angle, vpMatrix, loc_uMvpMatrix, loc_uNormalMatrix) {
 }
 
 function initVertexBuffers(gl) {
@@ -113,7 +120,7 @@ function initVertexBuffers(gl) {
   //  |/      |/
   //  v2------v3
   // Coordinates
-  var vertices = new Float32Array([
+  const vertices = new Float32Array([
      1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0, // v0-v1-v2-v3 front
      1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0, // v0-v3-v4-v5 right
      1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0, // v0-v5-v6-v1 up
@@ -123,7 +130,7 @@ function initVertexBuffers(gl) {
   ]);
 
   // Colors
-  var colors = new Float32Array([
+  const colors = new Float32Array([
     1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v1-v2-v3 front
     1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v3-v4-v5 right
     1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v5-v6-v1 up
@@ -133,7 +140,7 @@ function initVertexBuffers(gl) {
  ]);
 
   // Normal
-  var normals = new Float32Array([
+  const normals = new Float32Array([
     0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,  // v0-v1-v2-v3 front
     1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,  // v0-v3-v4-v5 right
     0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,  // v0-v5-v6-v1 up
@@ -143,7 +150,7 @@ function initVertexBuffers(gl) {
   ]);
 
   // Indices of the vertices
-  var indices = new Uint8Array([
+  const indices = new Uint8Array([
      0, 1, 2,   0, 2, 3,    // front
      4, 5, 6,   4, 6, 7,    // right
      8, 9,10,   8,10,11,    // up
@@ -152,16 +159,18 @@ function initVertexBuffers(gl) {
     20,21,22,  20,22,23     // back
  ]);
 
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
   // Write the vertex property to buffers (coordinates, colors and normals)
-  if (!initArrayBuffer(gl, 'a_Position', vertices, 3, gl.FLOAT)) return -1;
-  if (!initArrayBuffer(gl, 'a_Color', colors, 3, gl.FLOAT)) return -1;
-  if (!initArrayBuffer(gl, 'a_Normal', normals, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, loc_aPosition, vertices, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, loc_aColor, colors, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, loc_aNormal, normals, 3, gl.FLOAT)) return -1;
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Write the indices to the buffer object
-  var indexBuffer = gl.createBuffer();
+  const indexBuffer = gl.createBuffer();
   if (!indexBuffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -169,12 +178,13 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-  return indices.length;
+    gl.bindVertexArray(null);
+  return {vao,n:indices.length};
 }
 
-function initArrayBuffer(gl, attribute, data, num, type) {
+function initArrayBuffer(gl, loc_attrib, data, num, type) {
   // Create a buffer object
-  var buffer = gl.createBuffer();
+  const buffer = gl.createBuffer();
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -182,29 +192,23 @@ function initArrayBuffer(gl, attribute, data, num, type) {
   // Write date into the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-  // Assign the buffer object to the attribute variable
-  var a_attribute = gl.getAttribLocation(gl.program, attribute);
-  if (a_attribute < 0) {
-    console.log('Failed to get the storage location of ' + attribute);
-    return false;
-  }
-  gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
+  gl.vertexAttribPointer(loc_attrib, num, type, false, 0, 0);
   // Enable the assignment of the buffer object to the attribute variable
-  gl.enableVertexAttribArray(a_attribute);
+  gl.enableVertexAttribArray(loc_attrib);
 
   return true;
 }
 
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 30.0;
+let ANGLE_STEP = 30.0;
 // Last time that this function was called
-var g_last = Date.now();
+let g_last = Date.now();
 function animate(angle) {
   // Calculate the elapsed time
-  var now = Date.now();
-  var elapsed = now - g_last;
+  let now = Date.now();
+  let elapsed = now - g_last;
   g_last = now;
   // Update the current rotation angle (adjusted by the elapsed time)
-  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+  let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle %= 360;
 }
