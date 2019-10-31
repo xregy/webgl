@@ -38,56 +38,59 @@ function main()
 	gl.useProgram(shader_cubemap.h_prog);
 	gl.uniform1i(gl.getUniformLocation(shader_cubemap.h_prog, "sampler_cubemap"), TEX_UNIT);
 
-	let img_cubemap =
-	{
-		posx:new Image(),
-		negx:new Image(),
-		posy:new Image(),
-		negy:new Image(),
-		posz:new Image(),
-		negz:new Image(),
-	};
+    const faces = ['posx', 'negx', 'posy', 'negy', 'posz', 'negz'];
+    let img_cubemap = {};
+    faces.forEach(face => img_cubemap[face] = new Image());
 
-	const	TOTAL_IMAGES = 6;
-	let	images_loaded = 0;
+    function load_image(image, src)
+    {
+        return new Promise(function(resolve, reject) {
+            image.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
+            image.onload = function() {
+                resolve(image);
+            }
+            image.onerror = () => reject(new Error(`Error while loading ${src}.`));
+        	image.src = src;
+        });
+    }
+    
+    Promise.all(faces.map(face => load_image(img_cubemap[face], `../resources/SwedishRoyalCastle/${face}.jpg`))
+    ).then(
+        function(images) {
+            tex_cubemap = new TextureCubemap(gl, 
+                {
+                    posx:images[0],
+                    negx:images[1],
+                    posy:images[2],
+                    negy:images[3],
+                    posz:images[4],
+                    negz:images[5]
+                }
+                );
+            tick();
+        }
 
-	let tick_init = function() {
-		if(images_loaded == TOTAL_IMAGES)
-		{
-			tex_cubemap = new TextureCubemap(gl, img_cubemap);
-			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-		}
-		else
-		{
-			requestAnimationFrame(tick_init, canvas); // Request that the browser calls tick
-		}
-	};
+    ).catch(
+        err => document.getElementById("output").innerHTML = 'An error happened: ' + err.message
+    );
 
 
-	let t_last = Date.now();
-	const ANGLE_STEP = 45;
 
-	let tick = function() {
-		let now = Date.now();
-		let elapsed = now - t_last;
-		t_last = now;
-
-		monkey.M.rotate(( (ANGLE_STEP * elapsed) / 1000.0) % 360.0, 0, 1, 0);
-
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		room.render(gl, shader_room, null, null, V, P);
-		monkey.render(gl, shader_cubemap, null, null, V, P);
-		requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-	};
-
-	for(let face of ["posx", "negx", "posy", "negy", "posz", "negz"])
-	{
-		img_cubemap[face].onload = function() { images_loaded++; };
-		img_cubemap[face].src = "../resources/SwedishRoyalCastle/" + face + ".jpg";
-	}
-	
-	tick_init();
-
+    let t_last = Date.now();
+    const ANGLE_STEP = 45;
+    
+    let tick = function() {
+        let now = Date.now();
+        let elapsed = now - t_last;
+        t_last = now;
+        
+        monkey.M.rotate(( (ANGLE_STEP * elapsed) / 1000.0) % 360.0, 0, 1, 0);
+        
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        room.render(gl, shader_room, null, null, V, P);
+        monkey.render(gl, shader_cubemap, null, null, V, P);
+        requestAnimationFrame(tick, canvas); // Request that the browser calls tick
+    };
 }
 
 

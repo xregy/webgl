@@ -70,82 +70,70 @@ function main()
 	manager.onProgress = function ( item, loaded, total ) {
 		console.log( item, loaded, total );
 	};
+    let loader = new THREE.OBJLoader( manager );
 
-	let texture_loaded = false;
-	let mesh_loaded = false;
+    let image = new Image();
+    let tex;
 
-	let image = new Image();
+    function load_image(image, src)
+    {
+        return new Promise(function(resolve, reject) {
+            image.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
+            image.onload = function() {
+                resolve(image);
+            }
+            image.onerror = () => reject(new Error(`Error while loading ${src}.`));
+        	image.src = src;
+        });
+    }
 
-	let tex;
+    load_image(image, 'https://threejs.org/examples/models/obj/cerberus/Cerberus_A.jpg'
+    ).then(
+        function(image) {
+            tex = new Texture(gl, image);
+            return new Promise(function(resolve, reject) {
+                loader.load('https://threejs.org/examples/models/obj/cerberus/Cerberus.obj',
+                    function ( object )
+                    {
+                        resolve(object);
+                    },
+                    // called when loading is in progresses
+                    function ( xhr )
+                    {
+                        document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
+                    },
+                    // called when loading has errors
+                    function ( error )
+                    {
+                        reject(new Error(`Error while loading ${error.srcElement.responseURL}.`));
+                    }
+        
+                );
 
-	image.onload = function()
-	{
-		tex = new Texture(gl, image);
-		texture_loaded = true;
-		if(mesh_loaded)	resources_loaded = true;
-	};
-
-//	image.crossOrigin = "anonymous";
-	image.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
-	image.src = 'https://threejs.org/examples/models/obj/cerberus/Cerberus_A.jpg';
-//	image.src = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.jpg';
-
-	let resources_loaded = false;
-
-	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
-//	let url = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.gltf';
-//	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
-
-	let loader = new THREE.OBJLoader( manager );
-//	let loader = new THREE.GLTFLoader( manager );
-	loader.load(url,
-		function ( object )
-		{
-			document.getElementById("output").innerHTML = 'Successfully loaded.';
-//			for(let obj of object.scene.children)
-			for(let obj of object.children)
-			{
-				if(obj.type == "Mesh")
-				{
-					mesh.init_from_THREE_geometry(gl, object.children[0].geometry);
-				}
-			}
-			mesh_loaded = true;
-			if(texture_loaded)	resources_loaded = true;
-		},
-		// called when loading is in progresses
-		function ( xhr )
-		{
-			document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
-		},
-		// called when loading has errors
-		function ( error )
-		{
-			document.getElementById("output").innerHTML = 'An error happened: ' + error;
-		}
-
-	);
-
-	var tick_init = function() {
-		if(resources_loaded)
-		{
-			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-		}
-		else
-		{
-			requestAnimationFrame(tick_init, canvas); // Request that the browser calls tick
-		}
-	};
+            });
+        }
+    ).then(
+        function(object) {
+            document.getElementById("output").innerHTML = 'Successfully loaded.';
+            for(let obj of object.children)
+            {
+                if(obj.type == "Mesh")
+                {
+                    mesh.init_from_THREE_geometry(gl, object.children[0].geometry);
+                }
+            }
+            tick();
+        }
+    ).catch(
+        err => document.getElementById("output").innerHTML = 'An error happened: ' + err.message
+    );
 
 	let tick = function() {   // start drawing
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
 		mesh.render(gl, shader, null, null, V, P, {"tex":tex});
-//		mesh.render(gl, shader, [light], __js_materials["gold"], V, P);
 		requestAnimationFrame(tick, canvas);
 	};
-
-	tick_init();
 
 }
 

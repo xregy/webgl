@@ -75,7 +75,6 @@ function main()
 	let tex;
 
 
-	let resources_loaded = false;
 
 //	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
 //	let url = 'https://threejs.org/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb';
@@ -96,7 +95,7 @@ function main()
 					tex = new Texture(gl, obj.material.map.image, false);
 				}
 			}
-			resources_loaded = true;
+            tick();
 		},
 		// called when loading is in progresses
 		function ( xhr )
@@ -111,16 +110,6 @@ function main()
 
 	);
 
-	var tick_init = function() {
-		if(resources_loaded)
-		{
-			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-		}
-		else
-		{
-			requestAnimationFrame(tick_init, canvas); // Request that the browser calls tick
-		}
-	};
 
 	let tick = function() {   // start drawing
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -129,7 +118,6 @@ function main()
 		requestAnimationFrame(tick, canvas);
 	};
 
-	tick_init();
 
 }
 

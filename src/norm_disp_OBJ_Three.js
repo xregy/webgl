@@ -94,98 +94,84 @@ function main()
 		lastY = y;
 	}
 
-	let manager = new THREE.LoadingManager();
-	manager.onProgress = function ( item, loaded, total ) {
-		console.log( item, loaded, total );
-	};
+    let manager = new THREE.LoadingManager();
+    manager.onProgress = function ( item, loaded, total ) {
+        console.log( item, loaded, total );
+    };
+    let loader = new THREE.OBJLoader( manager );
 
-	let loaded = [];
-	loaded["texnorm"] = false;
-	loaded["texdisp"] = false;
-	loaded["mesh"] = false;
+    let tex_norm, tex_disp;
+    let img_norm = new Image();
+    let img_disp = new Image();
+
+    function load_image(image, src)
+    {
+        return new Promise(function(resolve, reject) {
+            image.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
+            image.onload = function() {
+                resolve(image);
+            }
+            image.onerror = () => reject(new Error(`Error while loading ${src}.`));
+        	image.src = src;
+        });
+    }
+
+    Promise.all([load_image(img_norm, 'https://threejs.org/examples/models/obj/ninja/normal.jpg'),
+                load_image(img_disp, 'https://threejs.org/examples/models/obj/ninja/displacement.jpg')]
+    ).then(
+        function(images) {
+            tex_norm = new Texture(gl, images[0]);
+            tex_disp = new Texture(gl, images[1]);
+            return new Promise(function(resolve, reject) {
+                loader.load('https://threejs.org/examples/models/obj/ninja/ninjaHead_Low.obj',
+                    function ( object )
+                    {
+                        resolve(object);
+                    },
+                    // called when loading is in progresses
+                    function ( xhr )
+                    {
+                        document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
+                    },
+                    // called when loading has errors
+                    function ( error )
+                    {
+                        reject(new Error(`Error while loading ${error.srcElement.responseURL}.`));
+                    }
+        
+                );
+
+            });
+        }
+    ).then(
+        function(object) {
+            document.getElementById("output").innerHTML = 'Successfully loaded.';
+            for(let obj of object.children)
+            {
+                if(obj.type == "Mesh")
+                {
+                    mesh.init_from_THREE_geometry(gl, object.children[0].geometry);
+                }
+            }
+            tick();
+        }
+    ).catch(
+        err => document.getElementById("output").innerHTML = 'An error happened: ' + err.message
+    );
 
 
-	let tex_norm, tex_disp;
+    let tick = function() {   // start drawing
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        axes.render(gl, V, P);
+        gl.useProgram(shader.h_prog);
+        gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_norm_map"), document.getElementById("normmap").checked);
+        gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_disp_map"), document.getElementById("dispmap").checked);
+        gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_scale"), 2.436143);
+        gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_bias"), -0.428408);
+        mesh.render(gl, shader, lights, __js_materials["gold"], V, P, {"tex_norm":tex_norm, "tex_disp":tex_disp});
+        requestAnimationFrame(tick, canvas);
+    };
 
-	let img_norm = new Image();
-	img_norm.onload = function()
-	{
-		tex_norm = new Texture(gl, img_norm);
-		loaded["texnorm"] = true;
-	};
-
-	let img_disp = new Image();
-	img_disp.onload = function()
-	{
-		tex_disp = new Texture(gl, img_disp);
-		loaded["texdisp"] = true;
-	};
-
-
-	img_norm.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
-	img_norm.src = 'https://threejs.org/examples/models/obj/ninja/normal.jpg';
-
-	img_disp.crossOrigin = '';	// https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
-	img_disp.src = 'https://threejs.org/examples/models/obj/ninja/displacement.jpg';
-
-	let url = 'https://threejs.org/examples/models/obj/ninja/ninjaHead_Low.obj';
-//	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
-//	let url = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.gltf';
-//	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
-
-	let loader = new THREE.OBJLoader( manager );
-//	let loader = new THREE.GLTFLoader( manager );
-	loader.load(url,
-		function ( object )
-		{
-			document.getElementById("output").innerHTML = 'Successfully loaded.';
-//			for(let obj of object.scene.children)
-			for(let obj of object.children)
-			{
-				if(obj.type == "Mesh")
-				{
-					mesh.init_from_THREE_geometry(gl, object.children[0].geometry);
-				}
-			}
-			loaded["mesh"] = true;
-		},
-		// called when loading is in progresses
-		function ( xhr )
-		{
-			document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
-		},
-		// called when loading has errors
-		function ( error )
-		{
-			document.getElementById("output").innerHTML = 'An error happened: ' + error;
-		}
-
-	);
-
-	var tick_init = function() {
-		if(loaded["texnorm"] && loaded["mesh"] && loaded["texdisp"])
-		{
-			requestAnimationFrame(tick, canvas); // Request that the browser calls tick
-		}
-		else
-		{
-			requestAnimationFrame(tick_init, canvas); // Request that the browser calls tick
-		}
-	};
-
-	let tick = function() {   // start drawing
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		axes.render(gl, V, P);
-		gl.useProgram(shader.h_prog);
-		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_norm_map"), document.getElementById("normmap").checked);
-		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_disp_map"), document.getElementById("dispmap").checked);
-		gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_scale"), 2.436143);
-		gl.uniform1f(gl.getUniformLocation(shader.h_prog, "disp_bias"), -0.428408);
-		mesh.render(gl, shader, lights, __js_materials["gold"], V, P, {"tex_norm":tex_norm, "tex_disp":tex_disp});
-		requestAnimationFrame(tick, canvas);
-	};
-
-	tick_init();
 
 }
 
