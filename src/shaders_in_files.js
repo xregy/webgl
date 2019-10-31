@@ -6,28 +6,17 @@ function main()
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
 
-    let src_vert, src_frag;
+    // https://stackoverflow.com/questions/31710768/how-can-i-fetch-an-array-of-urls-with-promise-all
+    Promise.all(['./simple.vert','./simple.frag'].map(url => fetch(url)))
+    .then(responses => Promise.all( responses.map(
+        function(response) {
+            if(response.ok) return response.text();
+            else    throw new Error(`Error while reading ${response.url}.`);
+        }) ))
+    .then(texts => draw(gl, texts[0], texts[1]))
+    .catch(err => console.log(err.message)
+    );
 
-    fetch('./simple.vert')
-    .then(function(response) {
-        if(response.ok) return response.text();
-        else    throw new Error(`Error while reading ${response.url}.`);
-    })
-    .then(function(text) {
-        src_vert = text;
-        return fetch('./simple.frag');
-    })
-    .then(function(response) {
-        if(response.ok) return response.text();
-        else    throw new Error(`Error while reading ${response.url}.`);
-    })
-    .then(function(text) {
-        src_frag = text;
-        draw(gl, src_vert, src_frag);
-    })
-    .catch(function(err) {
-        console.log(err.message);
-    });
 }
 
 function draw(gl, src_vert, src_frag)
