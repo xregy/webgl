@@ -19,8 +19,15 @@ title: WebGL examples by Minho Kim
 	<li><a href="src/triangles.html"><tt>triangles.html</tt></a>
 	    (<a href="src/webgl10_triangles.html"><tt>webgl10_triangles.html</tt></a>)
     </li>
-	<li>Shaders embedded in the HTML: <a href="src/shaders_in_html.html"><tt>shaders_in_html.html</tt></a>
+	<li>
+        Shader management
+        <ul>
+            <li>embedded in the HTML: <a href="src/shaders_in_html.html"><tt>shaders_in_html.html</tt></a>
         (<a href="src/webgl10_shaders_in_html.html"><tt>webgl10_shaders_in_html.html</tt></a>)
+            </li>
+            <li>as strings: <a href="src/shaders_as_strings.html"><tt>shaders_as_strings.html</tt></a>
+            <li>in files: <a href="src/shaders_in_files.html"><tt>shaders_in_files.html</tt></a>
+        </ul>
     </li>
 	<li>
 		Plumbing attributes and varying variables
@@ -271,31 +278,35 @@ title: WebGL examples by Minho Kim
                 <a href="src/tex-sampler.html"><tt>tex-sampler.html</tt></a>
             </li>
 
-			<li>
-				<a href="src/tex-alignment.html"><tt>tex-alignment.html</tt></a>:
-				Texture alignment
-				(<a href="src/webgl10_tex-alignment.html"><tt>webgl10_tex-alignment.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-multi.html"><tt>tex-multi.html</tt></a>:
-				Multi-texturing
-				(<a href="src/webgl10_tex-multi.html"><tt>webgl10_tex-multi.html</tt></a>)
-			</li>
-			<li>
-				<a href="src/tex-multi-callbacks.html"><tt>tex-multi-callbacks.html</tt></a>:
-				Multi-texturing
-                (loading images with cascated callbacks)
-			</li>
-			<li>
-				<a href="src/tex-multi-promise.html"><tt>tex-multi-promise.html</tt></a>:
-				Multi-texturing
-                (loading images using promises)
-			</li>
-			<li>
-				<a href="src/tex-multi-promise-all.html"><tt>tex-multi-promise-all.html</tt></a>:
-				Multi-texturing
-                (loading images using <tt>Promise.all</tt>)
-			</li>
+            <li>
+                <a href="src/tex-alignment.html"><tt>tex-alignment.html</tt></a>:
+                Texture alignment
+                (<a href="src/webgl10_tex-alignment.html"><tt>webgl10_tex-alignment.html</tt></a>)
+            </li>
+            <li>
+                Multi-Texturing
+                <ul>
+                    <li>
+                        <a href="src/tex-multi-callbacks.html"><tt>tex-multi-callbacks.html</tt></a>:
+                        Loading images with cascated callbacks
+                    </li>
+                    <li>
+                        <a href="src/tex-multi-promise.html"><tt>tex-multi-promise.html</tt></a>:
+                        Loading images using promise chain
+                    </li>
+                    <li>
+                        <a href="src/tex-multi-promise-all.html"><tt>tex-multi-promise-all.html</tt></a>:
+                        Loading images using <tt>Promise.all</tt>
+                    </li>
+                    <!--
+                    <li>
+                        <a href="src/tex-multi.html"><tt>tex-multi.html</tt></a>:
+                        using <tt>requestAnimationFrame</tt> (bad design)
+                        (<a href="src/webgl10_tex-multi.html"><tt>webgl10_tex-multi.html</tt></a>)
+                    </li>
+                    -->
+                </ul>
+            </li>
 
 
 
