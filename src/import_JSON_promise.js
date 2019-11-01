@@ -33,9 +33,6 @@ function main()
 
 	let monkey = new Mesh(gl);
 
-
-	let request = new XMLHttpRequest();
-
     function tick() {   // Start drawing
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         axes.render(gl, V, P);
@@ -43,17 +40,16 @@ function main()
         requestAnimationFrame(tick, canvas);
     };
 
-	request.onreadystatechange = function()
-	{
-		if(request.readyState == 4 && request.status != 404)
-		{
-			monkey.init_from_json_js(gl, JSON.parse(request.responseText));
-			tick();
-		}
-	}
-
-	request.open('GET', '../resources/monkey_sub2_smooth.json', true);
-	request.send();
+    fetch('../resources/monkey_sub2_smooth.json')
+    .then(function(response) {
+        if(response.ok) return response.json();
+        else    throw new Error(`Error while loading ${response.url}.`);
+    })
+    .then(function(json) {
+        monkey.init_from_json_js(gl, json);
+        tick();
+    })
+    .catch(err => console.log(err.message));
 
 }
 

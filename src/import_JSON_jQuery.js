@@ -33,14 +33,15 @@ function main()
 
 	let monkey = new Mesh(gl);
 
+    function tick() {   // Start drawing
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        axes.render(gl, V, P);
+        monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
+        requestAnimationFrame(tick, canvas);
+    };
+
 	$.getJSON('../resources/monkey_sub2_smooth.json', function(data) {
 			monkey.init_from_json_js(gl, data);
-			let tick = function() {   // Start drawing
-				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-				axes.render(gl, V, P);
-				monkey.render(gl, shader, [light], __js_materials["gold"], V, P);
-				requestAnimationFrame(tick, canvas);
-			};
 			tick();
 		}
 	);
