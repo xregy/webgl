@@ -16,6 +16,8 @@
 - shadow map
 - (DONE) Should a texture or RBO be bound to be attached to a FBO? --> No.
 
+lighting
+- selective reflection (diffusive + ambient + specular)
 
 WebGL2
 - dynamic loop
