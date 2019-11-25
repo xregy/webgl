@@ -1,30 +1,30 @@
 // RoundedPoints.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
-  '}\n';
+const loc_aPosition = 3;
+const VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+void main() {
+  gl_Position = aPosition;
+  gl_PointSize = 10.0;
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif GL_ES\n' +
-  'void main() {\n' +    // Center coordinate is (0.5, 0.5)
-  '  float d = distance(gl_PointCoord, vec2(0.5, 0.5));\n' +
-  '  if(d < 0.5) {\n' +  // Radius is 0.5
-  '    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '  } else { discard; }\n' +
-  '}\n';
+const FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main() {    // Center coordinate is (0.5, 0.5)
+  float d = distance(gl_PointCoord, vec2(0.5, 0.5));
+  if(d < 0.5) {  // Radius is 0.5
+    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else { discard; }
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -37,7 +37,7 @@ function main() {
   }
 
   // Set the vertex information
-  var n = initVertexBuffers(gl);
+  const {vao,n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -50,40 +50,41 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   // Draw three points
+  gl.bindVertexArray(vao);
   gl.drawArrays(gl.POINTS, 0, n);
+  gl.bindVertexArray(null);
 }
 
 function initVertexBuffers(gl) {
-  var vertices = new Float32Array([
+  const vertices = new Float32Array([
     0, 0.5,   -0.5, -0.5,   0.5, -0.5
   ]);
-  var n = 3; // The number of vertices
+  const n = 3; // The number of vertices
 
   // Create a buffer object
-  var vertexBuffer = gl.createBuffer();  
+  const vertexBuffer = gl.createBuffer();  
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
     return -1;
   }
 
+    const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
   // Bind the vertex buffer
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   // Write date into the buffer object
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
   // Assign the buffer object to the attribute variable
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
  
   // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
+  gl.enableVertexAttribArray(loc_aPosition);
 
-  return n;
+  gl.bindVertexArray(null);
+
+  return {vao,n};
 }

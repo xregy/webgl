@@ -1,110 +1,111 @@
 // ProgramObject.js (c) 2012 matsuda and kanda
 // Vertex shader for single color drawing
-var SOLID_VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Normal;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'uniform mat4 u_NormalMatrix;\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  vec3 lightDirection = vec3(0.0, 0.0, 1.0);\n' + // Light direction(World coordinate)
-　'  vec4 color = vec4(0.0, 1.0, 1.0, 1.0);\n' +     // Face color
-　'  gl_Position = u_MvpMatrix * a_Position;\n' +
-  '  vec3 normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
-  '  float nDotL = max(dot(normal, lightDirection), 0.0);\n' +
-  '  v_Color = vec4(color.rgb * nDotL, color.a);\n' +
-  '}\n';
+const loc_aPosition = 3;
+const loc_aNormal = 8;
+const loc_aTexCoord = 9;
+const SOLID_VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aNormal}) in vec4 aNormal;
+uniform mat4 uMvpMatrix;
+uniform mat4 uNormalMatrix;
+out vec4 vColor;
+void main() {
+  vec3 lightDirection = vec3(0.0, 0.0, 1.0); // Light direction(World coordinate)
+  vec4 color = vec4(0.0, 1.0, 1.0, 1.0);     // Face color
+  gl_Position = uMvpMatrix * aPosition;
+  vec3 normal = normalize(vec3(uNormalMatrix * aNormal));
+  float nDotL = max(dot(normal, lightDirection), 0.0);
+  vColor = vec4(color.rgb * nDotL, color.a);
+}`;
 
 // Fragment shader for single color drawing
-var SOLID_FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_FragColor = v_Color;\n' +
-  '}\n';
+const SOLID_FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main() {
+  fColor = vColor;
+}`;
 
 // Vertex shader for texture drawing
-var TEXTURE_VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Normal;\n' +
-  'attribute vec2 a_TexCoord;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'uniform mat4 u_NormalMatrix;\n' +
-  'varying float v_NdotL;\n' +
-  'varying vec2 v_TexCoord;\n' +
-  'void main() {\n' +
-  '  vec3 lightDirection = vec3(0.0, 0.0, 1.0);\n' + // Light direction(World coordinate)
-  '  gl_Position = u_MvpMatrix * a_Position;\n' +
-  '  vec3 normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
-  '  v_NdotL = max(dot(normal, lightDirection), 0.0);\n' +
-  '  v_TexCoord = a_TexCoord;\n' +
-  '}\n';
+const TEXTURE_VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aNormal}) in vec4 aNormal;
+layout(location=${loc_aTexCoord}) in vec4 aTexCoord;
+uniform mat4 uMvpMatrix;
+uniform mat4 uNormalMatrix;
+out float vNdotL;
+out vec2 vTexCoord;
+void main() {
+  vec3 lightDirection = vec3(0.0, 0.0, 1.0); // Light direction(World coordinate)
+  gl_Position = uMvpMatrix * aPosition;
+  vec3 normal = normalize(vec3(uNormalMatrix * aNormal));
+  vNdotL = max(dot(normal, lightDirection), 0.0);
+  vTexCoord = aTexCoord;
+}`;
 
 // Fragment shader for texture drawing
-var TEXTURE_FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'uniform sampler2D u_Sampler;\n' +
-  'varying vec2 v_TexCoord;\n' +
-  'varying float v_NdotL;\n' +
-  'void main() {\n' +
-  '  vec4 color = texture2D(u_Sampler, v_TexCoord);\n' +
-  '  gl_FragColor = vec4(color.rgb * v_NdotL, color.a);\n' +
-  '}\n';
+const TEXTURE_FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+uniform sampler2D uSampler;
+in vec2 vTexCoord;
+in float vNdotL;
+out vec4 fColor;
+void main() {
+  vec4 color = texture2D(uSampler, vTexCoord);
+  fColor = vec4(color.rgb * vNdotL, color.a);
+}`;
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
   }
 
   // Initialize shaders
-  var solidProgram = createProgram(gl, SOLID_VSHADER_SOURCE, SOLID_FSHADER_SOURCE);
-  var texProgram = createProgram(gl, TEXTURE_VSHADER_SOURCE, TEXTURE_FSHADER_SOURCE);
+  const solidProgram = createProgram(gl, SOLID_VSHADER_SOURCE, SOLID_FSHADER_SOURCE);
+  const texProgram = createProgram(gl, TEXTURE_VSHADER_SOURCE, TEXTURE_FSHADER_SOURCE);
   if (!solidProgram || !texProgram) {
     console.log('Failed to intialize shaders.');
     return;
   }
 
   // Get storage locations of attribute and uniform variables in program object for single color drawing
-  solidProgram.a_Position = gl.getAttribLocation(solidProgram, 'a_Position');
-  solidProgram.a_Normal = gl.getAttribLocation(solidProgram, 'a_Normal');
-  solidProgram.u_MvpMatrix = gl.getUniformLocation(solidProgram, 'u_MvpMatrix');
-  solidProgram.u_NormalMatrix = gl.getUniformLocation(solidProgram, 'u_NormalMatrix');
+  solidProgram.loc_aPosition = loc_aPosition;
+  solidProgram.loc_aNormal = loc_aNorma;
+  solidProgram.loc_uMvpMatrix = gl.getUniformLocation(solidProgram, 'uMvpMatrix');
+  solidProgram.loc_uNormalMatrix = gl.getUniformLocation(solidProgram, 'uNormalMatrix');
 
   // Get storage locations of attribute and uniform variables in program object for texture drawing
-  texProgram.a_Position = gl.getAttribLocation(texProgram, 'a_Position');
-  texProgram.a_Normal = gl.getAttribLocation(texProgram, 'a_Normal');
-  texProgram.a_TexCoord = gl.getAttribLocation(texProgram, 'a_TexCoord');
-  texProgram.u_MvpMatrix = gl.getUniformLocation(texProgram, 'u_MvpMatrix');
-  texProgram.u_NormalMatrix = gl.getUniformLocation(texProgram, 'u_NormalMatrix');
-  texProgram.u_Sampler = gl.getUniformLocation(texProgram, 'u_Sampler');
+  texProgram.loc_aPosition = loc_aPosition;
+  texProgram.loc_aNormal = loc_aNormal;
+  texProgram.loc_aTexCoord = loc_aTexCoord;
+  texProgram.loc_uMvpMatrix = gl.getUniformLocation(texProgram, 'uMvpMatrix');
+  texProgram.loc_uNormalMatrix = gl.getUniformLocation(texProgram, 'uNormalMatrix');
+  texProgram.loc_uSampler = gl.getUniformLocation(texProgram, 'uSampler');
 
-  if (solidProgram.a_Position < 0 || solidProgram.a_Normal < 0 || 
-      !solidProgram.u_MvpMatrix || !solidProgram.u_NormalMatrix ||
-      texProgram.a_Position < 0 || texProgram.a_Normal < 0 || texProgram.a_TexCoord < 0 ||
-      !texProgram.u_MvpMatrix || !texProgram.u_NormalMatrix || !texProgram.u_Sampler) { 
+  if (solidProgram.loc_aPosition < 0 || solidProgram.loc_aNormal < 0 || 
+      !solidProgram.loc_uMvpMatrix || !solidProgram.loc_uNormalMatrix ||
+      texProgram.loc_aPosition < 0 || texProgram.loc_aNormal < 0 || texProgram.loc_aTexCoord < 0 ||
+      !texProgram.loc_uMvpMatrix || !texProgram.loc_uNormalMatrix || !texProgram.loc_uSampler) { 
     console.log('Failed to get the storage location of attribute or uniform variable'); 
     return;
   }
 
   // Set the vertex information
-  var cube = initVertexBuffers(gl);
+  const cube = initVertexBuffers(gl);
   if (!cube) {
     console.log('Failed to set the vertex information');
     return;
   }
 
   // Set texture
-  var texture = initTextures(gl, texProgram);
+  const texture = initTextures(gl, texProgram);
   if (!texture) {
     console.log('Failed to intialize the texture.');
     return;
@@ -115,13 +116,13 @@ function main() {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   // Calculate the view projection matrix
-  var viewProjMatrix = new Matrix4();
+  let viewProjMatrix = new Matrix4();
   viewProjMatrix.setPerspective(30.0, canvas.width/canvas.height, 1.0, 100.0);
   viewProjMatrix.lookAt(0.0, 0.0, 15.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
   // Start drawing
-  var currentAngle = 0.0; // Current rotation angle (degrees)
-  var tick = function() {
+  let currentAngle = 0.0; // Current rotation angle (degrees)
+  let tick = function() {
     currentAngle = animate(currentAngle);  // Update current rotation angle
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear color and depth buffers
@@ -145,7 +146,7 @@ function initVertexBuffers(gl) {
   //  |/      |/
   //  v2------v3
 
-  var vertices = new Float32Array([   // Vertex coordinates
+  const vertices = new Float32Array([   // Vertex coordinates
      1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0,    // v0-v1-v2-v3 front
      1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0,    // v0-v3-v4-v5 right
      1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0,    // v0-v5-v6-v1 up
@@ -154,7 +155,7 @@ function initVertexBuffers(gl) {
      1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0     // v4-v7-v6-v5 back
   ]);
 
-  var normals = new Float32Array([   // Normal
+  const normals = new Float32Array([   // Normal
      0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,     // v0-v1-v2-v3 front
      1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,     // v0-v3-v4-v5 right
      0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,     // v0-v5-v6-v1 up
@@ -163,7 +164,7 @@ function initVertexBuffers(gl) {
      0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0      // v4-v7-v6-v5 back
   ]);
 
-  var texCoords = new Float32Array([   // Texture coordinates
+  const texCoords = new Float32Array([   // Texture coordinates
      1.0, 1.0,   0.0, 1.0,   0.0, 0.0,   1.0, 0.0,    // v0-v1-v2-v3 front
      0.0, 1.0,   0.0, 0.0,   1.0, 0.0,   1.0, 1.0,    // v0-v3-v4-v5 right
      1.0, 0.0,   1.0, 1.0,   0.0, 1.0,   0.0, 0.0,    // v0-v5-v6-v1 up
@@ -172,7 +173,7 @@ function initVertexBuffers(gl) {
      0.0, 0.0,   1.0, 0.0,   1.0, 1.0,   0.0, 1.0     // v4-v7-v6-v5 back
   ]);
 
-  var indices = new Uint8Array([        // Indices of the vertices
+  const indices = new Uint8Array([        // Indices of the vertices
      0, 1, 2,   0, 2, 3,    // front
      4, 5, 6,   4, 6, 7,    // right
      8, 9,10,   8,10,11,    // up
@@ -181,7 +182,11 @@ function initVertexBuffers(gl) {
     20,21,22,  20,22,23     // back
   ]);
 
-  var o = new Object(); // Utilize Object to to return multiple buffer objects together
+
+  let o = new Object(); // Utilize Object to to return multiple buffer objects together
+
+  o.vao = gl.createVertexArray();
+  gl.bindVertexArray(o.vao);
 
   // Write vertex information to buffer object
   o.vertexBuffer = initArrayBufferForLaterUse(gl, vertices, 3, gl.FLOAT);
@@ -196,17 +201,19 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
+  gl.bindVertexArray(null);
+
   return o;
 }
 
 function initTextures(gl, program) {
-  var texture = gl.createTexture();   // Create a texture object
+  const texture = gl.createTexture();   // Create a texture object
   if (!texture) {
     console.log('Failed to create the texture object');
     return null;
   }
 
-  var image = new Image();  // Create a image object
+  const image = new Image();  // Create a image object
   if (!image) {
     console.log('Failed to create the image object');
     return null;
@@ -220,9 +227,9 @@ function initTextures(gl, program) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-    // Pass the texure unit 0 to u_Sampler
+    // Pass the texure unit 0 to uSampler
     gl.useProgram(program);
-    gl.uniform1i(program.u_Sampler, 0);
+    gl.uniform1i(program.uSampler, 0);
 
     gl.bindTexture(gl.TEXTURE_2D, null); // Unbind texture
   };
@@ -236,22 +243,11 @@ function initTextures(gl, program) {
 function drawSolidCube(gl, program, o, x, angle, viewProjMatrix) {
   gl.useProgram(program);   // Tell that this program object is used
 
-  // Assign the buffer objects and enable the assignment
-  initAttributeVariable(gl, program.a_Position, o.vertexBuffer); // Vertex coordinates
-  initAttributeVariable(gl, program.a_Normal, o.normalBuffer);   // Normal
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.indexBuffer);  // Bind indices
-
   drawCube(gl, program, o, x, angle, viewProjMatrix);   // Draw
 }
 
 function drawTexCube(gl, program, o, texture, x, angle, viewProjMatrix) {
   gl.useProgram(program);   // Tell that this program object is used
-
-  // Assign the buffer objects and enable the assignment
-  initAttributeVariable(gl, program.a_Position, o.vertexBuffer);  // Vertex coordinates
-  initAttributeVariable(gl, program.a_Normal, o.normalBuffer);    // Normal
-  initAttributeVariable(gl, program.a_TexCoord, o.texCoordBuffer);// Texture coordinates
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.indexBuffer); // Bind indices
 
   // Bind texture object to texture unit 0
   gl.activeTexture(gl.TEXTURE0);
@@ -261,16 +257,16 @@ function drawTexCube(gl, program, o, texture, x, angle, viewProjMatrix) {
 }
 
 // Assign the buffer objects and enable the assignment
-function initAttributeVariable(gl, a_attribute, buffer) {
+function initAttributeVariable(gl, loc_attrib, buffer) {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(a_attribute, buffer.num, buffer.type, false, 0, 0);
-  gl.enableVertexAttribArray(a_attribute);
+  gl.vertexAttribPointer(loc_attrib, buffer.num, buffer.type, false, 0, 0);
+  gl.enableVertexAttribArray(loc_attrib);
 }
 
 // Coordinate transformation matrix
-var g_modelMatrix = new Matrix4();
-var g_mvpMatrix = new Matrix4();
-var g_normalMatrix = new Matrix4();
+let g_modelMatrix = new Matrix4();
+let g_mvpMatrix = new Matrix4();
+let g_normalMatrix = new Matrix4();
 
 function drawCube(gl, program, o, x, angle, viewProjMatrix) {
   // Calculate a model matrix
@@ -278,21 +274,23 @@ function drawCube(gl, program, o, x, angle, viewProjMatrix) {
   g_modelMatrix.rotate(20.0, 1.0, 0.0, 0.0);
   g_modelMatrix.rotate(angle, 0.0, 1.0, 0.0);
 
-  // Calculate transformation matrix for normals and pass it to u_NormalMatrix
+  // Calculate transformation matrix for normals and pass it to uNormalMatrix
   g_normalMatrix.setInverseOf(g_modelMatrix);
   g_normalMatrix.transpose();
-  gl.uniformMatrix4fv(program.u_NormalMatrix, false, g_normalMatrix.elements);
+  gl.uniformMatrix4fv(program.uNormalMatrix, false, g_normalMatrix.elements);
 
-  // Calculate model view projection matrix and pass it to u_MvpMatrix
+  // Calculate model view projection matrix and pass it to uMvpMatrix
   g_mvpMatrix.set(viewProjMatrix);
   g_mvpMatrix.multiply(g_modelMatrix);
-  gl.uniformMatrix4fv(program.u_MvpMatrix, false, g_mvpMatrix.elements);
+  gl.uniformMatrix4fv(program.uMvpMatrix, false, g_mvpMatrix.elements);
 
+    gl.bindVertexArray(o.vao);
   gl.drawElements(gl.TRIANGLES, o.numIndices, o.indexBuffer.type, 0);   // Draw
+    gl.bindVertexArray(null);
 }
 
 function initArrayBufferForLaterUse(gl, data, num, type) {
-  var buffer = gl.createBuffer();   // Create a buffer object
+  const buffer = gl.createBuffer();   // Create a buffer object
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return null;
@@ -309,7 +307,7 @@ function initArrayBufferForLaterUse(gl, data, num, type) {
 }
 
 function initElementArrayBufferForLaterUse(gl, data, type) {
-  var buffer = gl.createBuffer();　  // Create a buffer object
+  const buffer = gl.createBuffer();　  // Create a buffer object
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return null;
@@ -323,14 +321,14 @@ function initElementArrayBufferForLaterUse(gl, data, type) {
   return buffer;
 }
 
-var ANGLE_STEP = 30;   // The increments of rotation angle (degrees)
+const ANGLE_STEP = 30;   // The increments of rotation angle (degrees)
 
-var last = Date.now(); // Last time that this function was called
+let last = Date.now(); // Last time that this function was called
 function animate(angle) {
-  var now = Date.now();   // Calculate the elapsed time
-  var elapsed = now - last;
+  let now = Date.now();   // Calculate the elapsed time
+  let elapsed = now - last;
   last = now;
   // Update the current rotation angle (adjusted by the elapsed time)
-  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+  let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle % 360;
 }

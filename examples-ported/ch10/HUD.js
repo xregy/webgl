@@ -1,36 +1,37 @@
 // HUD.js (c) 2012 matsuda
 // Vertex shader program
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Color;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'uniform bool u_Clicked;\n' + // Mouse is pressed
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_MvpMatrix * a_Position;\n' +
-  '  if (u_Clicked) {\n' + //  Draw in red if mouse is pressed
-  '    v_Color = vec4(1.0, 0.0, 0.0, 1.0);\n' +
-  '  } else {\n' +
-  '    v_Color = a_Color;\n' +
-  '  }\n' +
-  '}\n';
+const loc_aPosition = 4;
+const loc_aColor = 2;
+const VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+uniform mat4 uMvpMatrix;
+uniform bool uClicked; // Mouse is pressed
+out vec4 vColor;
+void main() {
+  gl_Position = uMvpMatrix * aPosition;
+  if (uClicked) { //  Draw in red if mouse is pressed
+    vColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+    vColor = aColor;
+  }
+}`;
 
 // Fragment shader program
-var FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_FragColor = v_Color;\n' +
-  '}\n';
+const FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main() {
+  fColor = vColor;
+}`;
 
-var ANGLE_STEP = 20.0; // Rotation angle (degrees/second)
+const ANGLE_STEP = 20.0; // Rotation angle (degrees/second)
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
-  var hud = document.getElementById('hud');  
+  const canvas = document.getElementById('webgl');
+  const hud = document.getElementById('hud');  
 
   if (!canvas || !hud) { 
     console.log('Failed to get HTML elements');
@@ -38,9 +39,9 @@ function main() {
   } 
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   // Get the rendering context for 2DCG
-  var ctx = hud.getContext('2d');
+  const ctx = hud.getContext('2d');
   if (!gl || !ctx) {
     console.log('Failed to get rendering context');
     return;
@@ -53,7 +54,7 @@ function main() {
   }
 
   // Set the vertex information
-  var n = initVertexBuffers(gl);
+  const {vao,n} = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -64,36 +65,36 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   // Get the storage locations of uniform variables
-  var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
-  var u_Clicked = gl.getUniformLocation(gl.program, 'u_Clicked');
-  if (!u_MvpMatrix || !u_Clicked) { 
+  const loc_uMvpMatrix = gl.getUniformLocation(gl.program, 'uMvpMatrix');
+  const loc_uClicked = gl.getUniformLocation(gl.program, 'uClicked');
+  if (!loc_uMvpMatrix || !loc_uClicked) { 
     console.log('Failed to get the storage location of uniform variables');
     return;
   }
 
   // Calculate the view projection matrix
-  var viewProjMatrix = new Matrix4();
+  let viewProjMatrix = new Matrix4();
   viewProjMatrix.setPerspective(30.0, canvas.width / canvas.height, 1.0, 100.0);
   viewProjMatrix.lookAt(0.0, 0.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-  gl.uniform1i(u_Clicked, 0); // Pass false to u_Clicked
+  gl.uniform1i(loc_uClicked, 0); // Pass false to uClicked
 
-  var currentAngle = 0.0; // Current rotation angle
+  let currentAngle = 0.0; // Current rotation angle
   // Register the event handler
   hud.onmousedown = function(ev) {   // Mouse is pressed
-    var x = ev.clientX, y = ev.clientY;
-    var rect = ev.target.getBoundingClientRect();
+    let x = ev.clientX, y = ev.clientY;
+    let rect = ev.target.getBoundingClientRect();
     if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
       // If pressed position is inside <canvas>, check if it is above object
-      var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
-      var picked = check(gl, n, x_in_canvas, y_in_canvas, currentAngle, u_Clicked, viewProjMatrix, u_MvpMatrix);
+      let x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
+      let picked = check(gl, vao, n, x_in_canvas, y_in_canvas, currentAngle, loc_uClicked, viewProjMatrix, loc_uMvpMatrix);
       if (picked) alert('The cube was selected! '); }
   }
 
-  var tick = function() {   // Start drawing
+  let tick = function() {   // Start drawing
     currentAngle = animate(currentAngle);
     draw2D(ctx, currentAngle); // Draw 2D
-    draw(gl, n, currentAngle, viewProjMatrix, u_MvpMatrix);
+    draw(gl, vao, n, currentAngle, viewProjMatrix, loc_uMvpMatrix);
     requestAnimationFrame(tick, canvas);
   };
   tick();
@@ -108,7 +109,7 @@ function initVertexBuffers(gl) {
   //  | |v7---|-|v4
   //  |/      |/
   //  v2------v3
-  var vertices = new Float32Array([   // Vertex coordinates
+  const vertices = new Float32Array([   // Vertex coordinates
      1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0,    // v0-v1-v2-v3 front
      1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0,    // v0-v3-v4-v5 right
      1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0,    // v0-v5-v6-v1 up
@@ -117,7 +118,7 @@ function initVertexBuffers(gl) {
      1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0     // v4-v7-v6-v5 back
   ]);
 
-  var colors = new Float32Array([   // Colors
+  const colors = new Float32Array([   // Colors
     0.2, 0.58, 0.82,   0.2, 0.58, 0.82,   0.2,  0.58, 0.82,  0.2,  0.58, 0.82, // v0-v1-v2-v3 front
     0.5,  0.41, 0.69,  0.5, 0.41, 0.69,   0.5, 0.41, 0.69,   0.5, 0.41, 0.69,  // v0-v3-v4-v5 right
     0.0,  0.32, 0.61,  0.0, 0.32, 0.61,   0.0, 0.32, 0.61,   0.0, 0.32, 0.61,  // v0-v5-v6-v1 up
@@ -127,7 +128,7 @@ function initVertexBuffers(gl) {
    ]);
 
   // Indices of the vertices
-  var indices = new Uint8Array([
+  const indices = new Uint8Array([
      0, 1, 2,   0, 2, 3,    // front
      4, 5, 6,   4, 6, 7,    // right
      8, 9,10,   8,10,11,    // up
@@ -136,12 +137,15 @@ function initVertexBuffers(gl) {
     20,21,22,  20,22,23     // back
   ]);
 
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
   // Write the vertex property to buffers (coordinates and normals)
-  if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position')) return -1; // Coordinates
-  if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, 'a_Color')) return -1;      // Color Information
+  if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, loc_aPosition)) return -1; // Coordinates
+  if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, loc_aColor)) return -1;      // Color Information
 
   // Create a buffer object
-  var indexBuffer = gl.createBuffer();
+  const indexBuffer = gl.createBuffer();
   if (!indexBuffer) {
     return -1;
   }
@@ -149,36 +153,40 @@ function initVertexBuffers(gl) {
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-  return indices.length;
+  gl.bindVertexArray(null);
+
+  return {vao, n:indices.length};
 }
 
-function check(gl, n, x, y, currentAngle, u_Clicked, viewProjMatrix, u_MvpMatrix) {
-  var picked = false;
-  gl.uniform1i(u_Clicked, 1);  // Pass true to u_Clicked(Draw cube with red)
-  draw(gl, n, currentAngle, viewProjMatrix, u_MvpMatrix);
+function check(gl, vao, n, x, y, currentAngle, loc_uClicked, viewProjMatrix, loc_uMvpMatrix) {
+  let picked = false;
+  gl.uniform1i(loc_uClicked, 1);  // Pass true to uClicked(Draw cube with red)
+  draw(gl, vao, n, currentAngle, viewProjMatrix, loc_uMvpMatrix);
   // Read pixel at the clicked position
-  var pixels = new Uint8Array(4); // Array for storing the pixel value
+  const pixels = new Uint8Array(4); // Array for storing the pixel value
   gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
   if (pixels[0] == 255) // If red = 255, clicked on cube
     picked = true;
 
-  gl.uniform1i(u_Clicked, 0);  // Pass false to u_Clicked(Draw cube with specified color)
-  draw(gl, n, currentAngle, viewProjMatrix, u_MvpMatrix);
+  gl.uniform1i(loc_uClicked, 0);  // Pass false to uClicked(Draw cube with specified color)
+  draw(gl, vao, n, currentAngle, viewProjMatrix, loc_uMvpMatrix);
 
   return picked;
 }
 
-var g_MvpMatrix = new Matrix4(); // Model view projection matrix
-function draw(gl, n, currentAngle, viewProjMatrix, u_MvpMatrix) {
-  // Caliculate The model view projection matrix and pass it to u_MvpMatrix
+let g_MvpMatrix = new Matrix4(); // Model view projection matrix
+function draw(gl, vao, n, currentAngle, viewProjMatrix, loc_uMvpMatrix) {
+  // Caliculate The model view projection matrix and pass it to uMvpMatrix
   g_MvpMatrix.set(viewProjMatrix);
   g_MvpMatrix.rotate(currentAngle, 1.0, 0.0, 0.0); // Rotate appropriately
   g_MvpMatrix.rotate(currentAngle, 0.0, 1.0, 0.0);
   g_MvpMatrix.rotate(currentAngle, 0.0, 0.0, 1.0);
-  gl.uniformMatrix4fv(u_MvpMatrix, false, g_MvpMatrix.elements);
+  gl.uniformMatrix4fv(loc_uMvpMatrix, false, g_MvpMatrix.elements);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);     // Clear buffers (color and depth)
+  gl.bindVertexArray(vao);
   gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);   // Draw
+  gl.bindVertexArray(null);
 }
 
 function draw2D(ctx, currentAngle) {
@@ -198,19 +206,19 @@ function draw2D(ctx, currentAngle) {
   ctx.fillText('Current Angle: '+ Math.floor(currentAngle), 40, 240); 
 }
 
-var last = Date.now(); // Last time that this function was called
+let last = Date.now(); // Last time that this function was called
 function animate(angle) {
-  var now = Date.now();   // Calculate the elapsed time
-  var elapsed = now - last;
+  let now = Date.now();   // Calculate the elapsed time
+  let elapsed = now - last;
   last = now;
   // Update the current rotation angle (adjusted by the elapsed time)
-  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+  let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle % 360;
 }
 
-function initArrayBuffer (gl, data, num, type, attribute) {
+function initArrayBuffer (gl, data, num, type, loc_attrib) {
   // Create a buffer object
-  var buffer = gl.createBuffer();
+  const buffer = gl.createBuffer();
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return false;
@@ -219,14 +227,9 @@ function initArrayBuffer (gl, data, num, type, attribute) {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
   // Assign the buffer object to the attribute variable
-  var a_attribute = gl.getAttribLocation(gl.program, attribute);
-  if (a_attribute < 0) {
-    console.log('Failed to get the storage location of ' + attribute);
-    return false;
-  }
-  gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
+  gl.vertexAttribPointer(loc_attrib, num, type, false, 0, 0);
   // Enable the assignment of the buffer object to the attribute variable
-  gl.enableVertexAttribArray(a_attribute);
+  gl.enableVertexAttribArray(loc_attrib);
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
