@@ -31,7 +31,7 @@ void main() {
 const TEXTURE_VSHADER_SOURCE = `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 layout(location=${loc_aNormal}) in vec4 aNormal;
-layout(location=${loc_aTexCoord}) in vec4 aTexCoord;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
 uniform mat4 uMvpMatrix;
 uniform mat4 uNormalMatrix;
 out float vNdotL;
@@ -52,7 +52,7 @@ in vec2 vTexCoord;
 in float vNdotL;
 out vec4 fColor;
 void main() {
-  vec4 color = texture2D(uSampler, vTexCoord);
+  vec4 color = texture(uSampler, vTexCoord);
   fColor = vec4(color.rgb * vNdotL, color.a);
 }`;
 
@@ -77,7 +77,7 @@ function main() {
 
   // Get storage locations of attribute and uniform variables in program object for single color drawing
   solidProgram.loc_aPosition = loc_aPosition;
-  solidProgram.loc_aNormal = loc_aNorma;
+  solidProgram.loc_aNormal = loc_aNormal;
   solidProgram.loc_uMvpMatrix = gl.getUniformLocation(solidProgram, 'uMvpMatrix');
   solidProgram.loc_uNormalMatrix = gl.getUniformLocation(solidProgram, 'uNormalMatrix');
 
@@ -197,11 +197,11 @@ function initVertexBuffers(gl) {
 
   o.numIndices = indices.length;
 
+  gl.bindVertexArray(null);
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-  gl.bindVertexArray(null);
 
   return o;
 }

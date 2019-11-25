@@ -1,97 +1,94 @@
 // Shadow.js (c) 2012 matsuda and tanaka
 // Vertex shader program for generating a shadow map
-var SHADOW_VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_MvpMatrix * a_Position;\n' +
-  '}\n';
+const loc_aPosition = 3;
+const loc_aColor = 8;
+const SHADOW_VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform mat4 uMvpMatrix;
+void main() {
+  gl_Position = uMvpMatrix * aPosition;
+}`;
 
 // Fragment shader program for generating a shadow map
-var SHADOW_FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'void main() {\n' +
-  '  gl_FragColor = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);\n' + // Write the z-value in R
-  '}\n';
+const SHADOW_FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main() {
+  fColor = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0); // Write the z-value in R
+}`;
 
 // Vertex shader program for regular drawing
-var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' +
-  'attribute vec4 a_Color;\n' +
-  'uniform mat4 u_MvpMatrix;\n' +
-  'uniform mat4 u_MvpMatrixFromLight;\n' +
-  'varying vec4 v_PositionFromLight;\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  gl_Position = u_MvpMatrix * a_Position;\n' + 
-  '  v_PositionFromLight = u_MvpMatrixFromLight * a_Position;\n' +
-  '  v_Color = a_Color;\n' +
-  '}\n';
+const VSHADER_SOURCE = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+uniform mat4 uMvpMatrix;
+uniform mat4 uMvpMatrixFromLight;
+out vec4 vPositionFromLight;
+out vec4 vColor;
+void main() {
+  gl_Position = uMvpMatrix * aPosition; 
+  vPositionFromLight = uMvpMatrixFromLight * aPosition;
+  vColor = aColor;
+}`;
 
 // Fragment shader program for regular drawing
-var FSHADER_SOURCE =
-  '#ifdef GL_ES\n' +
-  'precision mediump float;\n' +
-  '#endif\n' +
-  'uniform sampler2D u_ShadowMap;\n' +
-  'varying vec4 v_PositionFromLight;\n' +
-  'varying vec4 v_Color;\n' +
-  'void main() {\n' +
-  '  vec3 shadowCoord = (v_PositionFromLight.xyz/v_PositionFromLight.w)/2.0 + 0.5;\n' +
-  '  vec4 rgbaDepth = texture2D(u_ShadowMap, shadowCoord.xy);\n' +
-  '  float depth = rgbaDepth.r;\n' + // Retrieve the z-value from R
-  '  float visibility = (shadowCoord.z > depth + 0.005) ? 0.7 : 1.0;\n' +
-  '  gl_FragColor = vec4(v_Color.rgb * visibility, v_Color.a);\n' +
-  '}\n';
+const FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+uniform sampler2D uShadowMap;
+in vec4 vPositionFromLight;
+in vec4 vColor;
+out vec4 fColor;
+void main() {
+  vec3 shadowCoord = (vPositionFromLight.xyz/vPositionFromLight.w)/2.0 + 0.5;
+  vec4 rgbaDepth = texture(uShadowMap, shadowCoord.xy);
+  float depth = rgbaDepth.r; // Retrieve the z-value from R
+  float visibility = (shadowCoord.z > depth + 0.005) ? 0.7 : 1.0;
+  fColor = vec4(vColor.rgb * visibility, vColor.a);
+}`;
 
-var OFFSCREEN_WIDTH = 2048, OFFSCREEN_HEIGHT = 2048;
-var LIGHT_X = 0, LIGHT_Y = 7, LIGHT_Z = 2; // Position of the light source
+const OFFSCREEN_WIDTH = 2048, OFFSCREEN_HEIGHT = 2048;
+const LIGHT_X = 0, LIGHT_Y = 7, LIGHT_Z = 2; // Position of the light source
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
+  const canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  const gl = canvas.getContext('webgl2');
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
   }
 
   // Initialize shaders for generating a shadow map
-  var shadowProgram = createProgram(gl, SHADOW_VSHADER_SOURCE, SHADOW_FSHADER_SOURCE);
-  shadowProgram.a_Position = gl.getAttribLocation(shadowProgram, 'a_Position');
-  shadowProgram.u_MvpMatrix = gl.getUniformLocation(shadowProgram, 'u_MvpMatrix');
-  if (shadowProgram.a_Position < 0 || !shadowProgram.u_MvpMatrix) {
+  const shadowProgram = createProgram(gl, SHADOW_VSHADER_SOURCE, SHADOW_FSHADER_SOURCE);
+  shadowProgram.loc_uMvpMatrix = gl.getUniformLocation(shadowProgram, 'uMvpMatrix');
+  if (!shadowProgram.loc_uMvpMatrix) {
     console.log('Failed to get the storage location of attribute or uniform variable from shadowProgram'); 
     return;
   }
 
   // Initialize shaders for regular drawing
-  var normalProgram = createProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE);
-  normalProgram.a_Position = gl.getAttribLocation(normalProgram, 'a_Position');
-  normalProgram.a_Color = gl.getAttribLocation(normalProgram, 'a_Color');
-  normalProgram.u_MvpMatrix = gl.getUniformLocation(normalProgram, 'u_MvpMatrix');
-  normalProgram.u_MvpMatrixFromLight = gl.getUniformLocation(normalProgram, 'u_MvpMatrixFromLight');
-  normalProgram.u_ShadowMap = gl.getUniformLocation(normalProgram, 'u_ShadowMap');
-  if (normalProgram.a_Position < 0 || normalProgram.a_Color < 0 || !normalProgram.u_MvpMatrix ||
-      !normalProgram.u_MvpMatrixFromLight || !normalProgram.u_ShadowMap) {
+  const normalProgram = createProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+  normalProgram.loc_uMvpMatrix = gl.getUniformLocation(normalProgram, 'uMvpMatrix');
+  normalProgram.loc_uMvpMatrixFromLight = gl.getUniformLocation(normalProgram, 'uMvpMatrixFromLight');
+  normalProgram.uShadowMap = gl.getUniformLocation(normalProgram, 'uShadowMap');
+  if (normalProgram.loc_aPosition < 0 || normalProgram.aColor < 0 || !normalProgram.loc_uMvpMatrix ||
+      !normalProgram.loc_uMvpMatrixFromLight || !normalProgram.uShadowMap) {
     console.log('Failed to get the storage location of attribute or uniform variable from normalProgram'); 
     return;
   }
 
   // Set the vertex information
-  var triangle = initVertexBuffersForTriangle(gl);
-  var plane = initVertexBuffersForPlane(gl);
+  const triangle = initVertexBuffersForTriangle(gl);
+  const plane = initVertexBuffersForPlane(gl);
   if (!triangle || !plane) {
     console.log('Failed to set the vertex information');
     return;
   }
 
   // Initialize framebuffer object (FBO)  
-  var fbo = initFramebufferObject(gl);
+  const fbo = initFramebufferObject(gl);
   if (!fbo) {
     console.log('Failed to initialize frame buffer object');
     return;
@@ -103,18 +100,18 @@ function main() {
   gl.clearColor(0, 0, 0, 1);
   gl.enable(gl.DEPTH_TEST);
 
-  var viewProjMatrixFromLight = new Matrix4(); // Prepare a view projection matrix for generating a shadow map
+  let viewProjMatrixFromLight = new Matrix4(); // Prepare a view projection matrix for generating a shadow map
   viewProjMatrixFromLight.setPerspective(70.0, OFFSCREEN_WIDTH/OFFSCREEN_HEIGHT, 1.0, 100.0);
   viewProjMatrixFromLight.lookAt(LIGHT_X, LIGHT_Y, LIGHT_Z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-  var viewProjMatrix = new Matrix4();          // Prepare a view projection matrix for regular drawing
+  let viewProjMatrix = new Matrix4();          // Prepare a view projection matrix for regular drawing
   viewProjMatrix.setPerspective(45, canvas.width/canvas.height, 1.0, 100.0);
   viewProjMatrix.lookAt(0.0, 7.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-  var currentAngle = 0.0; // Current rotation angle (degrees)
-  var mvpMatrixFromLight_t = new Matrix4(); // A model view projection matrix from light source (for triangle)
-  var mvpMatrixFromLight_p = new Matrix4(); // A model view projection matrix from light source (for plane)
-  var tick = function() {
+  let currentAngle = 0.0; // Current rotation angle (degrees)
+  let mvpMatrixFromLight_t = new Matrix4(); // A model view projection matrix from light source (for triangle)
+  let mvpMatrixFromLight_p = new Matrix4(); // A model view projection matrix from light source (for plane)
+  let tick = function() {
     currentAngle = animate(currentAngle);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);               // Change the drawing destination to FBO
@@ -133,11 +130,11 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    // Clear color and depth buffer
 
     gl.useProgram(normalProgram); // Set the shader for regular drawing
-    gl.uniform1i(normalProgram.u_ShadowMap, 0);  // Pass 0 because gl.TEXTURE0 is enabledする
+    gl.uniform1i(normalProgram.uShadowMap, 0);  // Pass 0 because gl.TEXTURE0 is enabledする
     // Draw the triangle and plane ( for regular drawing)
-    gl.uniformMatrix4fv(normalProgram.u_MvpMatrixFromLight, false, mvpMatrixFromLight_t.elements);
+    gl.uniformMatrix4fv(normalProgram.loc_uMvpMatrixFromLight, false, mvpMatrixFromLight_t.elements);
     drawTriangle(gl, normalProgram, triangle, currentAngle, viewProjMatrix);
-    gl.uniformMatrix4fv(normalProgram.u_MvpMatrixFromLight, false, mvpMatrixFromLight_p.elements);
+    gl.uniformMatrix4fv(normalProgram.loc_uMvpMatrixFromLight, false, mvpMatrixFromLight_p.elements);
     drawPlane(gl, normalProgram, plane, viewProjMatrix);
 
     window.requestAnimationFrame(tick, canvas);
@@ -146,8 +143,8 @@ function main() {
 }
 
 // Coordinate transformation matrix
-var g_modelMatrix = new Matrix4();
-var g_mvpMatrix = new Matrix4();
+let g_modelMatrix = new Matrix4();
+let g_mvpMatrix = new Matrix4();
 function drawTriangle(gl, program, triangle, angle, viewProjMatrix) {
   // Set rotate angle to model matrix and draw triangle
   g_modelMatrix.setRotate(angle, 0, 1, 0);
@@ -161,25 +158,22 @@ function drawPlane(gl, program, plane, viewProjMatrix) {
 }
 
 function draw(gl, program, o, viewProjMatrix) {
-  initAttributeVariable(gl, program.a_Position, o.vertexBuffer);
-  if (program.a_Color != undefined) // If a_Color is defined to attribute
-    initAttributeVariable(gl, program.a_Color, o.colorBuffer);
 
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.indexBuffer);
-
-  // Calculate the model view project matrix and pass it to u_MvpMatrix
+  // Calculate the model view project matrix and pass it to uMvpMatrix
   g_mvpMatrix.set(viewProjMatrix);
   g_mvpMatrix.multiply(g_modelMatrix);
-  gl.uniformMatrix4fv(program.u_MvpMatrix, false, g_mvpMatrix.elements);
+  gl.uniformMatrix4fv(program.loc_uMvpMatrix, false, g_mvpMatrix.elements);
 
+  gl.bindVertexArray(o.vao);
   gl.drawElements(gl.TRIANGLES, o.numIndices, gl.UNSIGNED_BYTE, 0);
+  gl.bindVertexArray(null);
 }
 
 // Assign the buffer objects and enable the assignment
-function initAttributeVariable(gl, a_attribute, buffer) {
+function initAttributeVariable(gl, loc_attrib, buffer) {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(a_attribute, buffer.num, buffer.type, false, 0, 0);
-  gl.enableVertexAttribArray(a_attribute);
+  gl.vertexAttribPointer(loc_attrib, buffer.num, buffer.type, false, 0, 0);
+  gl.enableVertexAttribArray(loc_attrib);
 }
 
 function initVertexBuffersForPlane(gl) {
@@ -191,19 +185,22 @@ function initVertexBuffersForPlane(gl) {
   //  v2------v3
 
   // Vertex coordinates
-  var vertices = new Float32Array([
+  const vertices = new Float32Array([
     3.0, -1.7, 2.5,  -3.0, -1.7, 2.5,  -3.0, -1.7, -2.5,   3.0, -1.7, -2.5    // v0-v1-v2-v3
   ]);
 
   // Colors
-  var colors = new Float32Array([
+  const colors = new Float32Array([
     1.0, 1.0, 1.0,    1.0, 1.0, 1.0,  1.0, 1.0, 1.0,   1.0, 1.0, 1.0
   ]);
 
   // Indices of the vertices
-  var indices = new Uint8Array([0, 1, 2,   0, 2, 3]);
+  const indices = new Uint8Array([0, 1, 2,   0, 2, 3]);
 
-  var o = new Object(); // Utilize Object object to return multiple buffer objects together
+  const o = new Object(); // Utilize Object object to return multiple buffer objects together
+
+  o.vao = gl.createVertexArray();
+  gl.bindVertexArray(o.vao);
 
   // Write vertex information to buffer object
   o.vertexBuffer = initArrayBufferForLaterUse(gl, vertices, 3, gl.FLOAT);
@@ -212,6 +209,11 @@ function initVertexBuffersForPlane(gl) {
   if (!o.vertexBuffer || !o.colorBuffer || !o.indexBuffer) return null; 
 
   o.numIndices = indices.length;
+
+  initAttributeVariable(gl, loc_aPosition, o.vertexBuffer);
+  initAttributeVariable(gl, loc_aColor, o.colorBuffer);
+
+  gl.bindVertexArray(null);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -229,13 +231,16 @@ function initVertexBuffersForTriangle(gl) {
   //  v0----v1
 
   // Vertex coordinates
-  var vertices = new Float32Array([-0.8, 3.5, 0.0,  0.8, 3.5, 0.0,  0.0, 3.5, 1.8]);
+  const vertices = new Float32Array([-0.8, 3.5, 0.0,  0.8, 3.5, 0.0,  0.0, 3.5, 1.8]);
   // Colors
-  var colors = new Float32Array([1.0, 0.5, 0.0,  1.0, 0.5, 0.0,  1.0, 0.0, 0.0]);    
+  const colors = new Float32Array([1.0, 0.5, 0.0,  1.0, 0.5, 0.0,  1.0, 0.0, 0.0]);    
   // Indices of the vertices
-  var indices = new Uint8Array([0, 1, 2]);
+  const indices = new Uint8Array([0, 1, 2]);
 
-  var o = new Object();  // Utilize Object object to return multiple buffer objects together
+  const o = new Object();  // Utilize Object object to return multiple buffer objects together
+
+  o.vao = gl.createVertexArray();
+  gl.bindVertexArray(o.vao);
 
   // Write vertex information to buffer object
   o.vertexBuffer = initArrayBufferForLaterUse(gl, vertices, 3, gl.FLOAT);
@@ -243,7 +248,12 @@ function initVertexBuffersForTriangle(gl) {
   o.indexBuffer = initElementArrayBufferForLaterUse(gl, indices, gl.UNSIGNED_BYTE);
   if (!o.vertexBuffer || !o.colorBuffer || !o.indexBuffer) return null; 
 
+  initAttributeVariable(gl, loc_aPosition, o.vertexBuffer);
+  initAttributeVariable(gl, loc_aColor, o.colorBuffer);
+
   o.numIndices = indices.length;
+
+  gl.bindVertexArray(null);
 
   // Unbind the buffer object
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -254,7 +264,7 @@ function initVertexBuffersForTriangle(gl) {
 
 function initArrayBufferForLaterUse(gl, data, num, type) {
   // Create a buffer object
-  var buffer = gl.createBuffer();
+  const buffer = gl.createBuffer();
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return null;
@@ -272,7 +282,7 @@ function initArrayBufferForLaterUse(gl, data, num, type) {
 
 function initElementArrayBufferForLaterUse(gl, data, type) {
   // Create a buffer object
-  var buffer = gl.createBuffer();
+  const buffer = gl.createBuffer();
   if (!buffer) {
     console.log('Failed to create the buffer object');
     return null;
@@ -287,10 +297,10 @@ function initElementArrayBufferForLaterUse(gl, data, type) {
 }
 
 function initFramebufferObject(gl) {
-  var framebuffer, texture, depthBuffer;
+  let framebuffer, texture, depthBuffer;
 
   // Define the error handling function
-  var error = function() {
+  const error = function() {
     if (framebuffer) gl.deleteFramebuffer(framebuffer);
     if (texture) gl.deleteTexture(texture);
     if (depthBuffer) gl.deleteRenderbuffer(depthBuffer);
@@ -329,7 +339,7 @@ function initFramebufferObject(gl) {
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
 
   // Check if FBO is configured correctly
-  var e = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  const e = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
   if (gl.FRAMEBUFFER_COMPLETE !== e) {
     console.log('Frame buffer object is incomplete: ' + e.toString());
     return error();
@@ -345,14 +355,14 @@ function initFramebufferObject(gl) {
   return framebuffer;
 }
 
-var ANGLE_STEP = 40;   // The increments of rotation angle (degrees)
+const ANGLE_STEP = 40;   // The increments of rotation angle (degrees)
 
-var last = Date.now(); // Last time that this function was called
+let last = Date.now(); // Last time that this function was called
 function animate(angle) {
-  var now = Date.now();   // Calculate the elapsed time
-  var elapsed = now - last;
+  let now = Date.now();   // Calculate the elapsed time
+  let elapsed = now - last;
   last = now;
   // Update the current rotation angle (adjusted by the elapsed time)
-  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+  let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle % 360;
 }
