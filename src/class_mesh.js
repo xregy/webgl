@@ -16,12 +16,8 @@ class Mesh
         if(!Mesh.shader_id)
             Mesh.shader_id = new Shader(gl, Mesh.src_shader_id_vert, Mesh.src_shader_id_frag);
     }
-    init_from_json_js(gl, json_obj)
+    init_from_json_js(gl, json_obj, loc_aPosition=0, loc_aNormal=1, loc_aTexCoord=2)
     {
-        const loc_aPosition = 0;
-        const loc_aNormal = 1;
-        const loc_aTexCoord = 2;
-
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
         
@@ -52,12 +48,8 @@ class Mesh
         
         gl.bindVertexArray(null);
     }
-    init_from_THREE_geometry(gl, geom)
+    init_from_THREE_geometry(gl, geom, loc_aPosition=0, loc_aNormal=1, loc_aTexCoord=2)
     {
-        const loc_aPosition = 0;
-        const loc_aNormal = 1;
-        const loc_aTexCoord = 2;
-
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
         

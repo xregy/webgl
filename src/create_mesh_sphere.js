@@ -1,6 +1,6 @@
 // http://rodger.global-linguist.com/webgl/ch08/PointLightedSphere.js
 "use strict";
-function create_mesh_sphere(gl, SPHERE_DIV) 
+function create_mesh_sphere(gl, SPHERE_DIV, loc_aPosition=0, loc_aNormal=1) 
 { // Create a sphere
     let vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -52,7 +52,6 @@ function create_mesh_sphere(gl, SPHERE_DIV)
     gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     
-    const loc_aPosition = 0;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
     
@@ -60,7 +59,6 @@ function create_mesh_sphere(gl, SPHERE_DIV)
     gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     
-    const loc_aNormal = 1;
     gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aNormal);
     

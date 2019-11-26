@@ -1,5 +1,5 @@
 "use strict";
-function create_mesh_cube(gl) 
+function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1) 
 {
     let vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -66,11 +66,9 @@ function create_mesh_cube(gl)
     
     var SZ = verts.BYTES_PER_ELEMENT;
     
-    const loc_aPosition = 0;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
     
-    const loc_aNormal = 1;
     gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
     gl.enableVertexAttribArray(loc_aNormal);
     
