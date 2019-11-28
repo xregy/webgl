@@ -16,8 +16,12 @@ class Mesh
         if(!Mesh.shader_id)
             Mesh.shader_id = new Shader(gl, Mesh.src_shader_id_vert, Mesh.src_shader_id_frag);
     }
-    init_from_json_js(gl, json_obj, loc_aPosition=0, loc_aNormal=1, loc_aTexCoord=2)
+    init_from_json_js(gl, json_obj)
     {
+        const loc_aPosition = 0;
+        const loc_aNormal = 1;
+        const loc_aTexCoord = 2;
+
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
         
@@ -48,8 +52,12 @@ class Mesh
         
         gl.bindVertexArray(null);
     }
-    init_from_THREE_geometry(gl, geom, loc_aPosition=0, loc_aNormal=1, loc_aTexCoord=2)
+    init_from_THREE_geometry(gl, geom)
     {
+        const loc_aPosition = 0;
+        const loc_aNormal = 1;
+        const loc_aTexCoord = 2;
+
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
         
@@ -114,20 +122,20 @@ class Mesh
     }
     set_uniform_lights(gl, h_prog, lights, V)
     {
-        let MV = new Matrix4();
+//        let MV = new Matrix4();
         let i = 0;
         for(let name in lights)
         {
             let light = lights[name];
-            MV.set(V);
-            MV.multiply(light.M);
+            this.MV.set(V);
+            this.MV.multiply(light.M);
             gl.uniform4fv(gl.getUniformLocation(h_prog, "light[" + i + "].position"), 
-                (MV.multiplyVector4(light.position)).elements);
+                (this.MV.multiplyVector4(light.position)).elements);
             gl.uniform3fv(gl.getUniformLocation(h_prog, "light[" + i + "].ambient"), light.ambient.elements);
             gl.uniform3fv(gl.getUniformLocation(h_prog, "light[" + i + "].diffuse"), light.diffusive.elements);
             gl.uniform3fv(gl.getUniformLocation(h_prog, "light[" + i + "].specular"), light.specular.elements);
             gl.uniform1i(gl.getUniformLocation(h_prog, "light[" + i + "].enabled"), light.enabled);
-            gl.uniform4fv(gl.getUniformLocation(h_prog, "light[" + i + "].direction"), MV.multiplyVector4(light.direction).elements);
+            gl.uniform4fv(gl.getUniformLocation(h_prog, "light[" + i + "].direction"), this.MV.multiplyVector4(light.direction).elements);
             gl.uniform1f(gl.getUniformLocation(h_prog, "light[" + i + "].cutoff_angle"), Math.cos(light.cutoff_angle*Math.PI/180.0));
             i++;
         }
