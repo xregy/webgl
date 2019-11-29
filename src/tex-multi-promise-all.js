@@ -23,15 +23,15 @@ const SRC_FRAG_SHADER =
 #ifdef GL_ES
 precision mediump float;
 #endif
-uniform sampler2D uSampler0;
-uniform sampler2D uSampler1;
+uniform sampler2D uSampler_sky;
+uniform sampler2D uSampler_circle;
 in vec2 vTexCoord0;
 in vec2 vTexCoord1;
 out vec4 fColor;
 void main()
 {
-    vec4 color0 = texture(uSampler0, vTexCoord0);
-    vec4 color1 = texture(uSampler1, vTexCoord1);
+    vec4 color0 = texture(uSampler_sky, vTexCoord0);
+    vec4 color1 = texture(uSampler_circle, vTexCoord1);
     fColor = mix(color0, color1, 0.5);
 }
 `;
@@ -49,19 +49,21 @@ function main()
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     
-    let textures = [{texture:null, unit:3, image:new Image(), loaded:false},
-                    {texture:null, unit:5, image:new Image(), loaded:false}];
+    let texture_sky = {texture:null, unit:3, image:new Image(), loaded:false};
+    let texture_circle = {texture:null, unit:5, image:new Image(), loaded:false};
     
     let MVP = new Matrix4();
     
     shader.set_uniforms = function(gl) 
     {
-        for(let i in textures)
-        {
-            gl.activeTexture(gl.TEXTURE0 + textures[i].unit);
-            gl.bindTexture(gl.TEXTURE_2D, textures[i].texture);
-            gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler" + i), textures[i].unit);
-        }
+        gl.activeTexture(gl.TEXTURE0 + texture_sky.unit);
+        gl.bindTexture(gl.TEXTURE_2D, texture_sky.texture);
+        gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler_sky"), texture_sky.unit);
+
+        gl.activeTexture(gl.TEXTURE0 + texture_circle.unit);
+        gl.bindTexture(gl.TEXTURE_2D, texture_circle.texture);
+        gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler_circle"), texture_circle.unit);
+
         gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, MVP.elements);
     };
     
@@ -90,12 +92,12 @@ function main()
     }
 
     Promise.all([
-        load_image(textures[0], '../resources/sky.jpg'),
-        load_image(textures[1], '../resources/circle.gif')
+        load_image(texture_sky, '../resources/sky.jpg'),
+        load_image(texture_circle, '../resources/circle.gif')
     ]).then(
         function(texes) {
-            init_texture(gl, texes[0]);
-            init_texture(gl, texes[1]);
+            init_texture(gl, texes[0]); // texes[0] == texture_sky
+            init_texture(gl, texes[1]); // texes[1] == texture_circle
             tick();
         }
     ).catch(
