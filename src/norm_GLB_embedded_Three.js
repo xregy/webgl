@@ -3,6 +3,33 @@
 let g_last = Date.now();
 let ANGLE_STEP_LIGHT = 30.0;
 let ANGLE_STEP_MESH = 30.0;
+
+const loc_aPosition = 3;
+const loc_aTexCoord = 8;
+
+// Vertex shader program
+let VSHADER_SOURCE =
+`#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+    out vec2 vTexCoord;
+    void main() {
+        gl_Position = aPosition;
+        vTexCoord = aTexCoord;
+    }
+`;
+
+// Fragment shader program
+let FSHADER_SOURCE = `#version 300 es
+precision mediump float;
+uniform sampler2D uSampler;
+in vec2 vTexCoord;
+out vec4 fColor;
+void main() {
+    fColor = texture(uSampler, vTexCoord);
+}
+`;
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -23,6 +50,11 @@ function main()
 			document.getElementById("vert-Phong-Phong").text,
 			document.getElementById("frag-Phong-Phong").text,
 			{aPosition:2, aNormal:4, aTexCoord:6});
+
+    let shader_quad = new Shader(gl, 
+            VSHADER_SOURCE, FSHADER_SOURCE);
+
+    shader_quad.loc_uSampler = gl.getUniformLocation(shader_quad.h_prog, 'uSampler');
 
 	let lights = 
 	[
@@ -45,6 +77,8 @@ function main()
 			true
 		),
 	];
+
+    let quad = init_quad(gl);
 
 
 	let mesh = new Mesh(gl);
@@ -101,11 +135,7 @@ function main()
 
 //	let resources_loaded = false;
 
-//	let url = 'https://threejs.org/examples/models/obj/cerberus/Cerberus.obj';
-//	let url = 'https://threejs.org/examples/models/gltf/LeePerrySmith/LeePerrySmith.glb';
 	let url = 'https://threejs.org/examples/models/gltf/Nefertiti/Nefertiti.glb';
-//	let url = 'https://threejs.org/examples/models/gltf/Monster/glTF/Monster.gltf';
-//	let url = 'https://xregy.github.io/webgl/resources/monkey_sub2_smooth.obj'; 
 
 	let loader = new THREE.GLTFLoader( manager );
 	loader.load(url,
@@ -137,6 +167,7 @@ function main()
 	);
 
 	let tick = function() {   // start drawing
+        gl.viewport(0, 0, 512, 512);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		axes.render(gl, V, P);
 		for(let light of lights) light.render(gl, V, P);
@@ -144,9 +175,65 @@ function main()
 		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_normal_map"), document.getElementById("normalmap").checked?1:0);
 		gl.uniform1i(gl.getUniformLocation(shader.h_prog, "use_color_map"), document.getElementById("colormap").checked?1:0);
 		mesh.render(gl, shader, lights, __js_materials["silver"], V, P, {"tex_color":tex_color, "tex_normal":tex_normal});
+
+        // render the color map in the lower-right area
+        gl.viewport(512, 0, 256, 256);
+		gl.useProgram(shader_quad.h_prog);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(shader_quad.loc_aSampler, 0);
+        gl.bindTexture(gl.TEXTURE_2D, tex_color.texid);
+        gl.bindVertexArray(quad);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
+        gl.bindVertexArray(null);
+
+        // render the normal map in the upper-right area
+        gl.viewport(512, 256, 256, 256);
+		gl.useProgram(shader_quad.h_prog);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(shader_quad.loc_aSampler, 0);
+        gl.bindTexture(gl.TEXTURE_2D, tex_normal.texid);
+        gl.bindVertexArray(quad);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
+        gl.bindVertexArray(null);
+
+
 		requestAnimationFrame(tick, canvas);
 	};
 
+}
+
+function init_quad(gl)
+{
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+
+    let verticesTexCoords = new Float32Array([
+      // Vertex coordinates, texture coordinate
+      -1,  1,   0.0, 1.0,
+      -1, -1,   0.0, 0.0,
+       1,  1,   1.0, 1.0,
+       1, -1,   1.0, 0.0,
+    ]);
+    
+    // Create the buffer object
+    let vertexTexCoordBuffer = gl.createBuffer();
+    
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
+    
+    let FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+
+    let a_Position = loc_aPosition;
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
+    gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+    
+    let a_TexCoord = loc_aTexCoord;
+    gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+    gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
+
+    gl.bindVertexArray(null);
+    return vao;
 }
 
 function length2(v)
