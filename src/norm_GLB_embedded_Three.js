@@ -125,7 +125,7 @@ function main()
 		},
 		// called when loading is in progresses
 		function ( xhr )
-		//{
+		{
 			document.getElementById("output").innerHTML = ( xhr.loaded / xhr.total * 100 ) + '% loaded.';
 		},
 		// called when loading has errors
