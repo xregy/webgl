@@ -69,3 +69,16 @@ Light.src_shader_frag =
 
 
 Light.shader = null;
+Light.generate_uniform_names = function(light_name)
+    {
+        let uniform_names = [];
+        uniform_names.push(light_name + '.position');
+        uniform_names.push(light_name + '.ambient');
+        uniform_names.push(light_name + '.diffuse');
+        uniform_names.push(light_name + '.specular');
+        uniform_names.push(light_name + '.enabled');
+        uniform_names.push(light_name + '.direction');
+        uniform_names.push(light_name + '.cutoff_angle');
+        return uniform_names;
+    }
+

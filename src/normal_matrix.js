@@ -25,10 +25,16 @@ function main()
     
     let P = new Matrix4();
     P.setPerspective(60, 1, 1, 100); 
-    
+
+     let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
+
+   
     let shader = new Shader(gl, 
         document.getElementById("vert-Phong-Phong").text,
-        document.getElementById("frag-Phong-Phong").text);
+        document.getElementById("frag-Phong-Phong").text, uniform_vars);
     
     init_materials(gl);
     

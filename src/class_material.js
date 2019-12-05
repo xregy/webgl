@@ -39,3 +39,12 @@ var __js_materials =
 };
 
 
+Material.generate_uniform_names = function(mat_name)
+{
+    let uniform_names = [];
+    uniform_names.push(mat_name + ".ambient");
+    uniform_names.push(mat_name + ".diffuse");
+    uniform_names.push(mat_name + ".specular");
+    uniform_names.push(mat_name + ".shininess");
+    return uniform_names;
+}

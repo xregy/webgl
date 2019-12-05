@@ -15,13 +15,19 @@ function main()
     
     let list_shaders = [];
     
+    let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
+
     // initializes shaders (reflection models)
     for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
     {
         list_shaders[model] = new Shader(gl, 
             document.getElementById("vert-" + model + "-spot").text,
             document.getElementById("frag-" + model + "-spot").text,
-            ["aPosition", "aNormal"]);
+            uniform_vars
+            );
     }
     
     // initializes the material combobox

@@ -18,10 +18,12 @@ function main()
 //	P.setPerspective(60, 1, 1, 100); 
 	P.setOrtho(-5, 5, -5, 5, 1, 100);
 
+    let uniform_vars = ["MVP", "tex"];
+
 	let shader = new Shader(gl, 
 			document.getElementById("vert-tex").text,
 			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:8});
+            uniform_vars);
 
 	let mesh = new Mesh(gl);
 

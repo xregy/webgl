@@ -141,7 +141,7 @@ void main()
 	vNormal = normalize(mat3(matNormal)*aNormal);
 	gl_Position = MVP*aPosition;
 }`;
-source["frag-Blinn-Phong"] = `#version 300 es
+list_shader_source["frag-Blinn-Phong"] = `#version 300 es
 precision mediump float;
 in vec4	vPosEye;
 in vec3	vNormal;
@@ -260,7 +260,6 @@ void main()
 
 function main()
 {
-    console.log(list_shader_source);
 	let canvas = document.getElementById('webgl');
 	let gl = canvas.getContext("webgl2");
 
@@ -275,13 +274,18 @@ function main()
 
 	let list_shaders = [];
 
+    let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
+
 	// initializes shaders (reflection models)
 	for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
 	{
 		list_shaders[model] = new Shader(gl, 
             list_shader_source["vert-" + model],
             list_shader_source["frag-" + model],
-			{aPosition:0, aNormal:1});
+            uniform_vars);
 	}
 
 	// initializes the material combobox

@@ -1,4 +1,82 @@
 "use strict"
+const loc_aPosition = 3;
+const loc_aNormal = 9;
+const src_vert = `#version 300 es
+			layout(location=${loc_aPosition}) in vec4	aPosition;
+			layout(location=${loc_aNormal}) in vec3	aNormal;
+			uniform mat4	MVP;
+			uniform mat4	MV;
+			uniform mat4	matNormal;
+			out vec3	vNormal;
+			out vec4	vPosEye;
+			void main()
+			{
+				vPosEye = MV*aPosition;
+				vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
+				gl_Position = MVP*aPosition;
+			}`;
+const src_frag = `#version 300 es
+			#ifdef GL_ES
+			precision mediump float;
+			#endif
+			in vec4 vPosEye;
+			in vec3	vNormal;
+            out vec4 fColor;
+			struct TMaterial
+			{
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				vec3	emission;
+				float	shininess;
+			};
+			struct TLight
+			{
+				vec4	position;
+				vec3	ambient;
+				vec3	diffuse;
+				vec3	specular;
+				bool	enabled;
+			};
+			uniform TMaterial	material_front;
+			uniform TMaterial	material_back;
+			uniform TLight		light[1];
+			void main()
+			{
+				vec3	n = normalize(vNormal);
+				TMaterial	material;
+				if(gl_FrontFacing)
+				{
+					material = material_front;
+				}
+				else
+				{
+					material = material_back;
+					n = -n;
+				}
+				vec3	l;
+				vec3	v = normalize(-vPosEye.xyz);
+				fColor = vec4(0.0);
+				if(light[0].enabled)
+				{
+					if(light[0].position.w == 1.0)
+						l = normalize((light[0].position - vPosEye).xyz);
+					else
+						l = normalize((light[0].position).xyz);
+					vec3	r = reflect(-l, n);
+					float	l_dot_n = max(dot(l, n), 0.0);
+					vec3	ambient = light[0].ambient * material.ambient;
+					vec3	diffuse = light[0].diffuse * material.diffuse * l_dot_n;
+					vec3	specular = vec3(0.0);
+					if(l_dot_n > 0.0)
+					{
+						specular = light[0].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+					}
+					fColor += vec4(ambient + diffuse + specular, 1);
+				}
+				
+				fColor.w = 1.0;
+			}`;
 
 function main()
 {
@@ -22,10 +100,12 @@ function main()
 		true
 	);
 
-	let shader = new Shader(gl,
-						document.getElementById("vert-Phong-Phong").text,
-						document.getElementById("frag-Phong-Phong").text,
-						["aPosition", "aNormal"]);
+    let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material_front"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material_back"));
+
+	let shader = new Shader(gl, src_vert, src_frag, uniform_vars);
 
 	let quad = create_mesh_quad(gl);
 	let axes = new Axes(gl);
@@ -49,8 +129,8 @@ function main()
 
 		gl.useProgram(shader.h_prog);
 
-		set_uniform_material(gl, shader.h_prog, "material_front", __js_materials["gold"]);
-		set_uniform_material(gl, shader.h_prog, "material_back", __js_materials["silver"]);
+		set_uniform_material(gl, shader, "material_front", __js_materials["gold"]);
+		set_uniform_material(gl, shader, "material_back", __js_materials["silver"]);
 
 		quad.render(gl, shader, [light], null, V, P);
 
@@ -61,12 +141,12 @@ function main()
 	tick();
 }
 
-function set_uniform_material(gl, h_prog, vname, mat)
+function set_uniform_material(gl, shader, vname, mat)
 {
-	gl.uniform3fv(gl.getUniformLocation(h_prog, vname + ".ambient"), mat.ambient.elements);
-	gl.uniform3fv(gl.getUniformLocation(h_prog, vname + ".diffuse"), mat.diffusive.elements);
-	gl.uniform3fv(gl.getUniformLocation(h_prog, vname + ".specular"), mat.specular.elements);
-	gl.uniform1f(gl.getUniformLocation(h_prog, vname + ".shininess"), mat.shininess*128.0);
+	gl.uniform3fv(shader.loc_uniforms[vname + ".ambient"], mat.ambient.elements);
+	gl.uniform3fv(shader.loc_uniforms[vname + ".diffuse"], mat.diffusive.elements);
+	gl.uniform3fv(shader.loc_uniforms[vname + ".specular"], mat.specular.elements);
+	gl.uniform1f(shader.loc_uniforms[vname + ".shininess"], mat.shininess*128.0);
 }
 
 
@@ -89,11 +169,9 @@ function create_mesh_quad(gl)
 
     var SZ = verts.BYTES_PER_ELEMENT;
     
-    const loc_aPosition = 0;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
     
-    const loc_aNormal = 1;
     gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, SZ*6, SZ*3);
     gl.enableVertexAttribArray(loc_aNormal);
  
