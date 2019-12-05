@@ -1,10 +1,126 @@
 "use strict";
-
-function init_shader(gl, src_vert, src_frag)
+const loc_aPosition = 2;
+const loc_aNormal = 8;
+const loc_aTexCoord = 9;
+const src_vert_preproc = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aNormal}) in vec4 aNormal;
+uniform mat4    MVP;
+uniform mat4	MV;
+uniform mat4	matNormal;
+out vec4	vPosition;
+out	vec3	vNormal;
+void main()
 {
-	initShaders(gl, src_vert, src_frag);
-	return gl.program;
-}
+	gl_Position = MVP*aPosition;
+	vPosition = MV*aPosition;
+	vNormal = normalize((matNormal*vec4(aNormal.xyz, 0)).xyz);
+}`;
+const src_frag_preproc = `#version 300 es
+#ifdef GL_ES
+precision mediump float;
+#endif
+in vec4	vPosition;
+in	vec3	vNormal;
+uniform vec4	diffuse;
+layout(location=0) out vec4 fPosition;
+layout(location=1) out vec4 fNormal;
+layout(location=2) out vec4 fDiffuse;
+void main()
+{
+	fPosition = vPosition;
+	fNormal = vec4(normalize(vNormal),1);
+	fDiffuse = diffuse;
+}`;
+const src_vert_tex = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+out vec2 vTexCoord;
+void main()
+{
+	gl_Position = aPosition;
+	vTexCoord = aTexCoord;
+}`;
+const src_frag_tex = `#version 300 es
+#ifdef GL_ES
+precision mediump float;
+#endif
+in vec2 vTexCoord;
+out vec4 fColor;
+uniform sampler2D tex;
+void main()
+{
+	fColor = texture(tex, vTexCoord);
+}`;
+const src_vert_shading = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+out vec2 vTexCoord;
+void main()
+{
+	gl_Position = aPosition;
+	vTexCoord = aTexCoord;
+}`;
+const src_frag_shading = `#version 300 es
+#ifdef GL_ES
+precision mediump float;
+#endif
+in vec2 vTexCoord;
+out vec4 fColor;
+uniform sampler2D	tex_position;
+uniform sampler2D	tex_normal;
+uniform sampler2D	tex_diffuse;
+struct TMaterial
+{
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+	vec3	emission;
+	float	shininess;
+};
+struct TLight
+{
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+};
+TLight		light;
+TMaterial	material;
+uniform vec4	light_position;
+void main()
+{
+	vec3	n = texture(tex_normal, vTexCoord).xyz;
+	vec4	p = texture(tex_position, vTexCoord);
+	
+	material.diffuse = texture(tex_diffuse, vTexCoord).rgb;
+	material.shininess = 12.8;
+	material.specular = vec3(.7);
+	material.ambient = vec3(.1);
+
+	light.ambient = vec3(.1);
+	light.diffuse = vec3(1);
+	light.specular = vec3(1);
+
+	vec3	l;
+	if(light_position.w == 1.0)
+		l = normalize((light_position - p).xyz);
+	else
+		l = normalize((light_position).xyz);
+	vec3	v = normalize(-p.xyz);
+
+	vec3	r = reflect(-l, n);
+	float	l_dot_n = max(dot(l, n), 0.0);
+
+	vec3	ambient = light.ambient * material.ambient;
+	vec3	diffuse = light.diffuse * material.diffuse.rgb * l_dot_n;
+	vec3	specular = vec3(0.0);
+	if(l_dot_n > 0.0)
+	{
+		specular = light.specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+	}
+	fColor = vec4(ambient + diffuse + specular, 1);
+}`;
+
 
 function main() 
 {
@@ -32,40 +148,38 @@ function main()
 	P.setPerspective(50, 1, 1, 20); 
 	V.setLookAt(0,3,7,0,0,0,0,1,0);
 
-	let shader_preproc = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-preproc").text,
-		document.getElementById("shader-frag-preproc").text)};
+	let shader_preproc = new Shader(gl, src_vert_preproc, src_frag_preproc,
+        ["MVP", "MV", "matNormal", "diffuse"]);
 
-	let shader_shading = {h_prog:init_shader(gl,
-		document.getElementById("vert-Phong-Phong").text,
-		document.getElementById("frag-Phong-Phong").text)};
+	let shader_shading = new Shader(gl, src_vert_shading, src_frag_shading,
+        ["tex_position", "tex_normal", "tex_diffuse", "light_position"]);
 
-	let shader_tex = {h_prog:init_shader(gl,
-		document.getElementById("vert-tex").text,
-		document.getElementById("frag-tex").text)};
 
-	shader_preproc.set_uniforms = function(gl) {
-			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
-			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MV"), false, MV.elements);
-			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "N"), false, N.elements);
-			gl.uniform4fv(gl.getUniformLocation(this.h_prog, "diffuse"), diffuse.elements);
+	let shader_tex = new Shader(gl, src_vert_tex, src_frag_tex, ["tex"]);
+
+	shader_preproc.set_uniforms = function(gl, diffuse) {
+			gl.uniformMatrix4fv(this.loc_uniforms["MVP"], false, MVP.elements);
+			gl.uniformMatrix4fv(this.loc_uniforms["MV"], false, MV.elements);
+			gl.uniformMatrix4fv(this.loc_uniforms["matNormal"], false, MV.elements);
+			gl.uniform4f(this.loc_uniforms["diffuse"], diffuse[0], diffuse[1], diffuse[2], diffuse[3]);
 	};
 
 	shader_shading.set_uniforms = function(gl) {
-			gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_position"), tex_unit_position);
-			gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_normal"), tex_unit_normal);
-			gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex_diffuse"), tex_unit_diffuse);
-			let light_position = V.multiplyVector4(new Vector4([1,1,1,0]));
-			gl.uniform4fv(gl.getUniformLocation(this.h_prog, "light_position"), light_position.elements);
+			gl.uniform1i(this.loc_uniforms["tex_position"], tex_unit_position);
+			gl.uniform1i(this.loc_uniforms["tex_normal"], tex_unit_normal);
+			gl.uniform1i(this.loc_uniforms["tex_diffuse"], tex_unit_diffuse);
+			gl.uniform4f(this.loc_uniforms["light_position"], 1, 1, 1, 0);
 	};
 
 	shader_tex.set_uniforms = function(gl) {
-		gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex"), 0);
+		gl.uniform1i(this.loc_uniforms["tex"], 0);
 	};
 	
 
-	let	monkey = parse_json(gl, __js_monkey_sub2_smooth);
-	let	sphere = parse_json(gl, __js_sphere);
+	let	monkey = new Mesh(gl);
+    monkey.init_from_json_js(gl, __js_monkey_sub2_smooth, loc_aPosition, loc_aNormal);
+	let	sphere = new Mesh(gl);
+    sphere.init_from_json_js(gl, __js_sphere, loc_aPosition, loc_aNormal);
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
 	gl.drawBuffers([
@@ -79,23 +193,15 @@ function main()
 	
 	MV = new Matrix4(V);
 	MV.translate(-1.5,0,0);
-	N = new Matrix4();
-	N.setInverseOf(MV);
-	N.transpose();
 	MVP = new Matrix4(P);
 	MVP.multiply(MV);
-	let diffuse = new Vector4([1,0,0,1]);
-	render_object(gl, shader_preproc, monkey);
+	render_object(gl, shader_preproc, monkey, [1,0,0,1]);
 	
 	MV = new Matrix4(V);
 	MV.translate(1.5,0,0);
-	N = new Matrix4();
-	N.setInverseOf(MV);
-	N.transpose();
 	MVP = new Matrix4(P);
 	MVP.multiply(MV);
-	diffuse = new Vector4([0,0,1,1]);
-	render_object(gl, shader_preproc, sphere);
+	render_object(gl, shader_preproc, sphere, [0,0,1,1]);
 	
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	
@@ -106,19 +212,19 @@ function main()
 	gl.viewport(0, canvas.height/2, canvas.width/2, canvas.height/2);
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[0]);
-	render_object(gl, shader_tex, quad);
+	render_quad(gl, shader_tex, quad);
 
 	// upper right quad
 	gl.viewport(canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2);
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[1]);
-	render_object(gl, shader_tex, quad);
+	render_quad(gl, shader_tex, quad);
 
 	// lower left quad
 	gl.viewport(0, 0, canvas.width/2, canvas.height/2);
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[2]);
-	render_object(gl, shader_tex, quad);
+	render_quad(gl, shader_tex, quad);
 
 	// lower right quad
 	gl.viewport(canvas.width/2, 0, canvas.width/2, canvas.height/2);
@@ -128,22 +234,32 @@ function main()
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[1]);
 	gl.activeTexture(gl.TEXTURE0 + tex_unit_diffuse);
 	gl.bindTexture(gl.TEXTURE_2D, fbo.color[2]);
-	render_object(gl, shader_shading, quad);
+	render_quad(gl, shader_shading, quad);
 }
 
 
-function render_object(gl, shader, object)
+function render_object(gl, shader, object, diffuse)
 {
 	gl.useProgram(shader.h_prog);
     gl.bindVertexArray(object.vao);
-	shader.set_uniforms(gl);
+	shader.set_uniforms(gl, diffuse);
 
-	if(object.drawcall == "drawArrays") gl.drawArrays(object.type, 0, object.n);
-	else if(object.drawcall == "drawElements") gl.drawElements(object.type, object.n, object.type_index, 0);
+    gl.drawElements(object.draw_mode, object.n, object.index_buffer_type, 0);
 
     gl.bindVertexArray(null);
 	gl.useProgram(null);
 }
+
+function render_quad(gl, shader, quad)
+{
+	gl.useProgram(shader.h_prog);
+    gl.bindVertexArray(quad);
+	shader.set_uniforms(gl);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    gl.bindVertexArray(null);
+	gl.useProgram(null);
+}
+
 
 
 function init_quad(gl)
@@ -164,18 +280,16 @@ function init_quad(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 6;
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*4, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aTexCoord = 9;
     gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, SZ*4, SZ*2);
     gl.enableVertexAttribArray(loc_aTexCoord);
 
     gl.bindVertexArray(null);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-	return {vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN};
+	return vao;
 }
 
 function init_fbo(gl, fbo_width, fbo_height)
@@ -220,36 +334,4 @@ function init_fbo(gl, fbo_width, fbo_height)
 
 	return {fbo:fbo, color:[tex_color0, tex_color1, tex_color2], depth:rbo_depth};
 }
-function parse_json(gl, obj)
-{
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-
-	let	attributes = obj.data.attributes;
-
-	let	buf_position = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.position.array), gl.STATIC_DRAW);
-    let loc_aPosition = 3;
-    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc_aPosition);
-
-
-	let	buf_normal = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributes.normal.array), gl.STATIC_DRAW);
-    let loc_aNormal = 7;
-    gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc_aNormal);
-
-
-	let	buf_index = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf_index);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(obj.data.index.array), gl.STATIC_DRAW);
-
-    gl.bindVertexArray(null);
-
-	return {vao:vao, n:obj.data.index.array.length, drawcall:"drawElements", buf_index:buf_index, type_index:gl.UNSIGNED_SHORT, type:gl.TRIANGLES};
-}
-
 

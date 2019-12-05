@@ -103,17 +103,14 @@ class Mesh
         this.MV.set(V);
         this.MV.multiply(this.M);
         gl.uniformMatrix4fv(shader.loc_uniforms["MV"], false, this.MV.elements);
-//        gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MV"), false, this.MV.elements);
         this.MVP.set(P);
         this.MVP.multiply(this.MV);
         gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, this.MVP.elements);
-//        gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, this.MVP.elements);
         this.MVP.set(V);
         this.MVP.multiply(this.M);
         this.N.setInverseOf(this.MVP);
         this.N.transpose();
         gl.uniformMatrix4fv(shader.loc_uniforms["matNormal"], false, this.N.elements);
-//        gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "matNormal"), false, this.N.elements);
     }
     set_uniform_lights(gl, shader, lights, V)
     {
@@ -132,22 +129,11 @@ class Mesh
             gl.uniform4fv(shader.loc_uniforms[`light[${i}].direction`], this.MV.multiplyVector4(light.direction).elements);
             gl.uniform1f(shader.loc_uniforms[`light[${i}].cutoff_angle`], Math.cos(light.cutoff_angle*Math.PI/180.0));
 
-//            gl.uniform4fv(gl.getUniformLocation(shader.h_prog, "light[" + i + "].position"), (this.MV.multiplyVector4(light.position)).elements);
-//            gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "light[" + i + "].ambient"), light.ambient.elements);
-//            gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "light[" + i + "].diffuse"), light.diffusive.elements);
-//            gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "light[" + i + "].specular"), light.specular.elements);
-//            gl.uniform1i(gl.getUniformLocation(shader.h_prog, "light[" + i + "].enabled"), light.enabled);
-//            gl.uniform4fv(gl.getUniformLocation(shader.h_prog, "light[" + i + "].direction"), this.MV.multiplyVector4(light.direction).elements);
-//            gl.uniform1f(gl.getUniformLocation(shader.h_prog, "light[" + i + "].cutoff_angle"), Math.cos(light.cutoff_angle*Math.PI/180.0));
             i++;
         }
     }
     set_uniform_material(gl, shader, mat)
     {
-//        gl.uniform3fv(shader.loc_uniforms["material.ambient"], mat.ambient.elements);
-//        gl.uniform3fv(shader.loc_uniforms["material.diffuse"], mat.diffusive.elements);
-//        gl.uniform3fv(shader.loc_uniforms["material.specular"], mat.specular.elements);
-//        gl.uniform1f(shader.loc_uniforms["material.shininess"], mat.shininess*128.0);
         gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.ambient"), mat.ambient.elements);
         gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.diffuse"), mat.diffusive.elements);
         gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.specular"), mat.specular.elements);
@@ -160,7 +146,6 @@ class Mesh
         {
             gl.activeTexture(gl.TEXTURE0 + i);
             gl.bindTexture(gl.TEXTURE_2D, textures[texname].texid);
-//            gl.uniform1i(gl.getUniformLocation(h_prog, texname), i);
             gl.uniform1i(shader.loc_uniforms[texname], i);
             i++;
         }
@@ -190,11 +175,8 @@ class Mesh
         this.MVP.set(P);
         this.MVP.multiply(V);
         this.MVP.multiply(this.M);
-//        gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, this.MVP.elements);
-        gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, this.MVP.elements);
-        
-        gl.uniform1i(shader.loc_uniforms["u_id"], this.id);
-//        gl.uniform1i(gl.getUniformLocation(h_prog, "u_id"), this.id);
+        gl.uniformMatrix4fv(Mesh.shader_id.loc_uniforms["MVP"], false, this.MVP.elements);
+        gl.uniform1i(Mesh.shader_id.loc_uniforms["u_id"], this.id);
         
         if(this.draw_call == "drawArrays") gl.drawArrays(this.draw_mode, 0, this.n);
         else if(this.draw_call == "drawElements") gl.drawElements(this.draw_mode, this.n, this.index_buffer_type, 0);

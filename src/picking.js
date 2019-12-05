@@ -18,9 +18,14 @@ function main()
 	let P = new Matrix4();
 	P.setPerspective(60, 1, 1, 100); 
 
+    let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
+
 	let shader = new Shader(gl, 
 			document.getElementById("vert-Blinn-Gouraud").text,
-			document.getElementById("frag-Blinn-Gouraud").text);
+			document.getElementById("frag-Blinn-Gouraud").text,
+            uniform_vars);
 
 	let light = new Light
 	(
