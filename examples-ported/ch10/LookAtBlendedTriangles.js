@@ -132,7 +132,7 @@ function keydown(ev, gl, vao, n, loc_uViewMatrix, viewMatrix) {
 }
 
 // Eye position
-const g_EyeX = 0.20, g_EyeY = 0.25, g_EyeZ = 0.25;
+let g_EyeX = 0.20, g_EyeY = 0.25, g_EyeZ = 0.25;
 function draw(gl, vao, n, loc_uViewMatrix, viewMatrix) {
   // Set the matrix to be used for to set the camera view
   viewMatrix.setLookAt(g_EyeX, g_EyeY, g_EyeZ, 0, 0, 0, 0, 1, 0);
