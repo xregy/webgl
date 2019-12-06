@@ -1,11 +1,9 @@
 "use strict";
 
-let g_last = Date.now();
-const ANGLE_STEP_LIGHT = 30.0;
-const ANGLE_STEP_MESH = 30.0;
-
 const loc_aPosition = 3;
 const loc_aTexCoord = 8;
+const loc_aNormal = -1;
+const numLights = 0;
 
 const src_vert = `#version 300 es
 layout(location=${loc_aPosition}) in vec4	aPosition;

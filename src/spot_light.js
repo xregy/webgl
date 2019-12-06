@@ -1,4 +1,9 @@
 "use strict";
+
+const loc_aPosition = 2;
+const loc_aNormal = 8;
+const numLights = 1;
+
 function main()
 {
     let canvas = document.getElementById('webgl');
@@ -13,22 +18,16 @@ function main()
     let P = new Matrix4();
     P.setPerspective(60, 1, 1, 100); 
     
-    let list_shaders = [];
-    
     let uniform_vars = ["MVP", "MV", "matNormal"];
     Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
-    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
     Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
     // initializes shaders (reflection models)
-    for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
-    {
-        list_shaders[model] = new Shader(gl, 
-            document.getElementById("vert-" + model + "-spot").text,
-            document.getElementById("frag-" + model + "-spot").text,
-            uniform_vars
-            );
-    }
+    let list_shaders = {};
+    list_shaders["Blinn-Gouraud"] = new Shader(gl, src_vert_Blinn_Gouraud_spot, src_frag_Blinn_Gouraud_spot, uniform_vars);
+    list_shaders["Phong-Gouraud"] = new Shader(gl, src_vert_Phong_Gouraud_spot, src_frag_Phong_Gouraud_spot, uniform_vars);
+    list_shaders["Blinn-Phong"] = new Shader(gl, src_vert_Blinn_Phong_spot, src_frag_Blinn_Phong_spot, uniform_vars);
+    list_shaders["Phong-Phong"] = new Shader(gl, src_vert_Phong_Phong_spot, src_frag_Phong_Phong_spot, uniform_vars);
     
     // initializes the material combobox
     let combo_mat = document.getElementById("materials");
@@ -59,13 +58,13 @@ function main()
     // initializes the meshes
     let list_meshes = [];
     let monkey = new Mesh(gl);
-    monkey.init_from_json_js(gl, __js_monkey);
+    monkey.init_from_json_js(gl, __js_monkey, loc_aPosition, loc_aNormal);
     let monkey_smooth = new Mesh(gl);
-    monkey_smooth.init_from_json_js(gl, __js_monkey_smooth);
+    monkey_smooth.init_from_json_js(gl, __js_monkey_smooth, loc_aPosition, loc_aNormal);
     let monkey_sub2_smooth = new Mesh(gl);
-    monkey_sub2_smooth.init_from_json_js(gl, __js_monkey_sub2_smooth);
-    let cube = create_mesh_cube(gl);
-    let ball = create_mesh_sphere(gl, 20);
+    monkey_sub2_smooth.init_from_json_js(gl, __js_monkey_sub2_smooth, loc_aPosition, loc_aNormal);
+    let cube = create_mesh_cube(gl, loc_aPosition, loc_aNormal);
+    let ball = create_mesh_sphere(gl, 20, loc_aPosition, loc_aNormal);
     list_meshes["cube"] = cube;
     list_meshes["sphere"] = ball;
     list_meshes["monkey"] = monkey;

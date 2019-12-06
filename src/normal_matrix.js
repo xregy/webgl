@@ -1,4 +1,9 @@
 "use strict";
+
+const loc_aPosition = 2;
+const loc_aNormal = 8;
+const numLights = 1;
+
 function init_materials(gl)
 {
     let combo_mat = document.getElementById("materials");
@@ -32,9 +37,8 @@ function main()
     Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
    
-    let shader = new Shader(gl, 
-        document.getElementById("vert-Phong-Phong").text,
-        document.getElementById("frag-Phong-Phong").text, uniform_vars);
+    let shader = new Shader(gl, src_vert_Phong_Phong,
+        src_frag_Phong_Phong, uniform_vars);
     
     init_materials(gl);
     
@@ -47,7 +51,7 @@ function main()
         [1.0, 1.0, 1.0, 1.0],
         true);
     
-    let ball = create_mesh_sphere(gl,20);
+    let ball = create_mesh_sphere(gl,20, loc_aPosition, loc_aNormal);
     ball.M.setScale(2.0, 0.7, 0.7);
     
     let t_last = Date.now();

@@ -3,6 +3,7 @@
 const loc_aPosition = 3;
 const loc_aTexCoord = 8;
 const loc_aNormal = 6;
+const numLights = 2;
 
 const src_vert_shading = `#version 300 es
 layout(location=${loc_aPosition}) in vec4	aPosition;
@@ -49,7 +50,7 @@ struct TLight
 	bool	enabled;
 };
 uniform TMaterial	material;
-uniform TLight		light[2];
+uniform TLight		light[${numLights}];
 void main()
 {
 	vec3	n;
@@ -72,7 +73,7 @@ void main()
 		m = material;
 	}
 	fColor = vec4(0.0);
-	for(int i=0 ; i<2 ; i++)
+	for(int i=0 ; i<${numLights} ; i++)
 	{
 		if(light[i].enabled)
 		{

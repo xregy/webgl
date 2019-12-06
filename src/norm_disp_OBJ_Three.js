@@ -3,6 +3,8 @@
 const loc_aPosition = 3;
 const loc_aNormal = 8;
 const loc_aTexCoord = 1;
+const numLights = 2;
+
 const src_vert = `#version 300 es
 layout(location=${loc_aPosition}) in vec4	aPosition;
 layout(location=${loc_aNormal}) in vec3	aNormal;
@@ -56,7 +58,7 @@ struct TLight
 	bool	enabled;
 };
 uniform TMaterial	material;
-uniform TLight		light[2];
+uniform TLight		light[${numLights}];
 
 // courtesy of Three.js fragment shader
 // http://www.thetenthplanet.de/archives/1180
@@ -118,7 +120,7 @@ void main()
 	}
 	vec3	l;
 	fColor = vec4(0.0);
-	for(int i=0 ; i<2 ; i++)
+	for(int i=0 ; i<${numLights} ; i++)
 	{
 		if(light[i].enabled)
 		{

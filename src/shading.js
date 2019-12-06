@@ -2,261 +2,7 @@
 
 const loc_aPosition = 3;
 const loc_aNormal = 9;
-let list_shader_source = {}
-list_shader_source["vert-Blinn-Gouraud"] = `#version 300 es
-layout(location=${loc_aPosition}) in vec4	aPosition;
-layout(location=${loc_aNormal}) in vec3	aNormal;
-uniform mat4	MVP;
-uniform mat4	MV;
-uniform mat4	matNormal;
-struct TMaterial
-{
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	vec3	emission;
-	float	shininess;
-};
-struct TLight
-{
-	vec4	position;
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	bool	enabled;
-};
-uniform TMaterial	material;
-uniform TLight		light[2];
-out vec3		vColor;
-void main()
-{
-	vec3	n = normalize(mat3(matNormal)*aNormal);
-	vec4	vPosEye = MV*aPosition;
-	vec3	l;
-	vec3	v = normalize(-vPosEye.xyz);
-	vColor = vec3(0.0);
-	for(int i=0 ; i<2 ; i++)
-	{
-		if(light[i].enabled)
-		{
-			if(light[i].position.w == 1.0)
-				l = normalize((light[i].position - vPosEye).xyz);
-			else
-				l = normalize((light[i].position).xyz);
-			vec3	h = normalize(l + v);
-			float	l_dot_n = max(dot(l, n), 0.0);
-			vec3	ambient = light[i].ambient * material.ambient;
-			vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
-			vec3	specular = vec3(0.0);
-			if(l_dot_n > 0.0)
-			{
-				specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-			}
-			vColor += ambient + diffuse + specular;
-		}
-	}
-	gl_Position = MVP*aPosition;
-}`;
-list_shader_source["frag-Blinn-Gouraud"] = `#version 300 es
-precision mediump float;
-in vec3	vColor;
-out vec4 fColor;
-void main()
-{
-	fColor = vec4(vColor, 1);
-}`;
-list_shader_source["vert-Phong-Gouraud"] = `#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aNormal}) in vec3 aNormal;
-uniform mat4	MVP;
-uniform mat4	MV;
-uniform mat4	matNormal;
-struct TMaterial
-{
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	vec3	emission;
-	float	shininess;
-};
-struct TLight
-{
-	vec4	position;
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	bool	enabled;
-};
-uniform TMaterial	material;
-uniform TLight		light[2];
-out vec3	vColor;
-void main()
-{
-	vec3	n = normalize(mat3(matNormal)*aNormal);	// n is the normal vector in eye coordinate system
-	vec4	vPosEye = MV*aPosition;	// vPosEye is the vertex position in eye coordinate system
-	vec3	l;
-	vec3	v = normalize(-vPosEye.xyz);
-	vColor = vec3(0.0);
-	for(int i=0 ; i<2 ; i++)
-	{
-		if(light[i].enabled)
-		{
-			if(light[i].position.w == 1.0)
-				l = normalize((light[i].position - vPosEye).xyz);
-			else
-				l = normalize((light[i].position).xyz);
-			vec3	r = reflect(-l, n);
-			float	l_dot_n = max(dot(l, n), 0.0);
-			vec3	ambient = light[i].ambient * material.ambient;
-			vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
-			vec3	specular = vec3(0.0);
-			if(l_dot_n > 0.0)
-			{
-				specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-			}
-			vColor += ambient + diffuse + specular;
-		}
-	}
-	gl_Position = MVP*aPosition;
-}`;
-list_shader_source["frag-Phong-Gouraud"] = `#version 300 es
-precision mediump float;
-in vec3	vColor;
-out vec4 fColor;
-void main()
-{
-	fColor = vec4(vColor, 1);
-}`;
-list_shader_source["vert-Blinn-Phong"] = `#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aNormal}) in vec3 aNormal;
-uniform mat4	MVP;
-uniform mat4	MV;
-uniform mat4	matNormal;
-out vec3	vNormal;
-out vec4	vPosEye;
-void main()
-{
-	vPosEye = MV*aPosition;
-	vNormal = normalize(mat3(matNormal)*aNormal);
-	gl_Position = MVP*aPosition;
-}`;
-list_shader_source["frag-Blinn-Phong"] = `#version 300 es
-precision mediump float;
-in vec4	vPosEye;
-in vec3	vNormal;
-out vec4 fColor;
-struct TMaterial
-{
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	vec3	emission;
-	float	shininess;
-};
-struct TLight
-{
-	vec4	position;
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	bool	enabled;
-};
-uniform TMaterial	material;
-uniform TLight		light[2];
-void main()
-{
-	vec3	n = normalize(vNormal);
-	vec3	l;
-	vec3	v = normalize(-vPosEye.xyz);
-	fColor = vec4(0.0);
-	for(int i=0 ; i<2 ; i++)
-	{
-		if(light[i].enabled)
-		{
-			if(light[i].position.w == 1.0)
-				l = normalize((light[i].position - vPosEye).xyz);		// positional light
-			else
-				l = normalize((light[i].position).xyz);	// directional light
-			float	l_dot_n = max(dot(l, n), 0.0);
-			vec3	ambient = light[i].ambient * material.ambient;
-			vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
-			vec3	specular = vec3(0.0);
-			if(l_dot_n > 0.0)
-			{
-				vec3	h = normalize(l + v);
-				specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
-			}
-			fColor += vec4(ambient + diffuse + specular, 1);
-		}
-	}
-	fColor.w = 1.0;
-}`;
-list_shader_source["vert-Phong-Phong"] = `#version 300 es
-layout(location=${loc_aPosition}) in vec4	aPosition;
-layout(location=${loc_aNormal}) in vec3	aNormal;
-uniform mat4	MVP;
-uniform mat4	MV;
-uniform mat4	matNormal;
-out vec3	vNormal;
-out vec4	vPosEye;
-void main()
-{
-	vPosEye = MV*aPosition;
-	vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
-	gl_Position = MVP*aPosition;
-}`;
-list_shader_source["frag-Phong-Phong"] = `#version 300 es
-precision mediump float;
-in vec4 vPosEye;
-in vec3	vNormal;
-out vec4 fColor;
-struct TMaterial
-{
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	vec3	emission;
-	float	shininess;
-};
-struct TLight
-{
-	vec4	position;
-	vec3	ambient;
-	vec3	diffuse;
-	vec3	specular;
-	bool	enabled;
-};
-uniform TMaterial	material;
-uniform TLight		light[2];
-void main()
-{
-	vec3	n = normalize(vNormal);
-	vec3	l;
-	vec3	v = normalize(-vPosEye.xyz);
-	fColor = vec4(0.0);
-	for(int i=0 ; i<2 ; i++)
-	{
-		if(light[i].enabled)
-		{
-			if(light[i].position.w == 1.0)
-				l = normalize((light[i].position - vPosEye).xyz);
-			else
-				l = normalize((light[i].position).xyz);
-			vec3	r = reflect(-l, n);
-			float	l_dot_n = max(dot(l, n), 0.0);
-			vec3	ambient = light[i].ambient * material.ambient;
-			vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
-			vec3	specular = vec3(0.0);
-			if(l_dot_n > 0.0)
-			{
-				specular = light[i].specular * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-			}
-			fColor += vec4(ambient + diffuse + specular, 1);
-		}
-	}
-	fColor.w = 1.0;
-}`;
+const numLights = 2;
 
 function main()
 {
@@ -279,8 +25,24 @@ function main()
     Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
     Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
+    let list_shader_source = 
+    {
+        "vert-Phong-Gouraud":src_vert_Phong_Gouraud,
+        "frag-Phong-Gouraud":src_frag_Phong_Gouraud,
+        "vert-Blinn-Gouraud":src_vert_Blinn_Gouraud,
+        "frag-Blinn-Gouraud":src_frag_Blinn_Gouraud,
+        "vert-Blinn-Phong":src_vert_Blinn_Phong,
+        "frag-Blinn-Phong":src_frag_Blinn_Phong,
+        "vert-Phong-Phong":src_vert_Phong_Phong,
+        "frag-Phong-Phong":src_frag_Phong_Phong,
+    };
+
+
 	// initializes shaders (reflection models)
-	for(let model of ["Blinn-Gouraud", "Phong-Gouraud", "Blinn-Phong", "Phong-Phong"])
+	for(let model of [
+    "Phong-Gouraud", 
+    "Blinn-Gouraud", 
+    "Blinn-Phong", "Phong-Phong"])
 	{
 		list_shaders[model] = new Shader(gl, 
             list_shader_source["vert-" + model],

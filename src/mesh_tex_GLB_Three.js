@@ -2,6 +2,8 @@
 
 const loc_aPosition = 3;
 const loc_aTexCoord = 8;
+const loc_aNormal = -1;
+const numLights = 0;
 const src_vert = `#version 300 es
 layout(location=${loc_aPosition}) in vec4	aPosition;
 layout(location=${loc_aTexCoord}) in vec2	aTexCoord;

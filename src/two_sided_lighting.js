@@ -1,6 +1,7 @@
 "use strict"
 const loc_aPosition = 3;
 const loc_aNormal = 9;
+const numLights = 0;
 const src_vert = `#version 300 es
 			layout(location=${loc_aPosition}) in vec4	aPosition;
 			layout(location=${loc_aNormal}) in vec3	aNormal;

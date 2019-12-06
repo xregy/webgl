@@ -1,8 +1,8 @@
 "use strict";
 
-//let g_last = Date.now();
-//let ANGLE_STEP_LIGHT = 30.0;
-//let ANGLE_STEP_MESH = 30.0;
+const loc_aPosition = 2;
+const loc_aNormal = 8;
+const numLights = 1;
 
 function main()
 {
@@ -22,10 +22,8 @@ function main()
     Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
     Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
-	let shader = new Shader(gl, 
-			document.getElementById("vert-Blinn-Gouraud").text,
-			document.getElementById("frag-Blinn-Gouraud").text,
-            uniform_vars);
+	let shader = new Shader(gl, src_vert_Blinn_Gouraud, 
+                src_frag_Blinn_Gouraud, uniform_vars);
 
 	let light = new Light
 	(
@@ -40,9 +38,9 @@ function main()
 
 	// initializes the meshes
 	let id = 0;
-	let cube = create_mesh_cube(gl);
-	let ball = create_mesh_sphere(gl, 20);
-	let monkey = new Mesh(gl);			monkey.init_from_json_js(gl, __js_monkey_smooth);
+	let cube = create_mesh_cube(gl, loc_aPosition, loc_aNormal);
+	let ball = create_mesh_sphere(gl, 20, loc_aPosition, loc_aNormal);
+	let monkey = new Mesh(gl);			monkey.init_from_json_js(gl, __js_monkey_smooth, loc_aPosition, loc_aNormal);
 
 	monkey.id = ++id;
 	cube.id = ++id;
