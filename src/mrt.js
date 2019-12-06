@@ -1,8 +1,64 @@
 "use strict"
-function init_shader(gl, src_vert, src_frag)
+const loc_aPosition = 2;
+const loc_aColor0 = 9;
+const loc_aColor1 = 5;
+const loc_aTexCoord = 8;
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor0}) in vec4    aColor0;
+layout(location=${loc_aColor1}) in vec4    aColor1;
+out vec4    vColor0;
+out vec4    vColor1;
+uniform mat4    MVP;
+void main()
+{
+	gl_Position = MVP*aPosition;
+	vColor0 = aColor0;
+	vColor1 = aColor1;
+}`;
+const src_frag = `#version 300 es
+//			#extension GL_EXT_draw_buffers : require 
+precision mediump float;
+in vec4    vColor0;
+in vec4    vColor1;
+layout(location=0) out vec4 fColor0;
+layout(location=1) out vec4 fColor1;
+void main()
+{
+	fColor0 = vColor0;
+	fColor1 = vColor1;
+}`;
+const src_vert_tex = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+out vec2 vTexCoord;
+uniform mat4    MVP;
+void main()
+{
+	gl_Position = MVP*aPosition;
+	vTexCoord = aTexCoord;
+}`;
+const src_frag_tex = `#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+out vec4 fColor;
+uniform sampler2D tex;
+void main()
+{
+	fColor = texture(tex, vTexCoord);
+}`;
+
+function init_shader(gl, src_vert, src_frag, uniform_vars)
 {
 	initShaders(gl, src_vert, src_frag);
-	return gl.program;
+    let shader = {}
+    shader.h_prog = gl.program
+    shader.loc_uniforms = {}
+    for(let uniform of uniform_vars)
+    {
+        shader.loc_uniforms[uniform] = gl.getUniformLocation(shader.h_prog, uniform);
+    }
+	return shader;
 }
 
 function main()
@@ -22,26 +78,20 @@ function main()
 	let P = new Matrix4();
 	P.setOrtho(-1,1,-1,1,-1,1);
 	
-	let shader_simple = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-simple").text,
-		document.getElementById("shader-frag-simple").text)};
+	let shader_simple = init_shader(gl, src_vert, src_frag, ["MVP"]);
 
-//    console.log(shader_simple);
-	
-	let shader_tex = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-tex").text,
-		document.getElementById("shader-frag-tex").text)};
+	let shader_tex = init_shader(gl, src_vert_tex, src_frag_tex, ["MVP", "tex"]);
 	
 	shader_simple.set_uniforms = function(gl) {
-		gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
+		gl.uniformMatrix4fv(shader_simple.loc_uniforms["MVP"], false, MVP.elements);
 	};
 
 	
 	let tex_unit = 3;
 	
 	shader_tex.set_uniforms = function(gl) {
-		gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
-		gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex"), tex_unit);
+		gl.uniformMatrix4fv(shader_tex.loc_uniforms["MVP"], false, MVP.elements);
+		gl.uniform1i(shader_tex.loc_uniforms["tex"], tex_unit);
 	};
 	
 	let MVP;
@@ -113,15 +163,12 @@ function init_triangles(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 3;
     gl.vertexAttribPointer(loc_aPosition, 4, gl.FLOAT, false, SZ*12, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aColor0 = 7;
     gl.vertexAttribPointer(loc_aColor0, 4, gl.FLOAT, false, SZ*12, SZ*4);
     gl.enableVertexAttribArray(loc_aColor0);
 
-    let loc_aColor1 = 9;
     gl.vertexAttribPointer(loc_aColor1, 4, gl.FLOAT, false, SZ*12, SZ*8);
     gl.enableVertexAttribArray(loc_aColor1);
 
@@ -150,11 +197,9 @@ function init_quad(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 2;
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*4, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aTexCoord = 5;
     gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, SZ*4, SZ*2);
     gl.enableVertexAttribArray(loc_aTexCoord);
 

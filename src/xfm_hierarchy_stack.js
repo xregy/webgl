@@ -1,17 +1,28 @@
 "use strict";
+const loc_aPosition = 5;
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform mat4	MVP;
+void main()
+{
+	gl_Position = MVP*aPosition;
+}`;
+const src_frag = `#version 300 es
+precision mediump float;
+uniform vec3 color;
+out vec4 fColor;
+void main()
+{
+    fColor = vec4(color,1);
+}`;
+
 function main() {
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
 
-    let shader = new Shader(gl, 
-                document.getElementById("shader-vert").text,
-                document.getElementById("shader-frag").text,
-                {aPosition:3});
+    let shader = new Shader(gl, src_vert, src_frag, ["MVP", "color"]);
     
     let quad = init_vbo_quad(gl);
-    
-    shader.loc_uniforms = {MVP:gl.getUniformLocation(shader.h_prog, "MVP"),
-                            color:gl.getUniformLocation(shader.h_prog, "color")};
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     
@@ -51,15 +62,15 @@ let angle_B = 30;
 function render_quad(gl, shader, object, uniforms)
 {
     gl.bindVertexArray(object.vao);
-    set_uniforms(gl, shader.loc_uniforms, uniforms);
+    set_uniforms(gl, shader, uniforms);
     gl.drawArrays(object.type, 0, object.n);
     gl.bindVertexArray(null);
 }
 
-function set_uniforms(gl, loc_uniforms, uniforms)
+function set_uniforms(gl, shader, uniforms)
 {
-    gl.uniformMatrix4fv(loc_uniforms.MVP, false, uniforms.MVP.elements);
-    gl.uniform3fv(loc_uniforms.color, (new Vector3(uniforms.color)).elements);
+    gl.uniformMatrix4fv(shader.loc_uniforms.MVP, false, uniforms.MVP.elements);
+    gl.uniform3f(shader.loc_uniforms.color, uniforms.color[0], uniforms.color[1], uniforms.color[2]);
 }
 
 function refresh_values()
@@ -167,7 +178,6 @@ function init_vbo_quad(gl)
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
     
-    let loc_aPosition = 3;
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 

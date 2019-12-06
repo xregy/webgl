@@ -1,18 +1,18 @@
 "use strict";
-// RotatedTranslatedTriangle.js (c) 2012 matsuda
-// Vertex shader program
-let VSHADER_SOURCE =
+
+const loc_aPosition = 2;
+
+const src_vert =
 `#version 300 es
-layout(location=3) in vec4 a_Position;
-uniform mat4 u_ModelMatrix;
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform mat4 uM;
 void main()
 {
-  gl_Position = u_ModelMatrix * a_Position;
+  gl_Position = uM * aPosition;
 }
 `;
 
-// Fragment shader program
-let FSHADER_SOURCE =
+const src_frag =
 `#version 300 es
 precision mediump float;
 out vec4 fColor;
@@ -23,24 +23,24 @@ void main()
 `;
 
 function main() {
-    let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    const canvas = document.getElementById('webgl');
+    const gl = canvas.getContext("webgl2");
     
-    initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+    initShaders(gl, src_vert, src_frag);
     
-    let vao = initVertexBuffers(gl);
+    const vao = initVertexBuffers(gl);
     
     let modelMatrix = mat4.create();
     
     // Calculate a model matrix
-    let ANGLE = 60.0; // The rotation angle
-    let Tx = 0.5;     // Translation distance
+    const ANGLE = 60.0; // The rotation angle
+    const Tx = 0.5;     // Translation distance
     mat4.rotate(modelMatrix, modelMatrix, ANGLE*Math.PI/180.0, [0,0,1]);	// Set rotation matrix
     mat4.translate(modelMatrix, modelMatrix, [Tx, 0, 0]);        // Multiply modelMatrix by the calculated translation matrix
     
     // Pass the model matrix to the vertex shader
-    let u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix);
+    const loc_uM = gl.getUniformLocation(gl.program, 'uM');
+    gl.uniformMatrix4fv(loc_uM, false, modelMatrix);
     
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -50,18 +50,17 @@ function main() {
 }
 
 function initVertexBuffers(gl) {
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    let vertices = new Float32Array([ 0, 0.3,   -0.3, -0.3,   0.3, -0.3 ]);
+    const vertices = new Float32Array([ 0, 0.3,   -0.3, -0.3,   0.3, -0.3 ]);
     
-    let vertexBuffer = gl.createBuffer();
+    const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
     
-    let a_Position = 3;
-    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(a_Position);
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
 
     gl.bindVertexArray(null);
 

@@ -1,7 +1,7 @@
 "use strict"
 const loc_aPosition = 3;
 const loc_aCoords = 4;
-const SRC_VERT = 
+const src_vert = 
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 layout(location=${loc_aCoords}) in vec2 aCoords;
@@ -11,7 +11,7 @@ void main() {
 	vCoords = aCoords;
 }
 `;
-const SRC_FRAG = `#version 300 es
+const src_frag = `#version 300 es
 precision mediump float;
 in vec2 vCoords;
 out vec4 fColor;
@@ -25,7 +25,7 @@ function main()
 {
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext('webgl2');
-    initShaders(gl, SRC_VERT, SRC_FRAG);
+    initShaders(gl, src_vert, src_frag);
     let vao = initVertexBuffers(gl);
     gl.clearColor(0.5, 0.5, 0.5, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);

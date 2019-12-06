@@ -1,9 +1,7 @@
-// ColoredCube.js (c) 2012 matsuda
-// Vertex shader program
 "use strict";
 const loc_aPosition = 3;
 const loc_aColor = 7;
-const VSHADER_SOURCE =
+const src_vert =
 `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 layout(location=${loc_aColor}) in vec4 aColor;
@@ -14,8 +12,7 @@ void main() {
     vColor = aColor;
 }`;
 
-// Fragment shader program
-const FSHADER_SOURCE =
+const src_frag =
 `#version 300 es
 precision mediump float;
 in vec4 vColor;
@@ -27,7 +24,7 @@ void main() {
 function main() {
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext('webgl2');
-    initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+    initShaders(gl, src_vert, src_frag);
     
     const cube = initVertexBuffers(gl);
     const axes = initAxes(gl);

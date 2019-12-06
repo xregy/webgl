@@ -1,10 +1,36 @@
 "use strict";
 const loc_aPosition = 4;
 const loc_aColor = 8;
-function init_shader(gl, src_vert, src_frag)
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+out vec4 vColor;
+uniform	mat4 uMVP;
+void main()
 {
-	initShaders(gl, src_vert, src_frag);
-	return gl.program;
+	gl_Position = uMVP*aPosition;
+	vColor = aColor;
+}`;
+const src_frag = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main()
+{
+	fColor = vColor;
+}`;
+
+function init_shader(gl, src_vert, src_frag, uniform_vars)
+{
+    initShaders(gl, src_vert, src_frag);
+    let shader = {}
+    shader.h_prog = gl.program;
+    shader.loc_uniforms = {}
+    for(let uniform of uniform_vars)
+    {
+        shader.loc_uniforms[uniform] = gl.getUniformLocation(shader.h_prog, uniform);
+    }
+    return shader;
 }
 
 function main()
@@ -12,14 +38,11 @@ function main()
 	var canvas = document.getElementById('webgl');
 	var gl = canvas.getContext("webgl2");
 
-	let shader = {h_prog:init_shader(gl, 
-		document.getElementById("shader-vert").text, 
-		document.getElementById("shader-frag").text)};
-	var loc_MVP = gl.getUniformLocation(shader.h_prog, 'uMVP');
+	let shader = init_shader(gl, src_vert, src_frag, ["uMVP"]);
 	var MVP = new Matrix4();
 	shader.set_uniforms = function(gl)
 	{
-		gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
+		gl.uniformMatrix4fv(shader.loc_uniforms["uMVP"], false, MVP.elements);
 	}
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	

@@ -10,58 +10,6 @@
 		<canvas id="webgl" width="400" height="400">
 			Please use a browser that supports "canvas"
 		</canvas>
-		<script id="shader-vert-simple" type="x-shader/x-vertex">#version 300 es
-			layout(location=3) in vec4 aPosition;
-			layout(location=7) in vec4    aColor0;
-			layout(location=9) in vec4    aColor1;
-			out vec4    vColor0;
-			out vec4    vColor1;
-			uniform mat4    MVP;
-			void main()
-			{
-				gl_Position = MVP*aPosition;
-				vColor0 = aColor0;
-				vColor1 = aColor1;
-			}
-		</script>
-		<script id="shader-frag-simple" type="x-shader/x-fragment">#version 300 es
-//			#extension GL_EXT_draw_buffers : require 
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			in vec4    vColor0;
-			in vec4    vColor1;
-            layout(location=0) out vec4 fColor0;
-            layout(location=1) out vec4 fColor1;
-			void main()
-			{
-				fColor0 = vColor0;
-				fColor1 = vColor1;
-			}
-		</script>
-		<script id="shader-vert-tex" type="x-shader/x-vertex">#version 300 es
-			layout(location=2) in vec4 aPosition;
-			layout(location=5) in vec2 aTexcoord;
-			out vec2 vTexcoord;
-			uniform mat4    MVP;
-			void main()
-			{
-				gl_Position = MVP*aPosition;
-				vTexcoord = aTexcoord;
-			}
-		</script>
-		<script id="shader-frag-tex" type="x-shader/x-fragment">#version 300 es
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			in vec2 vTexcoord;
-            out vec4 fColor;
-			uniform sampler2D tex;
-			void main()
-			{
-				fColor = texture(tex, vTexcoord);
-			}
-		</script>
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>

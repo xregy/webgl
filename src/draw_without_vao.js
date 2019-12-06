@@ -30,16 +30,10 @@ void main()
 }
 `;
 
-function init_shader(gl, src_vert, src_frag, attrib_names)
+function init_shader(gl, src_vert, src_frag, loc_attribs)
 {
 	initShaders(gl, src_vert, src_frag);
-	let h_prog = gl.program;
-	let attribs = {};
-	for(let attrib of attrib_names)
-	{
-		attribs[attrib] = gl.getAttribLocation(h_prog, attrib);
-	}
-	return {h_prog:h_prog, attribs:attribs};
+	return {h_prog:gl.program, loc_attribs};
 }
 
 function main()
@@ -47,8 +41,10 @@ function main()
 	let canvas = document.getElementById('webgl');
 	let gl = canvas.getContext("webgl2");
 	
-	let shader_red = init_shader(gl, src_vert, src_frag_red, ['aPosition', 'aPointSize']);
-	let shader_blue = init_shader(gl, src_vert, src_frag_blue, ['aPosition', 'aPointSize']);
+	let shader_red = init_shader(gl, src_vert, src_frag_red, 
+        {aPosition:loc_aPosition, aPointSize:loc_aPointSize});
+	let shader_blue = init_shader(gl, src_vert, src_frag_blue, 
+        {aPosition:loc_aPosition, aPointSize:loc_aPointSize});
 	let obj_red = init_triangle_red(gl);
 	let obj_blue = init_triangle_blue(gl);
 
@@ -67,9 +63,9 @@ function render_object(gl, shader, object)
 	{
 		let attrib = object.attribs[attrib_name];
 		gl.bindBuffer(gl.ARRAY_BUFFER, attrib.buffer);
-		gl.vertexAttribPointer(shader.attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
+		gl.vertexAttribPointer(shader.loc_attribs[attrib_name], attrib.size, attrib.type, attrib.normalized, attrib.stride, attrib.offset);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		gl.enableVertexAttribArray(shader.attribs[attrib_name]);
+		gl.enableVertexAttribArray(shader.loc_attribs[attrib_name]);
 	}
 	if(object.drawcall == 'drawElements')
 	{
@@ -83,7 +79,7 @@ function render_object(gl, shader, object)
 	
 	for(let attrib_name in object.attribs)
 	{
-		gl.disableVertexAttribArray(shader.attribs[attrib_name]);
+		gl.disableVertexAttribArray(shader.loc_attribs[attrib_name]);
 	}
 	
 	gl.useProgram(null);

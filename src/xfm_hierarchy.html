@@ -29,26 +29,6 @@
 				</td>
 			</tr>
 		
-		<script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-			layout(location=3) in vec4 aPosition;
-			uniform mat4	MVP;
-			void main()
-			{
-				gl_Position = MVP*aPosition;
-			}
-		</script>
-		<script id="shader-frag" type="x-shader/x-fragment">#version 300 es
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-			uniform vec3 color;
-            out vec4 fColor;
-			void main()
-			{
-                fColor = vec4(color,1);
-			}
-		</script>
-
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>

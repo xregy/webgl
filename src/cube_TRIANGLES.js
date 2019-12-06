@@ -1,14 +1,36 @@
+"use strict";
+const loc_aPosition = 3;
+const loc_aColor = 8;
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+uniform mat4 uMVP;
+out vec4 vColor;
+void main()
+{
+    gl_Position = uMVP * aPosition;
+    vColor = aColor;
+}`;
+const src_frag = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main()
+{
+    fColor = vColor;
+}`;
+
 function main() {
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
-    initShaders(gl, document.getElementById("shader-vert").text, document.getElementById("shader-frag").text);
+    initShaders(gl, src_vert, src_frag);
 
     let vao = initVertexBuffers(gl);
     
     gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0,0,0,1);
     
-    let loc_MVP = gl.getUniformLocation(gl.program, 'u_MVP');
+    let loc_MVP = gl.getUniformLocation(gl.program, 'uMVP');
     
     let MVP = new Matrix4();
     MVP.setPerspective(30, 1, 1, 100);
@@ -95,17 +117,15 @@ function initVertexBuffers(gl) {
     
     let FSIZE = verticesColors.BYTES_PER_ELEMENT;
 
-    let a_Position = 2;
-    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE * 6, 0);
-    gl.enableVertexAttribArray(a_Position);
+    gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, FSIZE * 6, 0);
+    gl.enableVertexAttribArray(loc_aPosition);
 
-    let a_Color = 8;
-    gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, FSIZE * 6, FSIZE * 3);
-    gl.enableVertexAttribArray(a_Color);
+    gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, FSIZE * 6, FSIZE * 3);
+    gl.enableVertexAttribArray(loc_aColor);
 
     gl.bindVertexArray(null); 
-    gl.disableVertexAttribArray(a_Position);
-    gl.disableVertexAttribArray(a_Color);
+    gl.disableVertexAttribArray(loc_aPosition);
+    gl.disableVertexAttribArray(loc_aColor);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
     return vao;

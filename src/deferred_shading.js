@@ -2,6 +2,7 @@
 const loc_aPosition = 2;
 const loc_aNormal = 8;
 const loc_aTexCoord = 9;
+const numLights = 0;
 const src_vert_preproc = `#version 300 es
 layout(location=${loc_aPosition}) in vec4 aPosition;
 layout(location=${loc_aNormal}) in vec4 aNormal;
