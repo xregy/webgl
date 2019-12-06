@@ -1,34 +1,117 @@
 "use strict";
 
-let g_last = Date.now();
-let ANGLE_STEP_LIGHT = 30.0;
-let ANGLE_STEP_MESH = 30.0;
-
 const loc_aPosition = 3;
 const loc_aTexCoord = 8;
+const loc_aNormal = 6;
 
-// Vertex shader program
-let VSHADER_SOURCE =
-`#version 300 es
-    layout(location=${loc_aPosition}) in vec4 aPosition;
-    layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
-    out vec2 vTexCoord;
-    void main() {
-        gl_Position = aPosition;
-        vTexCoord = aTexCoord;
-    }
-`;
+const src_vert_shading = `#version 300 es
+layout(location=${loc_aPosition}) in vec4	aPosition;
+layout(location=${loc_aNormal}) in vec3	aNormal;
+layout(location=${loc_aTexCoord}) in vec2	aTexCoord;
+out vec2	vTexCoord;
+uniform mat4	MVP;
+uniform mat4	MV;
+uniform mat4	matNormal;
+out vec3	vNormal;
+out vec4	vPosEye;
+void main()
+{
+	vPosEye = MV*aPosition;
+	vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
+	gl_Position = MVP*aPosition;
+	vTexCoord = aTexCoord;
+}`;
+const src_frag_shading = `#version 300 es
+precision mediump float;
+uniform sampler2D tex_color;
+uniform highp mat4	matNormal;
+uniform sampler2D tex_normal;
+uniform bool	use_normal_map;
+uniform bool	use_color_map;
+in vec4 vPosEye;
+in vec3	vNormal;
+in vec2	vTexCoord;
+out vec4 fColor;
+struct TMaterial
+{
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+	vec3	emission;
+	float	shininess;
+};
+struct TLight
+{
+	vec4	position;
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+	bool	enabled;
+};
+uniform TMaterial	material;
+uniform TLight		light[2];
+void main()
+{
+	vec3	n;
+	if(use_normal_map)
+		n = normalize((matNormal*vec4(texture(tex_normal, vTexCoord).xyz - 0.5,0)).xyz);
+	else
+		n = normalize(vNormal);
+	vec3	l;
+	vec3	v = normalize(-vPosEye.xyz);
+	TMaterial m;
+	if(use_color_map)
+	{
+		m.diffuse = texture(tex_color, vTexCoord).rgb;
+		m.ambient = material.diffuse;
+		m.specular = vec3(1,1,1);
+		m.shininess = 128.0;
+	}
+	else
+	{
+		m = material;
+	}
+	fColor = vec4(0.0);
+	for(int i=0 ; i<2 ; i++)
+	{
+		if(light[i].enabled)
+		{
+			if(light[i].position.w == 1.0)
+				l = normalize((light[i].position - vPosEye).xyz);
+			else
+				l = normalize((light[i].position).xyz);
+			vec3	r = reflect(-l, n);
+			float	l_dot_n = max(dot(l, n), 0.0);
+			vec3	ambient = light[i].ambient * m.ambient;
+			vec3	diffuse = light[i].diffuse * m.diffuse * l_dot_n;
+			vec3	specular = vec3(0.0);
+			if(l_dot_n > 0.0)
+			{
+				specular = light[i].specular * m.specular * pow(max(dot(r, v), 0.0), m.shininess);
+			}
+			fColor += vec4(ambient + diffuse + specular, 1);
+		}
+	}
+	fColor.w = 1.0;
+}`;
 
-// Fragment shader program
-let FSHADER_SOURCE = `#version 300 es
+const src_vert_quad = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+out vec2 vTexCoord;
+void main() {
+    gl_Position = aPosition;
+    vTexCoord = aTexCoord;
+}`;
+
+const src_frag_quad = `#version 300 es
 precision mediump float;
 uniform sampler2D uSampler;
 in vec2 vTexCoord;
 out vec4 fColor;
 void main() {
     fColor = texture(uSampler, vTexCoord);
-}
-`;
+}`;
 
 function main()
 {
@@ -45,16 +128,15 @@ function main()
 //	P.setPerspective(60, 1, 1, 100); 
 	P.setOrtho(-15, 15, -15, 15, 1, 100);
 
+    let uniform_vars = ["MVP", "MV", "matNormal", "tex_normal", 
+						"use_normal_map", "use_color_map"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[1]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
-	let shader = new Shader(gl, 
-			document.getElementById("vert-Phong-Phong").text,
-			document.getElementById("frag-Phong-Phong").text,
-			{aPosition:2, aNormal:4, aTexCoord:6});
+	let shader = new Shader(gl, src_vert_shading, src_frag_shading, uniform_vars);
 
-    let shader_quad = new Shader(gl, 
-            VSHADER_SOURCE, FSHADER_SOURCE);
-
-    shader_quad.loc_uSampler = gl.getUniformLocation(shader_quad.h_prog, 'uSampler');
+    let shader_quad = new Shader(gl, src_vert_quad, src_frag_quad, ["uSampler"]);
 
 	let lights = 
 	[
@@ -79,7 +161,6 @@ function main()
 	];
 
     let quad = init_quad(gl);
-
 
 	let mesh = new Mesh(gl);
 
@@ -146,7 +227,7 @@ function main()
 			{
 				if(obj.type == "Mesh")
 				{
-					mesh.init_from_THREE_geometry(gl, obj.geometry);
+					mesh.init_from_THREE_geometry(gl, obj.geometry, loc_aPosition, loc_aNormal, loc_aTexCoord);
 					tex_color = new Texture(gl, obj.material.map.image, false);
 					tex_normal = new Texture(gl, obj.material.normalMap.image, false);
 				}
@@ -196,7 +277,6 @@ function main()
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
         gl.bindVertexArray(null);
 
-
 		requestAnimationFrame(tick, canvas);
 	};
 
@@ -224,64 +304,14 @@ function init_quad(gl)
     
     let FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
 
-    let a_Position = loc_aPosition;
-    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
-    gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, FSIZE * 4, 0);
+    gl.enableVertexAttribArray(loc_aPosition);  // Enable the assignment of the buffer object
     
-    let a_TexCoord = loc_aTexCoord;
-    gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
-    gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
+    gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+    gl.enableVertexAttribArray(loc_aTexCoord);  // Enable the assignment of the buffer object
 
     gl.bindVertexArray(null);
     return vao;
-}
-
-function length2(v)
-{
-	return Math.sqrt(v[0]*v[0] + v[1]*v[1]);
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function project(p_obj, MVP, viewport)
-{
-	let	tmp = MVP.multiplyVector4(new Vector4([p_obj[0], p_obj[1], p_obj[2], 1]));
-
-	for(let i in [0,1,2])	tmp.elements[i] /= tmp.elements[3];
-
-//	for(let i in [0,1]) 	// --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-	{
-		tmp.elements[i] = (0.5*tmp.elements[i] + 0.5) * viewport[i+2] + viewport[i];
-	}
-
-	return tmp.elements;
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function unproject(p_win, MVP, viewport)
-{
-	let	MVP_inv = new Matrix4();
-	MVP_inv.setInverseOf(MVP);
-
-	let	tmp = new Vector4([p_win[0], p_win[1], p_win[2], 1.0]);
-
-//	for(let i in [0,1]) --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-		tmp.elements[i] = 2.0*(tmp.elements[i] - viewport[i])/viewport[i+2] - 1.0;
-
-	let p_obj = MVP_inv.multiplyVector4(tmp);
-
-	for(let i in [0,1,2]) p_obj.elements[i] /= p_obj.elements[3];
-
-	return p_obj.elements;
-}
-
-function unproject_vector(vec_win, MVP, viewport)
-{
-	let	org_win = project([0,0,0], MVP, viewport);
-	let	vec = unproject([org_win[0]+vec_win[0], org_win[1]+vec_win[1], org_win[2]+vec_win[2]],
-						MVP, viewport);
-	return vec;
 }
 
 

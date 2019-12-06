@@ -1,5 +1,71 @@
 "use strict";
 
+const loc_aPosition = 2;
+const loc_aNormal = 1;
+
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4	aPosition;
+layout(location=${loc_aNormal}) in vec3	aNormal;
+uniform mat4	MVP;
+uniform mat4	MV;
+uniform mat4	matNormal;
+struct TMaterial
+{
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+	vec3	emission;
+	float	shininess;
+};
+struct TLight
+{
+	vec4	position;
+	vec3	ambient;
+	vec3	diffuse;
+	vec3	specular;
+	bool	enabled;
+};
+uniform TMaterial	material;
+uniform TLight		light[2];
+out vec3		vColor;
+void main()
+{
+	vec3	n = normalize(mat3(matNormal)*aNormal);
+	vec4	vPosEye = MV*aPosition;
+	vec3	l;
+	vec3	v = normalize(-vPosEye.xyz);
+	vColor = vec3(0.0);
+	for(int i=0 ; i<2 ; i++)
+	{
+		if(light[i].enabled)
+		{
+			if(light[i].position.w == 1.0)
+				l = normalize((light[i].position - vPosEye).xyz);
+			else
+				l = normalize((light[i].position).xyz);
+			vec3	h = normalize(l + v);
+			float	l_dot_n = max(dot(l, n), 0.0);
+			vec3	ambient = light[i].ambient * material.ambient;
+			vec3	diffuse = light[i].diffuse * material.diffuse * l_dot_n;
+			vec3	specular = vec3(0.0);
+			if(l_dot_n > 0.0)
+			{
+				specular = light[i].specular * material.specular * pow(max(dot(h, n), 0.0), material.shininess);
+			}
+			vColor += ambient + diffuse + specular;
+		}
+	}
+	gl_Position = MVP*aPosition;
+}`;
+const src_frag = `#version 300 es
+precision mediump float;
+in vec3	vColor;
+out vec4 fColor;
+void main()
+{
+	fColor = vec4(vColor, 1);
+}`;
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -18,10 +84,7 @@ function main()
     Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
     Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
 
-	let shader = new Shader(gl, 
-			document.getElementById("vert-Blinn-Gouraud").text,
-			document.getElementById("frag-Blinn-Gouraud").text,
-            uniform_vars);
+	let shader = new Shader(gl, src_vert, src_frag, uniform_vars);
 
 	let light = new Light
 	(
@@ -36,9 +99,10 @@ function main()
 
 	// initializes the meshes
 	let id = 0;
-	let cube = create_mesh_cube(gl);
-	let ball = create_mesh_sphere(gl, 20);
-	let monkey = new Mesh(gl);			monkey.init_from_json_js(gl, __js_monkey_smooth);
+	let cube = create_mesh_cube(gl, loc_aPosition, loc_aNormal);
+	let ball = create_mesh_sphere(gl, 20, loc_aPosition, loc_aNormal);
+	let monkey = new Mesh(gl);			
+	monkey.init_from_json_js(gl, __js_monkey_smooth, loc_aPosition, loc_aNormal);
 
 	monkey.id = ++id;
 	cube.id = ++id;
@@ -111,53 +175,4 @@ function main()
 	};
 	tick();
 }
-
-function length2(v)
-{
-	return Math.sqrt(v[0]*v[0] + v[1]*v[1]);
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function project(p_obj, MVP, viewport)
-{
-	let	tmp = MVP.multiplyVector4(new Vector4([p_obj[0], p_obj[1], p_obj[2], 1]));
-
-	for(let i in [0,1,2])	tmp.elements[i] /= tmp.elements[3];
-
-//	for(let i in [0,1]) 	// --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-	{
-		tmp.elements[i] = (0.5*tmp.elements[i] + 0.5) * viewport[i+2] + viewport[i];
-	}
-
-	return tmp.elements;
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function unproject(p_win, MVP, viewport)
-{
-	let	MVP_inv = new Matrix4();
-	MVP_inv.setInverseOf(MVP);
-
-	let	tmp = new Vector4([p_win[0], p_win[1], p_win[2], 1.0]);
-
-//	for(let i in [0,1]) --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-		tmp.elements[i] = 2.0*(tmp.elements[i] - viewport[i])/viewport[i+2] - 1.0;
-
-	let p_obj = MVP_inv.multiplyVector4(tmp);
-
-	for(let i in [0,1,2]) p_obj.elements[i] /= p_obj.elements[3];
-
-	return p_obj.elements;
-}
-
-function unproject_vector(vec_win, MVP, viewport)
-{
-	let	org_win = project([0,0,0], MVP, viewport);
-	let	vec = unproject([org_win[0]+vec_win[0], org_win[1]+vec_win[1], org_win[2]+vec_win[2]],
-						MVP, viewport);
-	return vec;
-}
-
 

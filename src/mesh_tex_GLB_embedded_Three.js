@@ -1,8 +1,34 @@
 "use strict";
 
 let g_last = Date.now();
-let ANGLE_STEP_LIGHT = 30.0;
-let ANGLE_STEP_MESH = 30.0;
+const ANGLE_STEP_LIGHT = 30.0;
+const ANGLE_STEP_MESH = 30.0;
+
+const loc_aPosition = 3;
+const loc_aTexCoord = 8;
+
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4	aPosition;
+layout(location=${loc_aTexCoord}) in vec2	aTexCoord;
+out vec2	vTexCoord;
+uniform mat4	MVP;
+void main()
+{
+	gl_Position = MVP*aPosition;
+	vTexCoord = aTexCoord;
+}`;
+const src_frag = `#version 300 es
+#ifdef GL_ES
+precision mediump float;
+#endif
+uniform sampler2D tex;
+in vec2	vTexCoord;
+out vec4 fColor;
+void main()
+{
+	fColor = texture(tex, vTexCoord);
+}`;
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -18,10 +44,9 @@ function main()
 //	P.setPerspective(60, 1, 1, 100); 
 	P.setOrtho(-15, 15, -15, 15, 1, 100);
 
-	let shader = new Shader(gl, 
-			document.getElementById("vert-tex").text,
-			document.getElementById("frag-tex").text,
-			{aPosition:3, aTexCoord:9});
+    let uniform_vars = ["MVP", "tex"];
+
+	let shader = new Shader(gl, src_vert, src_frag, uniform_vars);
 
 	let mesh = new Mesh(gl);
 
@@ -91,7 +116,7 @@ function main()
 			{
 				if(obj.type == "Mesh")
 				{
-					mesh.init_from_THREE_geometry(gl, obj.geometry);
+					mesh.init_from_THREE_geometry(gl, obj.geometry, loc_aPosition, null, loc_aTexCoord);
 					tex = new Texture(gl, obj.material.map.image, false);
 				}
 			}
@@ -119,54 +144,6 @@ function main()
 	};
 
 
-}
-
-function length2(v)
-{
-	return Math.sqrt(v[0]*v[0] + v[1]*v[1]);
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function project(p_obj, MVP, viewport)
-{
-	let	tmp = MVP.multiplyVector4(new Vector4([p_obj[0], p_obj[1], p_obj[2], 1]));
-
-	for(let i in [0,1,2])	tmp.elements[i] /= tmp.elements[3];
-
-//	for(let i in [0,1]) 	// --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-	{
-		tmp.elements[i] = (0.5*tmp.elements[i] + 0.5) * viewport[i+2] + viewport[i];
-	}
-
-	return tmp.elements;
-}
-
-// https://github.com/g-truc/glm/blob/master/glm/ext/matrix_projection.inl
-function unproject(p_win, MVP, viewport)
-{
-	let	MVP_inv = new Matrix4();
-	MVP_inv.setInverseOf(MVP);
-
-	let	tmp = new Vector4([p_win[0], p_win[1], p_win[2], 1.0]);
-
-//	for(let i in [0,1]) --> not working!!!???
-	for(let i=0 ; i<2 ; i++)
-		tmp.elements[i] = 2.0*(tmp.elements[i] - viewport[i])/viewport[i+2] - 1.0;
-
-	let p_obj = MVP_inv.multiplyVector4(tmp);
-
-	for(let i in [0,1,2]) p_obj.elements[i] /= p_obj.elements[3];
-
-	return p_obj.elements;
-}
-
-function unproject_vector(vec_win, MVP, viewport)
-{
-	let	org_win = project([0,0,0], MVP, viewport);
-	let	vec = unproject([org_win[0]+vec_win[0], org_win[1]+vec_win[1], org_win[2]+vec_win[2]],
-						MVP, viewport);
-	return vec;
 }
 
 

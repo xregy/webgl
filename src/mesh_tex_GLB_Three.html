@@ -11,29 +11,6 @@
 		</canvas>
 		<p id="output">
 		</p>
-		<script id="vert-tex" type="x-shader/x-vertex">#version 300 es
-			layout(location=0) in vec4	aPosition;
-			layout(location=2) in vec2	aTexCoord;
-			out vec2	vTexCoord;
-			uniform mat4	MVP;
-			void main()
-			{
-				gl_Position = MVP*aPosition;
-				vTexCoord = aTexCoord;
-			}
-		</script>
-		<script id="frag-tex" type="x-shader/x-fragment">#version 300 es
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			uniform sampler2D tex;
-			in vec2	vTexCoord;
-            out vec4 fColor;
-			void main()
-			{
-				fColor = texture(tex, vTexCoord);
-			}
-		</script>
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
 		<script src="../lib/cuon-utils.js"></script>
@@ -45,6 +22,7 @@
 		<script src="class_mesh.js"></script>
 		<script src="class_axes.js"></script>
 		<script src="class_texture.js"></script>
+		<script src="utils.js"></script>
 		<script src="mesh_tex_GLB_Three.js"></script>
 	</body>
 </html>

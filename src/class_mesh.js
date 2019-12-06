@@ -56,12 +56,14 @@ class Mesh
         let position = geom.attributes.position;
         let normal = geom.attributes.normal;
         
-        let buf_normal = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
-        gl.bufferData(gl.ARRAY_BUFFER, normal.array, gl.STATIC_DRAW);
-        
-        gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(loc_aNormal);
+		if(loc_aNormal)
+		{
+	        let buf_normal = gl.createBuffer();
+	        gl.bindBuffer(gl.ARRAY_BUFFER, buf_normal);
+	        gl.bufferData(gl.ARRAY_BUFFER, normal.array, gl.STATIC_DRAW);
+        	gl.vertexAttribPointer(loc_aNormal, 3, gl.FLOAT, false, 0, 0);
+        	gl.enableVertexAttribArray(loc_aNormal);
+		}
         
         let buf_position = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, buf_position);
@@ -70,7 +72,7 @@ class Mesh
         gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(loc_aPosition);
         
-        if(geom.attributes.uv != undefined)
+        if(geom.attributes.uv != undefined && loc_aTexCoord)
         {
             let buf_texcoord = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buf_texcoord);

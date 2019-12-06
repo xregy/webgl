@@ -1,5 +1,9 @@
 "use strict";
 
+const loc_aPosition = 2;
+const loc_aNormal = 8;
+const numLights = 1;
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -16,9 +20,11 @@ function main()
 
 	let axes = new Axes(gl);
 
-	let shader = new Shader(gl, 
-			document.getElementById("vert-Blinn-Gouraud").text,
-			document.getElementById("frag-Blinn-Gouraud").text);
+    let uniform_vars = ["MVP", "MV", "matNormal"];
+    Array.prototype.push.apply(uniform_vars, Light.generate_uniform_names("light[0]"));
+    Array.prototype.push.apply(uniform_vars, Material.generate_uniform_names("material"));
+
+	let shader = new Shader(gl, src_vert_Phong_Gouraud, src_frag_Phong_Gouraud, uniform_vars);
 
 	let light = new Light
 	(
@@ -47,7 +53,8 @@ function main()
 			{
 				if(obj.type == "Mesh")
 				{
-					monkey.init_from_THREE_geometry(gl, obj.geometry);
+					monkey.init_from_THREE_geometry(gl, obj.geometry,
+						loc_aPosition, loc_aNormal);
 				}
 			}
 			let tick = function() {   // start drawing
