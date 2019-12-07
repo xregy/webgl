@@ -14,46 +14,43 @@
         <script src="../lib/webgl-debug.js"></script>
         <script src="../lib/cuon-utils.js"></script>
         <script src="../lib/cuon-matrix.js"></script>
-        <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-            layout(location=3) in vec4 a_Position;
-            layout(location=8) in vec2 a_TexCoord;
+        <script type="text/javascript">
+        const loc_aPosition=3;
+        const loc_aTexCoord = 9;
+        const src_vert = `#version 300 es
+            layout(location=${loc_aPosition}) in vec4 a_Position;
+            layout(location=${loc_aTexCoord}) in vec2 a_TexCoord;
             out vec2 v_TexCoord;
             void main()
             {
                 gl_Position = a_Position;
                 v_TexCoord = a_TexCoord;
-            }
-        </script>
-        <script id="shader-frag" type="x-shader/x-fragment">#version 300 es
-            #ifdef GL_ES
+            }`;
+        const src_frag = `#version 300 es
             precision mediump float;
-            #endif
-            uniform sampler2D u_Sampler;
+            uniform sampler2D uSampler;
             in vec2 v_TexCoord;
             out vec4 f_Color;
             void main()
             {
-                f_Color = texture(u_Sampler, v_TexCoord);
-            }
-        </script>
-        <script type="text/javascript">
+                f_Color = texture(uSampler, v_TexCoord);
+            }`;
             function main()
             {
-                  var canvas = document.getElementById('webgl');
-                  var gl = canvas.getContext('webgl2');
-                  initShaders(gl, document.getElementById("shader-vert").text,
-                                    document.getElementById("shader-frag").text);
-                  initVertexBuffers(gl);
-                  gl.clearColor(0.5, 0.5, 0.5, 1.0);
-                  initTextures(gl);
-                  refresh(gl);
-                }
+                var canvas = document.getElementById('webgl');
+                var gl = canvas.getContext('webgl2');
+                initShaders(gl, src_vert, src_frag);
+                initVertexBuffers(gl);
+                gl.clearColor(0.5, 0.5, 0.5, 1.0);
+                initTextures(gl);
+                refresh(gl);
+            }
                 
-                function refresh(gl)
-                {
-                	gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
-                	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
-                }
+            function refresh(gl)
+            {
+                gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); // Draw the rectangle
+            }
             
             function initVertexBuffers(gl)
             {
@@ -70,13 +67,10 @@
                 
                 var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
                 
-                var a_Position = 3;
-                gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
-                gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
-                
-                var a_TexCoord = 8;
-                gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
-                gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
+                gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, FSIZE * 4, 0);
+                gl.enableVertexAttribArray(loc_aPosition);  // Enable the assignment of the buffer object
+                gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+                gl.enableVertexAttribArray(loc_aTexCoord);  // Enable the assignment of the buffer object
                 
                 return;
             }
@@ -91,8 +85,7 @@
                 gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 2, 2, 0, gl.RGB, gl.UNSIGNED_BYTE, 
                     new Uint8Array([255,0,0,   0,255,0,  99,99,    0,0,255,   255,0,255, 99,99]));
-                var u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
-                gl.uniform1i(u_Sampler, 0);
+                gl.uniform1i(gl.getUniformLocation(gl.program, 'uSampler'), 0);
             }
         </script>
     </body>

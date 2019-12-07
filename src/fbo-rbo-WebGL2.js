@@ -1,9 +1,37 @@
 "use strict";
-function init_shader(gl, src_vert, src_frag)
+
+const loc_aPosition = 2;
+const loc_aColor = 4;
+const src_vert = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+out vec4 vColor;
+uniform mat4    MVP;
+void main()
+{
+	gl_Position = MVP*aPosition;
+	vColor = aColor;
+}`;
+const src_frag = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main()
+{
+	fColor = vColor;
+}`;
+
+function init_shader(gl, src_vert, src_frag, uniform_vars)
 {
 	initShaders(gl, src_vert, src_frag);
-	let h_prog = gl.program;
-	return h_prog;
+    let shader = {}
+    shader.h_prog = gl.program;
+    shader.loc_uniforms = {};
+    for(let uniform of uniform_vars)
+    {
+        shader.loc_uniforms[uniform] = gl.getUniformLocation(shader.h_prog, uniform);
+    }
+	return shader;
 }
 
 
@@ -23,12 +51,10 @@ function main()
 	let MVP = new Matrix4();
 	MVP.setOrtho(-1,1,-1,1,-1,1);
 
-	let shader_simple = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-simple").text,
-		document.getElementById("shader-frag-simple").text)};
+	let shader_simple = init_shader(gl, src_vert, src_frag, ["MVP"]);
 
 	shader_simple.set_uniforms = function(gl) {
-		gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
+		gl.uniformMatrix4fv(shader_simple.loc_uniforms["MVP"], false, MVP.elements);
 	}
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
@@ -98,11 +124,9 @@ function init_triangles(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 3;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aColor = 7;
     gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, SZ*6, SZ*3);
     gl.enableVertexAttribArray(loc_aColor);
 

@@ -1,12 +1,57 @@
 "use strict";
 
-function init_shader(gl, src_vert, src_frag)
+const loc_aPosition = 3;
+const loc_aColor = 8;
+const loc_aTexCoord = 9;
+const src_vert_simple = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aColor}) in vec4 aColor;
+out vec4 vColor;
+uniform mat4    MVP;
+void main()
+{
+    gl_Position = MVP*aPosition;
+    vColor = aColor;
+}`;
+const src_frag_simple = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 fColor;
+void main()
+{
+    fColor = vColor;
+}`;
+const src_vert_tex = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+out vec2 vTexCoord;
+void main()
+{
+    gl_Position = aPosition;
+    vTexCoord = aTexCoord;
+}`;
+const src_frag_tex = `#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+out vec4 fColor;
+uniform sampler2D tex;
+void main()
+{
+    fColor = texture(tex, vTexCoord);
+}`;
+
+function init_shader(gl, src_vert, src_frag, uniform_vars)
 {
 	initShaders(gl, src_vert, src_frag);
-	let h_prog = gl.program;
-	return h_prog;
+    let shader = {};
+	shader.h_prog = gl.program;
+    shader.loc_uniforms = {};
+    for(let uniform of  uniform_vars)
+    {
+        shader.loc_uniforms[uniform] = gl.getUniformLocation(shader.h_prog, uniform);
+    }
+	return shader;
 }
-
 
 function main()
 {
@@ -25,19 +70,15 @@ function main()
 	let MVP = new Matrix4();
 	MVP.setOrtho(-1,1,-1,1,-1,1);
 	
-	let shader_simple = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-simple").text,
-		document.getElementById("shader-frag-simple").text)};
+	let shader_simple = init_shader(gl, src_vert_simple, src_frag_simple, ["MVP"]);
 	
-	let shader_tex = {h_prog:init_shader(gl,
-		document.getElementById("shader-vert-tex").text,
-		document.getElementById("shader-frag-tex").text)};
+	let shader_tex = init_shader(gl, src_vert_tex, src_frag_tex, ["tex"]);
 	
 	shader_simple.set_uniforms = function(gl) {
-			gl.uniformMatrix4fv(gl.getUniformLocation(this.h_prog, "MVP"), false, MVP.elements);
+			gl.uniformMatrix4fv(shader_simple.loc_uniforms["MVP"], false, MVP.elements);
 	    }
 	shader_tex.set_uniforms = function(gl) {
-			gl.uniform1i(gl.getUniformLocation(this.h_prog, "tex"), fbo.tex);
+			gl.uniform1i(shader_tex.loc_uniforms["tex"], fbo.tex);
 	    }
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);	// from now on, we render to the FBO
@@ -95,11 +136,9 @@ function init_triangles(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 3;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aColor = 7;
     gl.vertexAttribPointer(loc_aColor, 3, gl.FLOAT, false, SZ*6, SZ*3);
     gl.enableVertexAttribArray(loc_aColor);
 
@@ -127,11 +166,9 @@ function init_quad(gl)
 
 	let SZ = verts.BYTES_PER_ELEMENT;
 
-    let loc_aPosition = 2;
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*4, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
-    let loc_aTexCoord = 5;
     gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, SZ*4, SZ*2);
     gl.enableVertexAttribArray(loc_aTexCoord);
 

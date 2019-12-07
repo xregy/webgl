@@ -1,4 +1,50 @@
 "use strict";
+
+const loc_aPosition = 2;
+const loc_aNormal = 4;
+const src_vert_room = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+out vec4 vPosition;
+uniform mat4 MVP;
+void main()
+{
+    gl_Position = MVP * aPosition;
+    vPosition = aPosition;
+}`;
+const src_frag_room = `#version 300 es
+precision mediump float;
+uniform samplerCube sampler_cubemap;
+in vec4 vPosition;
+out vec4 fColor;
+void main()
+{
+    fColor = texture(sampler_cubemap, vPosition.xyz);
+}`;
+const src_vert_cubemap = `#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+layout(location=${loc_aNormal}) in vec3 aNormal;
+out vec4 vPosition;
+out vec3 vNormal;
+uniform mat4 MVP;
+uniform mat4 MV;
+uniform mat4 matNormal;
+void main()
+{
+    gl_Position = MVP * aPosition;
+    vPosition = MV*aPosition;
+    vNormal = normalize(mat3(matNormal)*aNormal);
+}`;
+const src_frag_cubemap = `#version 300 es
+precision mediump float;
+uniform samplerCube sampler_cubemap;
+in vec4 vPosition;
+in vec3 vNormal;
+out vec4 fColor;
+void main()
+{
+    fColor = texture(sampler_cubemap, reflect(vPosition.xyz, vNormal));
+}`;
+
 function main()
 {
 	let canvas = document.getElementById('webgl');
@@ -8,19 +54,17 @@ function main()
 	gl.enable(gl.CULL_FACE);
 	gl.enable(gl.DEPTH_TEST);
 
-	let shader_room = new Shader(gl,
-		document.getElementById("vert-room").text,
-		document.getElementById("frag-room").text);
+	let shader_room = new Shader(gl, src_vert_room, src_frag_room,  
+                        ["MVP", "sampler_cubemap"]);
 
-	let shader_cubemap = new Shader(gl,
-		document.getElementById("vert-cubemap").text,
-		document.getElementById("frag-cubemap").text);
+	let shader_cubemap = new Shader(gl, src_vert_cubemap, src_frag_cubemap, 
+        ["MVP", "MV", "matNormal", "sampler_cubemap"]);
 
 	let room = create_mesh_room_cubemap(gl);
 	room.M.setScale(2.0, 2.0, 2.0);
 
 	let monkey = new Mesh(gl);
-	monkey.init_from_json_js(gl, __js_monkey_sub2_smooth);
+	monkey.init_from_json_js(gl, __js_monkey_sub2_smooth, loc_aPosition, loc_aNormal);
 
 	gl.clearColor(0.5, 0.5, 0.5, 1.0);
 
@@ -34,9 +78,9 @@ function main()
 	gl.activeTexture(gl.TEXTURE0 + TEX_UNIT);
 
 	gl.useProgram(shader_room.h_prog);
-	gl.uniform1i(gl.getUniformLocation(shader_room.h_prog, "sampler_cubemap"), TEX_UNIT);
+	gl.uniform1i(shader_room.loc_uniforms["sampler_cubemap"], TEX_UNIT);
 	gl.useProgram(shader_cubemap.h_prog);
-	gl.uniform1i(gl.getUniformLocation(shader_cubemap.h_prog, "sampler_cubemap"), TEX_UNIT);
+	gl.uniform1i(shader_cubemap.loc_uniforms["sampler_cubemap"], TEX_UNIT);
 
     const faces = ['posx', 'negx', 'posy', 'negy', 'posz', 'negz'];
     let img_cubemap = {};
@@ -54,7 +98,8 @@ function main()
         });
     }
     
-    Promise.all(faces.map(face => load_image(img_cubemap[face], `../resources/SwedishRoyalCastle/${face}.jpg`))
+    Promise.all(faces.map(face => load_image(img_cubemap[face], 
+                        `../resources/SwedishRoyalCastle/${face}.jpg`))
     ).then(
         function(images) {
             tex_cubemap = new TextureCubemap(gl, 
@@ -92,7 +137,6 @@ function main()
         requestAnimationFrame(tick, canvas); // Request that the browser calls tick
     };
 }
-
 
 function create_mesh_room_cubemap(gl)
 {
@@ -160,7 +204,6 @@ function create_mesh_room_cubemap(gl)
 	gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 	gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-    let loc_aPosition = 7;
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
  

@@ -20,56 +20,7 @@
 		<p id="output">
 		</p>
 
-		<script id="vert-room" type="x-shader/x-vertex">#version 300 es
-			layout(location=7) in vec4 aPosition;
-			out vec4 vPosition;
-			uniform mat4 MVP;
-			void main()
-			{
-				gl_Position = MVP * aPosition;
-				vPosition = aPosition;
-			}
-		</script>
-		<script id="frag-room" type="x-shader/x-fragment">#version 300 es
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			uniform samplerCube sampler_cubemap;
-			in vec4 vPosition;
-            out vec4 fColor;
-			void main()
-			{
-				fColor = texture(sampler_cubemap, vPosition.xyz);
-			}
-		</script>
-		<script id="vert-cubemap" type="x-shader/x-vertex">#version 300 es
-			layout(location=0) in vec4 aPosition;
-			layout(location=1) in vec3 aNormal;
-			out vec4 vPosition;
-			out vec3 vNormal;
-			uniform mat4 MVP;
-			uniform mat4 MV;
-			uniform mat4 matNormal;
-			void main()
-			{
-				gl_Position = MVP * aPosition;
-				vPosition = MV*aPosition;
-				vNormal = normalize(mat3(matNormal)*aNormal);
-			}
-		</script>
-		<script id="frag-cubemap" type="x-shader/x-fragment">#version 300 es
-			#ifdef GL_ES
-			precision mediump float;
-			#endif
-			uniform samplerCube sampler_cubemap;
-			in vec4 vPosition;
-			in vec3 vNormal;
-            out vec4 fColor;
-			void main()
-			{
-				fColor = texture(sampler_cubemap, reflect(vPosition.xyz, vNormal));
-			}
-		</script>
+
 
 		<script src="../lib/webgl-utils.js"></script>
 		<script src="../lib/webgl-debug.js"></script>
@@ -77,9 +28,9 @@
 		<script src="../lib/cuon-matrix.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
 		
+		<script src="tex-cubemap.js"></script>
 		<script src="class_mesh.js"></script>
 		<script src="class_shader.js"></script>
 		<script src="class_texture.js"></script>
-		<script src="tex-cubemap.js"></script>
 	</body>
 </html>

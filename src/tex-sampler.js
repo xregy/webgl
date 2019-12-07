@@ -4,8 +4,7 @@ const tex_unit = 5;
 const loc_aPosition = 3;
 const loc_aTexCoord = 8;
 
-// Vertex shader program
-let VSHADER_SOURCE =
+let src_vert =
 `#version 300 es
     layout(location=${loc_aPosition}) in vec4 aPosition;
     layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
@@ -16,12 +15,9 @@ let VSHADER_SOURCE =
     }
 `;
 
-// Fragment shader program
-let FSHADER_SOURCE =
+let src_frag =
 `#version 300 es
-    #ifdef GL_ES
     precision mediump float;
-    #endif
     uniform sampler2D uSampler;
     in vec2 vTexCoord;
     out vec4 fColor;
@@ -35,7 +31,7 @@ function main()
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
     
-    initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+    initShaders(gl, src_vert, src_frag);
 
     let vao = initVertexBuffers(gl);
     
@@ -100,13 +96,11 @@ function initVertexBuffers(gl)
     
     let FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
 
-    let a_Position = loc_aPosition;
-    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
-    gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+    gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, FSIZE * 4, 0);
+    gl.enableVertexAttribArray(loc_aPosition);  // Enable the assignment of the buffer object
     
-    let a_TexCoord = loc_aTexCoord;
-    gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
-    gl.enableVertexAttribArray(a_TexCoord);  // Enable the assignment of the buffer object
+    gl.vertexAttribPointer(loc_aTexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+    gl.enableVertexAttribArray(loc_aTexCoord);  // Enable the assignment of the buffer object
 
     gl.bindVertexArray(null);
     return vao;

@@ -1,7 +1,7 @@
 "use strict";
 const loc_aPosition = 3;
 const loc_aTexCoord = 5;
-const SRC_VERT_SHADER = 
+const src_vert = 
 `#version 300 es
 layout(location=${loc_aPosition}) in vec2 aPosition;
 layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
@@ -14,11 +14,9 @@ void main()
 }
 `;
 
-const SRC_FRAG_SHADER =
+const src_frag =
 `#version 300 es
-#ifdef GL_ES
 precision mediump float;
-#endif
 uniform sampler2D uSampler;
 in vec2 vTexCoord;
 out vec4 fColor;
@@ -43,10 +41,7 @@ function main()
 	document.getElementById("min-NEAREST_MIPMAP_LINEAR").value = gl.NEAREST_MIPMAP_LINEAR;
 	document.getElementById("min-LINEAR_MIPMAP_LINEAR").value = gl.LINEAR_MIPMAP_LINEAR;
 
-	let shader = {
-        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER),
-        attribs:{"aPosition":3, "aTexCoord":7}
-    };
+	let shader = { h_prog:init_shader(gl, src_vert, src_frag) };
 
 	let obj = initVBO(gl);
 
@@ -108,9 +103,9 @@ function main()
 
 }
 
-function init_shader(gl, src_vert, src_frag)
+function init_shader(gl, src_v, src_f)
 {
-	initShaders(gl, src_vert, src_frag);
+	initShaders(gl, src_v, src_f);
 	let h_prog = gl.program;
 	return h_prog;
 }
@@ -155,7 +150,6 @@ function generate_tex_mipmap(gl, levels, colors, max_level)
 				for(let k=0 ; k<3 ; k++) img[3*(i*N + j) + k] = colors[level][k];
 			}
 		}
-//		console.log(level + ',' + N + ':' );
 		gl.texImage2D(gl.TEXTURE_2D, level, gl.RGB, N, N, 0, gl.RGB, gl.UNSIGNED_BYTE, img);
 	}
 	return tex;

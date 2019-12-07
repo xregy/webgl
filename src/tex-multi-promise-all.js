@@ -2,7 +2,7 @@
 const loc_aPosition = 3;
 const loc_aTexCoord0 = 5;
 const loc_aTexCoord1 = 6;
-const SRC_VERT_SHADER = 
+const src_vert = 
 `#version 300 es
 layout(location=${loc_aPosition}) in vec2 aPosition;
 layout(location=${loc_aTexCoord0}) in vec2 aTexCoord0;
@@ -18,11 +18,9 @@ void main()
 }
 `;
 
-const SRC_FRAG_SHADER =
+const src_frag =
 `#version 300 es
-#ifdef GL_ES
 precision mediump float;
-#endif
 uniform sampler2D uSampler_sky;
 uniform sampler2D uSampler_circle;
 in vec2 vTexCoord0;
@@ -41,10 +39,7 @@ function main()
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext('webgl2');
     
-    let shader = 
-    {
-        h_prog:init_shader(gl, SRC_VERT_SHADER, SRC_FRAG_SHADER)
-    };
+    let shader = { h_prog:init_shader(gl, src_vert, src_frag) };
     let obj = initVBO(gl);
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);

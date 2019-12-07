@@ -1,3 +1,25 @@
+const src_vert_picking =
+`#version 300 es
+layout(location=${loc_aPosition}) in vec4 aPosition;
+uniform mat4 MVP;
+uniform int  u_id;
+out vec4 v_Color;
+void main()
+{
+    gl_Position = MVP * aPosition;
+    v_Color = vec4(float(u_id)/256.0, 0.0, 0.0, 1.0);
+}`;
+
+const src_frag_picking =
+`#version 300 es
+precision mediump float;
+in vec4 v_Color;
+out vec4 fColor;
+void main() {
+    fColor = v_Color;
+}`;
+
+
 class Mesh
 {
     constructor(gl, vao, draw_call, draw_mode, n, index_buffer_type)
