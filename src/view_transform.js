@@ -1,63 +1,69 @@
-"use strict";
-const loc_aPosition = 3;
-const loc_aColor = 7;
-const src_vert =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-uniform mat4 uMVP;
-out vec4 vColor;
-void main() {
-    gl_Position = uMVP * aPosition;
-    vColor = aColor;
-}`;
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
 
-const src_frag =
-`#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main() {
-    fColor = vColor;
-}`;
+"use strict";
 
 function main() {
+
+    const loc_aPosition = 3;
+    const loc_aColor = 7;
+    const src_vert =
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    uniform mat4 uMVP;
+    out vec4 vColor;
+    void main() {
+        gl_Position = uMVP * aPosition;
+        vColor = aColor;
+    }`;
+    
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main() {
+        fColor = vColor;
+    }`;
+
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext('webgl2');
-    initShaders(gl, src_vert, src_frag);
+
+    const prog = new Shader(gl, src_vert, src_frag, ["uMVP"]);
+    gl.useProgram(prog.h_prog);
     
-    const cube = initVertexBuffers(gl);
-    const axes = initAxes(gl);
+    const cube = initVertexBuffers({gl, loc_aPosition, loc_aColor});
+    const axes = initAxes({gl, loc_aPosition, loc_aColor});
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
     
-    const loc_uMVP = gl.getUniformLocation(gl.program, 'uMVP');
-    
-    let MVP = new Matrix4();
+    let MVP = mat4.create();
 
-    document.getElementById("distance").oninput = function(ev) {refresh(gl, cube, axes, MVP, loc_uMVP);};
-    document.getElementById("azimuth").oninput = function(ev) {refresh(gl, cube, axes, MVP, loc_uMVP);};
-    document.getElementById("altitude").oninput = function(ev) {refresh(gl, cube, axes, MVP, loc_uMVP);};
+    document.getElementById("distance").oninput = function(ev) {refresh({gl, prog, cube, axes, MVP});};
+    document.getElementById("azimuth").oninput = function(ev) {refresh({gl, prog, cube, axes, MVP});};
+    document.getElementById("altitude").oninput = function(ev) {refresh({gl, prog, cube, axes, MVP});};
 
-    refresh(gl, cube, axes, MVP, loc_uMVP);
-    
+    refresh({gl, prog, cube, axes, MVP});
 }
 
 
-function refresh(gl, cube, axes, MVP, loc_uMVP)
+function refresh({gl, prog, cube, axes, MVP})
 {
     let distance = 0.1*parseFloat(document.getElementById("distance").value);
     let azimuth = parseInt(document.getElementById("azimuth").value);
     let altitude = parseInt(document.getElementById("altitude").value);
 
-    MVP.setPerspective(30, 1, 1, 100);
+    mat4.identity(MVP);
+    mat4.perspective(MVP, toRadian(30), 1, 1, 100);
+    mat4.translate(MVP, MVP, [0, 0, -distance]);
+    mat4.rotate(MVP, MVP, toRadian(altitude), [1, 0, 0]);
+    mat4.rotate(MVP, MVP, toRadian(azimuth), [0, 1, 0]);
 
-    MVP.translate(0, 0, -distance);
-    MVP.rotate(altitude, 1, 0, 0);
-    MVP.rotate(azimuth, 0, 1, 0);
-
-    gl.uniformMatrix4fv(loc_uMVP, false, MVP.elements);
+    gl.uniformMatrix4fv(prog.loc_uniforms["uMVP"], false, MVP);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.bindVertexArray(cube.vao);
@@ -70,7 +76,7 @@ function refresh(gl, cube, axes, MVP, loc_uMVP)
 
 }
 
-function initAxes(gl)
+function initAxes({gl, loc_aPosition, loc_aColor})
 {
     const vertices = new Float32Array([
         0, 0, 0, 1, 0, 0,
@@ -102,7 +108,7 @@ function initAxes(gl)
 
 }
 
-function initVertexBuffers(gl) {
+function initVertexBuffers({gl, loc_aPosition, loc_aColor}) {
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -178,3 +184,5 @@ function initArrayBuffer(gl, data, num, type, loc_attribute) {
     
     return true;
 }
+
+main();

@@ -1,4 +1,6 @@
-class Light
+import {Shader} from "./class_shader.mjs"
+
+export class Light
 {
 	constructor(gl, position, ambient, diffusive, specular, enabled, cutoff_angle = 180, direction = [0,0,0])
 	{

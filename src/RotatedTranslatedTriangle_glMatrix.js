@@ -1,45 +1,50 @@
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {Shader} from "../modules/class_shader.mjs"
+
 "use strict";
 
-const loc_aPosition = 2;
-
-const src_vert =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform mat4 uM;
-void main()
-{
-  gl_Position = uM * aPosition;
-}
-`;
-
-const src_frag =
-`#version 300 es
-precision mediump float;
-out vec4 fColor;
-void main()
-{
-  fColor = vec4(1.0, 0.0, 0.0, 1.0);
-}
-`;
-
 function main() {
+
+    const loc_aPosition = 2;
+    
+    const src_vert =
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    uniform mat4 uM;
+    void main()
+    {
+      gl_Position = uM * aPosition;
+    }
+    `;
+    
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    out vec4 fColor;
+    void main()
+    {
+      fColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    `;
+
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext("webgl2");
     
-    initShaders(gl, src_vert, src_frag);
+    const prog = new Shader(gl, src_vert, src_frag);
+
+    gl.useProgram(prog.h_prog);
     
-    const vao = initVertexBuffers(gl);
+    const vao = initVertexBuffers({gl, loc_aPosition});
     
     let modelMatrix = mat4.create();
     
-    // Calculate a model matrix
-    const ANGLE = 60.0; // The rotation angle
-    const Tx = 0.5;     // Translation distance
-    mat4.rotate(modelMatrix, modelMatrix, ANGLE*Math.PI/180.0, [0,0,1]);	// Set rotation matrix
-    mat4.translate(modelMatrix, modelMatrix, [Tx, 0, 0]);        // Multiply modelMatrix by the calculated translation matrix
+    const ANGLE = 60.0;
+    const Tx = 0.5;
+    mat4.rotate(modelMatrix, modelMatrix, ANGLE*Math.PI/180.0, [0,0,1]);
+    mat4.translate(modelMatrix, modelMatrix, [Tx, 0, 0]);
     
-    // Pass the model matrix to the vertex shader
-    const loc_uM = gl.getUniformLocation(gl.program, 'uM');
+    const loc_uM = gl.getUniformLocation(prog.h_prog, 'uM');
     gl.uniformMatrix4fv(loc_uM, false, modelMatrix);
     
     gl.clearColor(0, 0, 0, 1);
@@ -49,7 +54,7 @@ function main() {
     gl.bindVertexArray(null);
 }
 
-function initVertexBuffers(gl) {
+function initVertexBuffers({gl, loc_aPosition}) {
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
@@ -67,3 +72,5 @@ function initVertexBuffers(gl) {
     return vao;
 }
 
+
+main();

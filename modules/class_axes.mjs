@@ -1,4 +1,6 @@
-class Axes
+import {Shader} from "./class_shader.mjs"
+
+export class Axes
 {
 	constructor(gl, length=2)
 	{

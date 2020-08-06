@@ -1,54 +1,65 @@
-"use strict";
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
 
-const loc_aPosition = 2;
-const loc_aColor = 1;
-const src_vert = `#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-uniform mat4 uMVP;
-out vec4 vColor;
-void main()
-{
-    gl_Position = uMVP * aPosition;
-    vColor = aColor;
-}`;
-const src_frag = `#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main()
-{
-    fColor = vColor;
-}`;
+"use strict";
 
 
 function main() {
-    let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
-    initShaders(gl, src_vert, src_frag);
+    const loc_aPosition = 2;
+    const loc_aColor = 1;
 
-    let vao = initVertexBuffers(gl);
+    const src_vert = `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    uniform mat4 uMVP;
+    out vec4 vColor;
+    void main()
+    {
+        gl_Position = uMVP * aPosition;
+        vColor = aColor;
+    }`;
+    const src_frag = `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main()
+    {
+        fColor = vColor;
+    }`;
+
+    const canvas = document.getElementById('webgl');
+    const gl = canvas.getContext("webgl2");
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
+
+    const vao = initVertexBuffers({gl, loc_aPosition, loc_aColor});
     
     gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0,0,0,1);
+
     
-    let loc_MVP = gl.getUniformLocation(gl.program, 'uMVP');
+    const loc_MVP = gl.getUniformLocation(prog.h_prog, 'uMVP');
     
-    let MVP = new Matrix4();
-    MVP.setPerspective(30, 1, 1, 100);
-    MVP.lookAt(3, 3, 7, 0, 0, 0, 0, 1, 0);
-    
-    gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
-    
+    const P = mat4.create();
+    const V = mat4.create();
+    const MVP = mat4.create();
+    mat4.perspective(P, toRadian(30), 1, 1, 100);
+    mat4.lookAt(V, [3, 3, 7], [0, 0, 0], [0, 1, 0]);
+    mat4.multiply(MVP, P, V);
+    gl.uniformMatrix4fv(loc_MVP, false, MVP);
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.useProgram(prog.h_prog);
     
     gl.bindVertexArray(vao); 
     for(let i=0 ; i<6 ; i++)    gl.drawArrays(gl.TRIANGLE_FAN, 4*i, 4);
     gl.bindVertexArray(null); 
 }
 
-function initVertexBuffers(gl) {
-    let vao = gl.createVertexArray();
+function initVertexBuffers({gl, loc_aPosition, loc_aColor}) {
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao); 
 
     // Create a cube
@@ -59,7 +70,7 @@ function initVertexBuffers(gl) {
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
-	let verticesColors = new Float32Array([
+	const verticesColors = new Float32Array([
 
          1.0,  1.0,  1.0,     1.0,  1.0,  1.0,  // v0 White
          1.0, -1.0,  1.0,     1.0,  1.0,  0.0,  // v3 Yellow
@@ -94,13 +105,13 @@ function initVertexBuffers(gl) {
     
    
     // Create a buffer object
-    let vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
     
     // Write the vertex coordinates and color to the buffer object
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, verticesColors, gl.STATIC_DRAW);
     
-    let FSIZE = verticesColors.BYTES_PER_ELEMENT;
+    const FSIZE = verticesColors.BYTES_PER_ELEMENT;
 
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, FSIZE * 6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
@@ -115,3 +126,5 @@ function initVertexBuffers(gl) {
     return vao;
 
 }
+
+main();

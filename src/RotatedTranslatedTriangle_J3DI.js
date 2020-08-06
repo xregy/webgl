@@ -1,33 +1,38 @@
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {Shader} from "../modules/class_shader.mjs"
+
 "use strict";
 
-const loc_aPosition = 4;
-const src_vert =
-`#version 300 es
-    layout(location=${loc_aPosition}) in vec4 aPosition;
-    uniform mat4 uM;
-    void main()
-    {
-      gl_Position = uM * aPosition;
-    }
-`;
-
-const src_frag =
-`#version 300 es
-    precision mediump float;
-    out vec4 fColor;
-    void main()
-    {
-      fColor = vec4(1.0, 0.0, 0.0, 1.0);
-    }
-`;
-
 function main() {
+    const loc_aPosition = 4;
+    const src_vert =
+    `#version 300 es
+        layout(location=${loc_aPosition}) in vec4 aPosition;
+        uniform mat4 uM;
+        void main()
+        {
+          gl_Position = uM * aPosition;
+        }
+    `;
+    
+    const src_frag =
+    `#version 300 es
+        precision mediump float;
+        out vec4 fColor;
+        void main()
+        {
+          fColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    `;
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext("webgl2");
     
-    initShaders(gl, src_vert, src_frag);
+    const prog = new Shader(gl, src_vert, src_frag);
     
-    const vao = initVertexBuffers(gl);
+    gl.useProgram(prog.h_prog);
+    
+    const vao = initVertexBuffers({gl, loc_aPosition});
     
     // Create Matrix4 object for model transformation
     let modelMatrix = new J3DIMatrix4();
@@ -39,7 +44,7 @@ function main() {
     modelMatrix.translate(Tx, 0, 0);        // Multiply modelMatrix by the calculated translation matrix
     
     // Pass the model matrix to the vertex shader
-    let loc_uM = gl.getUniformLocation(gl.program, 'uM');
+    let loc_uM = gl.getUniformLocation(prog.h_prog, 'uM');
 
     modelMatrix.setUniform(gl, loc_uM, false);
     
@@ -50,7 +55,7 @@ function main() {
     gl.bindVertexArray(null);
 }
 
-function initVertexBuffers(gl) {
+function initVertexBuffers({gl, loc_aPosition}) {
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
@@ -68,3 +73,5 @@ function initVertexBuffers(gl) {
     return vao;
 }
 
+
+main();

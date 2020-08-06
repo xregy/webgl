@@ -1,4 +1,4 @@
-class Material
+export class Material
 {
 	constructor(ambient, diffusive, specular, shininess)
 	{
@@ -9,7 +9,7 @@ class Material
 	}
 }
 
-var __js_materials = 
+export var __js_materials = 
 {
 	//	http://devernay.free.fr/cours/opengl/materials.html
 	emerald  		: new Material([0.0215,0.1745,0.0215],		[0.07568,0.61424,0.07568],		[0.633,0.727811,0.633],				0.6),

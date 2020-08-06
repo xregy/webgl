@@ -1,10 +1,11 @@
 "use strict";
-const loc_aPosition = 7;
 
 function main()
 {
-    let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    const loc_aPosition = 7;
+    
+    const canvas = document.getElementById('webgl');
+    const gl = canvas.getContext("webgl2");
 
     // https://stackoverflow.com/questions/31710768/how-can-i-fetch-an-array-of-urls-with-promise-all
     Promise.all(['./simple.vert','./simple.frag'].map(url => fetch(url)))
@@ -13,15 +14,14 @@ function main()
             if(response.ok) return response.text();
             else    throw new Error(`Error while reading ${response.url}.`);
         }) ))
-    .then(texts => draw(gl, texts[0], texts[1]))
-    .catch(err => console.log(err.message)
-    );
+    .then(texts => draw({gl, src_vert:texts[0], src_frag:texts[1], loc_aPosition}))
+    .catch(err => console.log(err.message));
 
 }
 
-function draw(gl, src_vert, src_frag)
+function draw({gl, src_vert, src_frag, loc_aPosition})
 {
-    let vertices = new Float32Array([
+    const vertices = new Float32Array([
                         -0.90, -0.90, // Triangle 1
                          0.85, -0.90,
                         -0.90,  0.85,
@@ -29,27 +29,26 @@ function draw(gl, src_vert, src_frag)
                          0.90,  0.90,
                         -0.85,  0.90]);
 
-    let h_vert = gl.createShader(gl.VERTEX_SHADER);
+    const h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
     gl.compileShader(h_vert);
 
-    let	h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+    const h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
 
-    let h_prog = gl.createProgram();
+    const h_prog = gl.createProgram();
     gl.attachShader(h_prog, h_vert);
     gl.attachShader(h_prog, h_frag);
     gl.linkProgram(h_prog);
 
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    let vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    let loc_aPosition = 7;  // shoule be consistent with the vertex shaders
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(loc_aPosition);
 
@@ -67,3 +66,6 @@ function draw(gl, src_vert, src_frag)
 
 
 }
+
+
+main();

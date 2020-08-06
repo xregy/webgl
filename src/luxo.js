@@ -1,138 +1,19 @@
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import * as vec4 from "../lib/gl-matrix/vec4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
+
 "use strict";
-const loc_aPosition = 4;
-const loc_aColor = 1;
-const loc_aNormal = 8;
-const numLights = 2;
-let src_vert_axes = 
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-uniform mat4 VP;
-out vec4 vColor;
-void main()
-{
-    gl_Position = VP * aPosition;
-    gl_PointSize = 10.0;
-    vColor = aColor;
-}
-`;
-let src_frag_axes =
-`#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main()
-{
-    fColor = vColor;
-}
-`;
-let src_vert_lighting =
-`#version 300 es
- // eye coordinate system
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aNormal}) in vec3 aNormal;
-uniform mat4 MVP;
-uniform mat4 MV;
-uniform mat4 matNormal;
-out vec3 vNormal;
-out vec4 vPosWorld;
-void main()
-{
-    vPosWorld = MV*aPosition;
-    vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
-    gl_Position = MVP*aPosition;
-}
-`;
-let src_frag_lighting =
-`#version 300 es
- // eye coordinate system
- #ifdef GL_ES
- precision mediump float;
- #endif
-in vec4 vPosWorld;
-in vec3 vNormal;
-out vec4 fColor;
-struct TMaterial
-{
-    vec3    ambient;
-    vec3    diffuse;
-    vec3    specular;
-    vec3    emission;
-    float   shininess;
-};
-struct TLight
-{
-    vec4    position;
-    vec4    direction;
-    float   cutoff_angle; // cosine of the cut-off angle
-    vec4    ambient;
-    vec4    diffuse;
-    vec4    specular;
-};
-uniform TMaterial   material;
-uniform TLight      lights[${numLights}];
-void main()
-{
-    vec3 n = normalize(vNormal);
-    vec3 v = normalize(-vPosWorld.xyz);
-     fColor = vec4(0,0,0,1);
-     for(int i=0 ; i<${numLights} ; i++)
-     {
-        vec3    l = normalize((lights[i].position - vPosWorld).xyz);
-        vec3    r = reflect(-l, n);
-        float   l_dot_n = max(dot(l, n), 0.0);
-        vec3    ambient = lights[i].ambient.rgb * material.ambient;
-        vec3    diffuse = lights[i].diffuse.rgb * material.diffuse * l_dot_n;
-        vec3    specular = vec3(0.0);
-        if(l_dot_n > 0.0)
-        {
-            specular = lights[i].specular.rgb * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
-        }
-        if(dot(-l,lights[i].direction.xyz) < lights[i].cutoff_angle)
-        {
-            diffuse = vec3(0);
-            specular = vec3(0);
-        }
-        fColor.rgb += ambient + diffuse + specular;
-     }
-}
-`;
 
 let list_mats = [];
 
-let shader_model;
-let shader_axes;
-
-let lights = [];
-let walls;
-
-let luxo;
-let axes;
-
-let angle = 0;
-const M = new Matrix4();
-const V = new Matrix4();
-const P = new Matrix4();
-const N = new Matrix4();
-const VP = new Matrix4();
-const MV = new Matrix4();
-const MVP = new Matrix4();
-
-let g_last = Date.now();
-
-
-function init_shader(gl, src_vert, src_frag, uniform_vars)
-{
-    initShaders(gl, src_vert, src_frag);
-    let shader = {};
-    shader.h_prog = gl.program;
-    shader.loc_uniforms = {}
-    for(let uniform of uniform_vars)
-    {
-        shader.loc_uniforms[uniform] = gl.getUniformLocation(shader.h_prog, uniform);
-    }
-    return shader;
-}
+let M = mat4.create();
+let V = mat4.create();
+let P = mat4.create();
+let N = mat4.create();
+let VP = mat4.create();
+let MV = mat4.create();
+let MVP = mat4.create();
 
 function init_materials(gl)
 {
@@ -146,45 +27,152 @@ function init_materials(gl)
 
 function init_lights(gl)
 {
+    let lights = {};
     let l;
     l = {
         position:[0, .9, 0, 1], 
         direction:[0,-1,0,0],
         cutoff_angle:180,
-        ambient: new Vector4([.1, .1, .1, 1.0]), 
-        diffuse: new Vector4([.5, .5, .5, 1.0]), 
-        specular:new Vector4([.5, .5, .5, 1.0]),
+        ambient: [.1, .1, .1, 1.0], 
+        diffuse: [.5, .5, .5, 1.0], 
+        specular:[.5, .5, .5, 1.0],
         position_transformed:null
         };
-    l.position = V.multiplyVector4(new Vector4(l.position));
-    l.direction = V.multiplyVector4(new Vector4(l.direction));
-    lights["ceiling"] = l;
+    vec4.transformMat4(l.position, l.position, V);
+    vec4.transformMat4(l.direction, l.direction, V);
+    lights.ceiling = l;
 
     l = {
         position:[0, 0, 0, 1], 
         direction:[0,-1,0,0],
         cutoff_angle:30,
-        ambient: new Vector4([0.5, 0.5, 0.5, 1.0]), 
-        diffuse: new Vector4([1.0, 1.0, 1.0, 1.0]), 
-        specular:new Vector4([1.0, 1.0, 1.0, 1.0]),
+        ambient: [0.5, 0.5, 0.5, 1.0], 
+        diffuse: [1.0, 1.0, 1.0, 1.0], 
+        specular: [1.0, 1.0, 1.0, 1.0],
         position_transformed:null
         };
-    lights["luxo"] = l;
+    lights.luxo = l;
+    return lights;
 };
 
 
 function main()
 {
+    const loc_aPosition = 4;
+    const loc_aColor = 1;
+    const loc_aNormal = 8;
+    const numLights = 2;
+
+    let src_vert_axes = 
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    uniform mat4 VP;
+    out vec4 vColor;
+    void main()
+    {
+        gl_Position = VP * aPosition;
+        gl_PointSize = 10.0;
+        vColor = aColor;
+    }
+    `;
+    let src_frag_axes =
+    `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main()
+    {
+        fColor = vColor;
+    }
+    `;
+    let src_vert_lighting =
+    `#version 300 es
+     // eye coordinate system
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aNormal}) in vec3 aNormal;
+    uniform mat4 MVP;
+    uniform mat4 MV;
+    uniform mat4 matNormal;
+    out vec3 vNormal;
+    out vec4 vPosWorld;
+    void main()
+    {
+        vPosWorld = MV*aPosition;
+        vNormal = normalize((matNormal*vec4(aNormal,0)).xyz);
+        gl_Position = MVP*aPosition;
+    }
+    `;
+    let src_frag_lighting =
+    `#version 300 es
+     // eye coordinate system
+     #ifdef GL_ES
+     precision mediump float;
+     #endif
+    in vec4 vPosWorld;
+    in vec3 vNormal;
+    out vec4 fColor;
+    struct TMaterial
+    {
+        vec3    ambient;
+        vec3    diffuse;
+        vec3    specular;
+        vec3    emission;
+        float   shininess;
+    };
+    struct TLight
+    {
+        vec4    position;
+        vec4    direction;
+        float   cutoff_angle; // cosine of the cut-off angle
+        vec4    ambient;
+        vec4    diffuse;
+        vec4    specular;
+    };
+    uniform TMaterial   material;
+    uniform TLight      lights[${numLights}];
+    void main()
+    {
+        vec3 n = normalize(vNormal);
+        vec3 v = normalize(-vPosWorld.xyz);
+         fColor = vec4(0,0,0,1);
+         for(int i=0 ; i<${numLights} ; i++)
+         {
+            vec3    l = normalize((lights[i].position - vPosWorld).xyz);
+            vec3    r = reflect(-l, n);
+            float   l_dot_n = max(dot(l, n), 0.0);
+            vec3    ambient = lights[i].ambient.rgb * material.ambient;
+            vec3    diffuse = lights[i].diffuse.rgb * material.diffuse * l_dot_n;
+            vec3    specular = vec3(0.0);
+            if(l_dot_n > 0.0)
+            {
+                specular = lights[i].specular.rgb * material.specular * pow(max(dot(r, v), 0.0), material.shininess);
+            }
+            if(dot(-l,lights[i].direction.xyz) < lights[i].cutoff_angle)
+            {
+                diffuse = vec3(0);
+                specular = vec3(0);
+            }
+            fColor.rgb += ambient + diffuse + specular;
+         }
+    }
+    `;
+    
+
     let canvas = document.getElementById('webgl');
     let gl = canvas.getContext("webgl2");
 
     gl.enable(gl.DEPTH_TEST);
+
+    let shaders = {};
     
-    shader_axes = init_shader(gl, src_vert_axes, src_frag_axes, ["VP"]);
+    shaders.axes = new Shader(gl, src_vert_axes, src_frag_axes, ["VP"]);
     
-    axes = init_vbo_axes(gl);
-    walls = init_vbo_walls(gl);
-    luxo = init_vbo_luxo(gl);
+
+    let objects = {};
+    objects.axes = init_vbo_axes({gl, loc_aPosition, loc_aColor});
+    objects.walls = init_vbo_walls({gl, loc_aPosition, loc_aNormal});
+    objects.luxo = init_vbo_luxo({gl, loc_aPosition, loc_aNormal});
     
     
     init_xforms(gl);
@@ -204,28 +192,29 @@ function main()
     uniform_vars.push("material.specular");
     uniform_vars.push("material.shininess");
    
-    shader_model = init_shader(gl, src_vert_lighting, src_frag_lighting, uniform_vars);
+    shaders.model = new Shader(gl, src_vert_lighting, src_frag_lighting, uniform_vars);
     
     init_materials(gl);
-    init_lights(gl);
+
+    let lights = init_lights(gl);
     
     for(let name of ["x", "z", "shoulder-1", "shoulder-2", "elbow", "lower", "upper", "head-1", "head-2", "cutoff"])
     {
-        init_slider(gl, name);
+        init_slider({gl, shaders, objects, lights, name});
     }
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
     
-    refresh_scene(gl);
+    refresh_scene({gl, shaders, objects, lights});
 }
 
-function init_slider(gl, name)
+function init_slider({gl, shaders, objects, lights, name})
 {
-    document.getElementById(name).onchange = function(ev) { refresh_scene(gl); };
-    document.getElementById(name).oninput = function(ev) { refresh_scene(gl); };
+    document.getElementById(name).onchange = function(ev) { refresh_scene({gl, shaders, objects, lights}); };
+    document.getElementById(name).oninput = function(ev) { refresh_scene({gl, shaders, objects, lights}); };
 }
 
 
-function refresh_scene(gl)
+function refresh_scene({gl, shaders, objects, lights})
 {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -233,7 +222,7 @@ function refresh_scene(gl)
     {
         let e_slider = document.getElementById(name);
         let e_span = document.getElementById(name + "-value");
-        e_span.innerHTML = e_slider.value*0.01;
+        e_span.innerHTML = (e_slider.value*0.01).toFixed(2);
     }
     for(let name of ["shoulder-1", "shoulder-2", "elbow", "head-1", "head-2", "cutoff"])
     {
@@ -243,20 +232,21 @@ function refresh_scene(gl)
     }
 
 
-    update_luxo_xforms(gl);
+    update_luxo_xforms({gl, luxo:objects.luxo});
 
-    render_object(gl, shader_axes, axes);
+    render_object({gl, shader:shaders.axes, objects, object:objects.axes, lights});
 
-    render_walls(gl, shader_model, walls);
+    render_walls({gl, shader:shaders.model, objects, lights, walls:objects.walls});
     
-    render_luxo(gl, shader_model);
+    render_luxo({gl, shader:shaders.model, objects, lights, luxo:objects.luxo});
 }
 
-function render_object(gl, shader, object, mat_name=null, mtrx_model=new Matrix4())
+function render_object({gl, shader, objects, object, lights, mtrx_model, mat_name})
 {
+    if(!mtrx_model) mtrx_model = mat4.create();
     gl.useProgram(shader.h_prog);
     gl.bindVertexArray(object.vao);
-    set_uniforms(gl, shader, mat_name, mtrx_model);
+    set_uniforms({gl, shader, objects, lights, mtrx_model, mat_name});
     
     if(object.drawcall == "drawArrays")         gl.drawArrays(object.type, 0, object.n);
     else if(object.drawcall == "drawElements")  gl.drawElements(object.type, object.n, object.type_index, 0);
@@ -265,63 +255,77 @@ function render_object(gl, shader, object, mat_name=null, mtrx_model=new Matrix4
     gl.useProgram(null);
 }
 
-function set_uniforms(gl, shader, mat_name, mtrx_model)
+function set_uniforms({gl, shader, objects, lights, mtrx_model, mat_name})
 {
-    set_xforms(gl, shader, mtrx_model);
-    set_lights(gl, shader);
+    set_xforms({gl, shader, mtrx_model});
+    set_lights({gl, shader, objects, lights});
     if(mat_name != null)    set_material(gl, shader, mat_name);
 }
 
 
 function init_xforms(gl)
 {
-    V.setLookAt(0, 0, 3, 0, 0, 0, 0, 1, 0);
-    P.setPerspective(60, 1, 1, 5); 
+    mat4.lookAt(V, [0, 0, 3], [0, 0, 0], [0, 1, 0]);
+    mat4.perspective(P, toRadian(60), 1, 1, 5); 
+//    V.setLookAt(0, 0, 3, 0, 0, 0, 0, 1, 0);
+//    P.setPerspective(60, 1, 1, 5); 
 }
 
-function set_xforms(gl, shader, mtrx_model)
+function set_xforms({gl, shader, mtrx_model})
 {
-    M.set(mtrx_model);
-    N.setIdentity();
-    VP.set(P); VP.multiply(V);
-    MV.set(V); MV.multiply(M);
-    MVP.set(P); MVP.multiply(V); MVP.multiply(M);
-    N.setInverseOf(MV);
-    N.transpose();
+    mat4.copy(M, mtrx_model);
+//    mat4.identity(N);
+    mat4.copy(VP, P);
+    mat4.multiply(VP, VP, V);
 
-    gl.uniformMatrix4fv(shader.loc_uniforms["VP"], false, VP.elements);
-    gl.uniformMatrix4fv(shader.loc_uniforms["MV"], false, MV.elements);
-    gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, MVP.elements);
-    gl.uniformMatrix4fv(shader.loc_uniforms["matNormal"], false, N.elements);
+    mat4.copy(MV, V);  
+    mat4.multiply(MV, MV, M);
+
+    mat4.copy(MVP, P); 
+    mat4.multiply(MVP, MVP, V); 
+    mat4.multiply(MVP, MVP, M);
+
+    mat4.invert(N, MV);
+    mat4.transpose(N, N);
+
+
+    gl.uniformMatrix4fv(shader.loc_uniforms["VP"], false, VP);
+    gl.uniformMatrix4fv(shader.loc_uniforms["MV"], false, MV);
+    gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, MVP);
+    gl.uniformMatrix4fv(shader.loc_uniforms["matNormal"], false, N);
 
 }
 
-const tempMat = new Matrix4();
-const tempVec = new Vector4();
-function set_lights(gl, shader)
+//const tempMat = new Matrix4();
+//const tempVec = new Vector4();
+const tempMat = mat4.create();
+const tempVec = vec4.create();
+function set_lights({gl, shader, objects, lights})
 {
     let l;
-    l = lights["ceiling"];
-    gl.uniform4fv(shader.loc_uniforms["lights[0].position"], l.position.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[0].direction"], l.direction.elements);
+    l = lights.ceiling;
+    gl.uniform4fv(shader.loc_uniforms["lights[0].position"], l.position);
+    gl.uniform4fv(shader.loc_uniforms["lights[0].direction"], l.direction);
     gl.uniform1f(shader.loc_uniforms["lights[0].cutoff_angle"], Math.cos(l.cutoff_angle*Math.PI/180.0));
-    gl.uniform4fv(shader.loc_uniforms["lights[0].ambient"], l.ambient.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[0].diffuse"], l.diffuse.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[0].specular"], l.specular.elements);
+    gl.uniform4fv(shader.loc_uniforms["lights[0].ambient"], l.ambient);
+    gl.uniform4fv(shader.loc_uniforms["lights[0].diffuse"], l.diffuse);
+    gl.uniform4fv(shader.loc_uniforms["lights[0].specular"], l.specular);
 
-    l = lights["luxo"];
-    tempMat.set(V);
-    tempMat.multiply(luxo["head"].M);
-    for(let i=0 ; i<4 ; i++)    tempVec.elements[i] = l.position[i];
-    let pos = tempMat.multiplyVector4(tempVec);
-    for(let i=0 ; i<4 ; i++)    tempVec.elements[i] = l.direction[i];
-    let dir = tempMat.multiplyVector4(tempVec);
-    gl.uniform4fv(shader.loc_uniforms["lights[1].position"], pos.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[1].direction"], dir.elements);
+    l = lights.luxo;
+    mat4.copy(tempMat, V);
+    mat4.multiply(tempMat, tempMat, objects.luxo["head"].M);
+    for(let i=0 ; i<4 ; i++)    tempVec[i] = l.position[i];
+    let pos = vec4.create();
+    vec4.transformMat4(pos, tempVec, tempMat);
+    for(let i=0 ; i<4 ; i++)    tempVec[i] = l.direction[i];
+    let dir = vec4.create();
+    vec4.transformMat4(dir, tempVec, tempMat);
+    gl.uniform4fv(shader.loc_uniforms["lights[1].position"], pos);
+    gl.uniform4fv(shader.loc_uniforms["lights[1].direction"], dir);
     gl.uniform1f(shader.loc_uniforms["lights[1].cutoff_angle"], Math.cos(document.getElementById("cutoff").value*Math.PI/180.0));
-    gl.uniform4fv(shader.loc_uniforms["lights[1].ambient"], l.ambient.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[1].diffuse"], l.diffuse.elements);
-    gl.uniform4fv(shader.loc_uniforms["lights[1].specular"], l.specular.elements);
+    gl.uniform4fv(shader.loc_uniforms["lights[1].ambient"], l.ambient);
+    gl.uniform4fv(shader.loc_uniforms["lights[1].diffuse"], l.diffuse);
+    gl.uniform4fv(shader.loc_uniforms["lights[1].specular"], l.specular);
 }
 
 function set_material(gl, shader, mat_name)
@@ -332,7 +336,7 @@ function set_material(gl, shader, mat_name)
     gl.uniform3f(shader.loc_uniforms["material.specular"], mat.specular[0], mat.specular[1], mat.specular[2]);
     gl.uniform1f(shader.loc_uniforms["material.shininess"], mat.shininess*128.0);
 }
-function init_vbo_axes(gl)
+function init_vbo_axes({gl, loc_aPosition, loc_aColor})
 {
     let vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -371,7 +375,7 @@ function init_vbo_axes(gl)
 
 const ROOM_WIDTH_HALF = 1;
 
-function init_vbo_walls(gl)
+function init_vbo_walls({gl, loc_aPosition, loc_aNormal})
 {
     let vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -403,56 +407,43 @@ function init_vbo_walls(gl)
 
     let m;
 
-    m = new Matrix4();
-    m.setTranslate(0, 0, -1);
+    m = mat4.create();
+    mat4.fromTranslation(m, [0, 0, -1]);
     walls["back"] = {M:m, material:"gold"};
 
-    m = new Matrix4();
-    m.setTranslate(-1, 0, 0);
-    m.rotate(90, 0, 1, 0);
+    m = mat4.create();
+    mat4.fromTranslation(m, [-1, 0, 0]);
+    mat4.rotate(m, m, toRadian(90), [0, 1, 0]);
     walls["left"] = {M:m, material:"silver"};
 
-    m = new Matrix4();
-    m.setTranslate(1, 0, 0);
-    m.rotate(-90, 0, 1, 0);
+    m = mat4.create();
+    mat4.fromTranslation(m, [1, 0, 0]);
+    mat4.rotate(m, m, toRadian(-90), [0, 1, 0]);
     walls["right"] = {M:m, material:"chrome"};
 
-    m = new Matrix4();
-    m.setTranslate(0, 1, 0);
-    m.rotate(90, 1, 0, 0);
+    m = mat4.create();
+    mat4.fromTranslation(m, [0, 1, 0]);
+    mat4.rotate(m, m, toRadian(90), [1, 0, 0]);
     walls["top"] = {M:m, material:"bronze"};
 
-    m = new Matrix4();
-    m.setTranslate(0, -1, 0);
-    m.rotate(-90, 1, 0, 0);
+    m = mat4.create();
+    mat4.fromTranslation(m, [0, -1, 0]);
+    mat4.rotate(m, m, toRadian(-90), [1, 0, 0]);
     walls["bottom"] = {M:m, material:"copper"};
 
     return {walls:walls, object:{vao:vao, n:4, drawcall:"drawArrays", type:gl.TRIANGLE_FAN}};
 }
 
-function render_walls(gl, shader, walls)
+function render_walls({gl, shader, objects, lights, walls})
 {
     for(let wallname in walls.walls)
     {
         let wall = walls.walls[wallname];
-        render_object(gl, shader, walls.object, wall.material, wall.M);
+        render_object({gl, shader, objects, lights, object:walls.object, mat_name:wall.material, mtrx_model:wall.M});
     }
 }
 
-function animate(angle) 
-{
-    const ANGLE_STEP = 30.0;
-
-    // Calculate the elapsed time
-    let now = Date.now();
-    let elapsed = now - g_last;
-    g_last = now;
-    // Update the current rotation angle (adjusted by the elapsed time)
-    let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
-    return newAngle %= 360;
-}
-
-function init_vbo_luxo(gl) {
+function init_vbo_luxo({gl, loc_aPosition, loc_aNormal}) {
     let vao_cube = gl.createVertexArray();
     gl.bindVertexArray(vao_cube);
     let x = .5;
@@ -551,7 +542,7 @@ function init_vbo_luxo(gl) {
 
     for(let i=0 ; i<=steps ; i++)
     {
-        angle = (parseFloat(i)*2.0*Math.PI)/parseFloat(steps);
+        let angle = (parseFloat(i)*2.0*Math.PI)/parseFloat(steps);
         let n  = normalize_vec3([
                         Math.sin(angle), 
                         parseFloat(RADIUS_LARGE-RADIUS_SMALL)/parseFloat(HEIGHT),
@@ -600,15 +591,15 @@ function init_vbo_luxo(gl) {
     luxo["upper"] = {vao:vao_cube, n:36, drawcall:"drawArrays", type:gl.TRIANGLES, material:"copper"};
     luxo["head"] = {vao:vao_cone, n:(steps+1)*2, drawcall:"drawArrays", type:gl.TRIANGLE_STRIP, material:"chrome"};
 
-    luxo.base.M = new Matrix4();
-    luxo.lower.M = new Matrix4();
-    luxo.upper.M = new Matrix4();
-    luxo.head.M = new Matrix4();
+    luxo.base.M = mat4.create();
+    luxo.lower.M = mat4.create();
+    luxo.upper.M = mat4.create();
+    luxo.head.M = mat4.create();
 
     return luxo;
 }
 
-function update_luxo_xforms(gl)
+function update_luxo_xforms({gl, luxo})
 {
     let x = document.getElementById("x").value*0.01;
     let z = document.getElementById("z").value*0.01;
@@ -623,52 +614,48 @@ function update_luxo_xforms(gl)
     let m;
 
     m = luxo.base.M;
-    m.setIdentity();
     const BASE_WIDTH =.4;
     const BASE_HEIGHT = .1;
-    m.setTranslate(x, BASE_HEIGHT*.5-ROOM_WIDTH_HALF, z);
-    m.scale(BASE_WIDTH, BASE_HEIGHT, BASE_WIDTH);
+    mat4.fromTranslation(m, [x, BASE_HEIGHT*.5-ROOM_WIDTH_HALF, z]);
+    mat4.scale(m, m, [BASE_WIDTH, BASE_HEIGHT, BASE_WIDTH]);
 
 
     m = luxo.lower.M;
-    m.setIdentity();
     const WIDTH_LOWER = .1;
-    m.setTranslate(x, BASE_HEIGHT-ROOM_WIDTH_HALF, z);
-    m.rotate(shoulder_2, 0, 1, 0);
-    m.rotate(shoulder_1, 0, 0, 1);
-    m.translate((lower-WIDTH_LOWER)*.5, 0, 0);
-    m.scale(lower, WIDTH_LOWER, WIDTH_LOWER);
+    mat4.fromTranslation(m, [x, BASE_HEIGHT-ROOM_WIDTH_HALF, z]);
+    mat4.rotate(m, m, toRadian(shoulder_2), [0, 1, 0]);
+    mat4.rotate(m, m, toRadian(shoulder_1), [0, 0, 1]);
+    mat4.translate(m, m, [(lower-WIDTH_LOWER)*.5, 0, 0]);
+    mat4.scale(m, m, [lower, WIDTH_LOWER, WIDTH_LOWER]);
 
     m = luxo.upper.M;
-    m.setIdentity();
     const WIDTH_UPPER = .1;
-    m.setTranslate(x, BASE_HEIGHT-ROOM_WIDTH_HALF, z);
-    m.rotate(shoulder_2, 0, 1, 0);
-    m.rotate(shoulder_1, 0, 0, 1);
-    m.translate(lower-WIDTH_LOWER, 0, 0);
-    m.rotate(elbow, 0, 0, 1);
-    m.translate((upper-WIDTH_UPPER)*.5, 0, 0);
-    m.scale(upper, WIDTH_UPPER, WIDTH_UPPER);
+    mat4.fromTranslation(m, [x, BASE_HEIGHT-ROOM_WIDTH_HALF, z]);
+    mat4.rotate(m, m, toRadian(shoulder_2), [0, 1, 0]);
+    mat4.rotate(m, m, toRadian(shoulder_1), [0, 0, 1]);
+    mat4.translate(m, m, [lower-WIDTH_LOWER, 0, 0]);
+    mat4.rotate(m, m, toRadian(elbow), [0, 0, 1]);
+    mat4.translate(m, m, [(upper-WIDTH_UPPER)*.5, 0, 0]);
+    mat4.scale(m, m, [upper, WIDTH_UPPER, WIDTH_UPPER]);
 
     m = luxo.head.M;
-    m.setIdentity();
-    m.setTranslate(x, BASE_HEIGHT-ROOM_WIDTH_HALF, z);
-    m.rotate(shoulder_2, 0, 1, 0);
-    m.rotate(shoulder_1, 0, 0, 1);
-    m.translate(lower-WIDTH_LOWER, 0, 0);
-    m.rotate(elbow, 0, 0, 1);
-    m.translate(upper-WIDTH_UPPER*.5, 0, 0);
-    m.rotate(head_2, 1, 0, 0);
-    m.rotate(head_1, 0, 0, 1);
+    mat4.fromTranslation(m, [x, BASE_HEIGHT-ROOM_WIDTH_HALF, z]);
+    mat4.rotate(m, m, toRadian(shoulder_2), [0, 1, 0]);
+    mat4.rotate(m, m, toRadian(shoulder_1), [0, 0, 1]);
+    mat4.translate(m, m, [lower-WIDTH_LOWER, 0, 0]);
+    mat4.rotate(m, m, toRadian(elbow), [0, 0, 1]);
+    mat4.translate(m, m, [upper-WIDTH_UPPER*.5, 0, 0]);
+    mat4.rotate(m, m, toRadian(head_2), [1, 0, 0]);
+    mat4.rotate(m, m, toRadian(head_1), [0, 0, 1]);
 }
 
-function render_luxo(gl, shader)
+function render_luxo({gl, shader, objects, lights, luxo})
 {
     for(let partname in luxo)
     {
         let part = luxo[partname];
-        render_object(gl, shader, part, part.material, part.M);
+        render_object({gl, shader, objects, lights, object:part, mat_name:part.material, mtrx_model:part.M});
     }
 }
 
-
+main();

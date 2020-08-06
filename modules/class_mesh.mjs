@@ -1,28 +1,9 @@
-const src_vert_picking =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform mat4 MVP;
-uniform int  u_id;
-out vec4 v_Color;
-void main()
+import {Shader} from "./class_shader.mjs"
+import {shaders} from "./shaders.mjs"
+
+export class Mesh
 {
-    gl_Position = MVP * aPosition;
-    v_Color = vec4(float(u_id)/256.0, 0.0, 0.0, 1.0);
-}`;
-
-const src_frag_picking =
-`#version 300 es
-precision mediump float;
-in vec4 v_Color;
-out vec4 fColor;
-void main() {
-    fColor = v_Color;
-}`;
-
-
-class Mesh
-{
-    constructor(gl, vao, draw_call, draw_mode, n, index_buffer_type)
+    constructor({gl, vao, draw_call, draw_mode, n, index_buffer_type, loc_aPosition})
     {
         this.vao = vao;
         this.name = "";
@@ -36,7 +17,7 @@ class Mesh
         this.N = new Matrix4();
         this.id = -1;
         if(!Mesh.shader_id)
-            Mesh.shader_id = new Shader(gl, src_vert_picking, src_frag_picking, ["MVP", "u_id"]);
+            Mesh.shader_id = new Shader(gl, shaders.src_vert_picking({loc_aPosition}), shaders.src_frag_picking(), ["MVP", "u_id"]);
     }
     init_from_json_js(gl, json_obj, loc_aPosition=0, loc_aNormal=1, loc_aTexCoord=2)
     {

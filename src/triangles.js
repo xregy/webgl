@@ -1,38 +1,41 @@
 "use stricrt";
-const loc_aPosition = 7;
-const src_vert = 
-`#version 300 es
-    layout(location=${loc_aPosition}) in vec4 aPosition;
-    void main()
-    {
-        gl_Position = aPosition;
-    }
-`;
-const src_frag = 
-`#version 300 es
-    precision mediump float;
-    out vec4 fColor;
-    void main()
-    {
-        fColor = vec4(0.0, 0.0, 1.0, 1.0);
-    }
-`;
 
 function main()
 {
+    const loc_aPosition = 7;
+
+    const src_vert = 
+    `#version 300 es
+        layout(location=${loc_aPosition}) in vec4 aPosition;
+        void main()
+        {
+            gl_Position = aPosition;
+        }
+    `;
+    const src_frag = 
+    `#version 300 es
+        precision mediump float;
+        out vec4 fColor;
+        void main()
+        {
+            fColor = vec4(0.0, 0.0, 1.0, 1.0);
+        }
+    `;
+
+
     // Getting the WebGL context
-    let canvas = document.getElementById('webgl');
+    const canvas = document.getElementById('webgl');
     gl = canvas.getContext("webgl2");
 
     // Compiling the shaders
-    let h_prog = gl.createProgram();
+    const h_prog = gl.createProgram();
 
-    let h_vert = gl.createShader(gl.VERTEX_SHADER);
+    const h_vert = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(h_vert, src_vert);
     gl.compileShader(h_vert);
     gl.attachShader(h_prog, h_vert);
 
-    let h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+    const h_frag = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(h_frag, src_frag);
     gl.compileShader(h_frag);
     gl.attachShader(h_prog, h_frag);
@@ -40,7 +43,7 @@ function main()
     gl.linkProgram(h_prog);
 
 
-    let vertices = new Float32Array([
+    const vertices = new Float32Array([
                         -0.90, -0.90, // Triangle 1
                          0.85, -0.90,
                         -0.90,  0.85,
@@ -49,10 +52,10 @@ function main()
                         -0.85,  0.90]);
 
     // Setting up the geometry data
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    let vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
 
     // From which VBO to retrieve the geometry data? --> stored in the VAO
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
@@ -83,3 +86,6 @@ function main()
     gl.bindVertexArray(null);
 
 }
+
+
+main();
