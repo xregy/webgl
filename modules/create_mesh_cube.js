@@ -1,7 +1,8 @@
-"use strict";
-function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1) 
+import {Mesh} from "./class_mesh.mjs"
+
+export function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1) 
 {
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     // Create a cube
     //    v6----- v5
@@ -11,7 +12,7 @@ function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1)
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
-    var verts = new Float32Array([
+    const verts = new Float32Array([
     	 1, 1, 1,    1, 0, 0,  // v0 White
     	 1,-1, 1,    1, 0, 0,  // v3 Yellow
     	 1,-1,-1,    1, 0, 0,  // v4 Green
@@ -60,11 +61,11 @@ function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1)
     	 1,-1, 1,    0,-1, 0,  // v3 Yellow
     	-1,-1, 1,    0,-1, 0,  // v2 Red
     ]);
-    var vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
     
-    var SZ = verts.BYTES_PER_ELEMENT;
+    const SZ = verts.BYTES_PER_ELEMENT;
     
     gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
@@ -75,7 +76,7 @@ function create_mesh_cube(gl, loc_aPosition=0, loc_aNormal=1)
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     
-    return new Mesh(gl, vao, "drawArrays", gl.TRIANGLES, 36, null);
+    return new Mesh({gl, vao, draw_call:"drawArrays", draw_mode:gl.TRIANGLES, n:36, loc_aPosition});
 }
 
 

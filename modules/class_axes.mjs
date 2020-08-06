@@ -1,10 +1,11 @@
 import {Shader} from "./class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
 
 export class Axes
 {
 	constructor(gl, length=2)
 	{
-		this.MVP = new Matrix4();
+		this.MVP = mat4.create();
 		if(!Axes.shader)
 			Axes.shader = new Shader(gl, Axes.src_shader_vert, Axes.src_shader_frag,);
 		this.init_vbo(gl,length);
@@ -16,7 +17,7 @@ export class Axes
         this.vao = gl.createVertexArray();
         gl.bindVertexArray(this.vao);
 
-		var vertices = new Float32Array([
+		const vertices = new Float32Array([
 			0,0,0, 1,0,0,
 			l,0,0, 1,0,0,
 			0,0,0, 0,1,0,
@@ -24,11 +25,11 @@ export class Axes
 			0,0,0, 0,0,1,
 			0,0,l, 0,0,1,
 		]);
-		var vbo = gl.createBuffer();  
+		const vbo = gl.createBuffer();  
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 		gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-		var SZ = vertices.BYTES_PER_ELEMENT;
+		const SZ = vertices.BYTES_PER_ELEMENT;
 
         gl.vertexAttribPointer(Axes.loc_aPosition, 3, gl.FLOAT, false, SZ*6, 0);
         gl.enableVertexAttribArray(Axes.loc_aPosition);
@@ -46,9 +47,12 @@ export class Axes
 	}
 	set_uniform_matrices(gl, h_prog, V, P)
 	{
-		this.MVP.set(P);
-		this.MVP.multiply(V);
-		gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, this.MVP.elements);
+        mat4.copy(this.MVP, P);
+        mat4.multiply(this.MVP, this.MVP, V);
+        gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, this.MVP);
+//		this.MVP.set(P);
+//		this.MVP.multiply(V);
+//		gl.uniformMatrix4fv(gl.getUniformLocation(h_prog, "MVP"), false, this.MVP.elements);
 	}
 	render(gl, V, P)
 	{

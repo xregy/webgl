@@ -63,7 +63,7 @@ export let shaders =
         {
         	fColor = vec4(vColor, 1);
         }`,
-    src_vert_Blinn_Gouraud : (loc_aPosition=0, loc_aNormal=1, numLights=1) => `#version 300 es
+    src_vert_Blinn_Gouraud : ({loc_aPosition, loc_aNormal, numLights} = {loc_aPosition:0, loc_aNormal:1, numLights:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4	aPosition;
         layout(location=${loc_aNormal}) in vec3	aNormal;
         uniform mat4	MVP;
@@ -126,7 +126,7 @@ export let shaders =
         	fColor = vec4(vColor, 1);
         }`,
 
-    src_vert_Blinn_Phong : (loc_aPosition=0, loc_aNormal=1) => `#version 300 es
+    src_vert_Blinn_Phong : ({loc_aPosition, loc_aNormal} = {loc_aPosition:0, loc_aNormal:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4 aPosition;
         layout(location=${loc_aNormal}) in vec3 aNormal;
         uniform mat4	MVP;
@@ -141,7 +141,7 @@ export let shaders =
         	gl_Position = MVP*aPosition;
         }`,
 
-    src_frag_Blinn_Phong : (numLights=1) => `#version 300 es
+    src_frag_Blinn_Phong : ({numLights} = {numLights:1}) => `#version 300 es
         precision mediump float;
         in vec4	vPosEye;
         in vec3	vNormal;
@@ -193,7 +193,7 @@ export let shaders =
         	fColor.w = 1.0;
         }`,
 
-    src_vert_Phong_Phong : (loc_aPosition=0, loc_aNormal=1) => `#version 300 es
+    src_vert_Phong_Phong : ({loc_aPosition, loc_aNormal} = {loc_aPosition:0, loc_aNormal:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4	aPosition;
         layout(location=${loc_aNormal}) in vec3	aNormal;
         uniform mat4	MVP;
@@ -208,7 +208,7 @@ export let shaders =
         	gl_Position = MVP*aPosition;
         }`,
 
-    src_frag_Phong_Phong : (numLights=1) => `#version 300 es
+    src_frag_Phong_Phong : ({numLights} = {numLights:1}) => `#version 300 es
         precision mediump float;
         in vec4 vPosEye;
         in vec3	vNormal;
@@ -260,7 +260,7 @@ export let shaders =
         	fColor.w = 1.0;
         }`,
 
-    src_vert_Blinn_Gouraud_spot : (loc_aPosition=0, loc_aNormal=1, numLights=1) => `#version 300 es
+    src_vert_Blinn_Gouraud_spot : ({loc_aPosition, loc_aNormal, numLights} = {loc_aPosition:0, loc_aNormal:1, numLights:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4	aPosition;
         layout(location=${loc_aNormal}) in vec3	aNormal;
         uniform mat4	MVP;
@@ -324,7 +324,7 @@ export let shaders =
         	gl_Position = MVP*aPosition;
         }`,
 
-    src_frag_Blinn_Gouraud_spot : (loc_aPosition=0, loc_aNormal=1, numLights=1) => `#version 300 es
+    src_frag_Blinn_Gouraud_spot : ({loc_aPosition, loc_aNomal, numLights} = {loc_aPosition:0, loc_aNormal:1, numLights:1}) => `#version 300 es
         precision mediump float;
         in vec3	vColor;
         out vec4 fColor;
@@ -332,7 +332,7 @@ export let shaders =
         {
         	fColor = vec4(vColor, 1);
         }`,
-    src_vert_Phong_Gouraud_spot : (loc_aPosition=0, loc_aNormal=1, numLights=1) => `#version 300 es
+    src_vert_Phong_Gouraud_spot : ({loc_aPosition, loc_aNormal, numLights} = {loc_aPosition:0, loc_aNormal:1, numLights:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4 aPosition;
         layout(location=${loc_aNormal}) in vec3 aNormal;
         uniform mat4	MVP;
@@ -405,7 +405,7 @@ export let shaders =
         	fColor = vec4(vColor, 1);
         }`,
 
-    src_vert_Blinn_Phong_spot : (loc_aPosition=0, loc_aNormal=1) => `#version 300 es
+    src_vert_Blinn_Phong_spot : ({loc_aPosition, loc_aNormal} = {loc_aPosition:0, loc_aNormal:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4 aPosition;
         layout(location=${loc_aNormal}) in vec3 aNormal;
         uniform mat4	MVP;
@@ -419,7 +419,7 @@ export let shaders =
         	vNormal = normalize(mat3(matNormal)*aNormal);
         	gl_Position = MVP*aPosition;
         }`,
-    src_frag_Blinn_Phong_spot : (numLights=1) => `#version 300 es
+    src_frag_Blinn_Phong_spot : ({numLights} = {numLights:1}) => `#version 300 es
         precision mediump float;
         in vec4	vPosEye;
         in vec3	vNormal;
@@ -479,7 +479,7 @@ export let shaders =
         	fColor.w = 1.0;
         }`,
 
-    src_vert_Phong_Phong_spot : (loc_aPosition=0, loc_aNormal=1) => `#version 300 es
+    src_vert_Phong_Phong_spot : ({loc_aPosition, loc_aNormal} = {loc_aPosition:0, loc_aNormal:1}) => `#version 300 es
         layout(location=${loc_aPosition}) in vec4	aPosition;
         layout(location=${loc_aNormal}) in vec3	aNormal;
         uniform mat4	MVP;
@@ -494,7 +494,7 @@ export let shaders =
         	gl_Position = MVP*aPosition;
         }`,
 
-    src_frag_Phong_Phong_spot : (numLights=1) => `#version 300 es
+    src_frag_Phong_Phong_spot : ({numLights} = {numLights:1}) => `#version 300 es
         precision mediump float;
         in vec4 vPosEye;
         in vec3	vNormal;

@@ -1,15 +1,17 @@
+import * as vec3 from "../lib/gl-matrix/vec3.js"
+
 export class Material
 {
 	constructor(ambient, diffusive, specular, shininess)
 	{
-		this.ambient = new Vector3(ambient);
-		this.diffusive = new Vector3(diffusive);
-		this.specular = new Vector3(specular);
+		this.ambient = vec3.clone(ambient);
+		this.diffusive = vec3.clone(diffusive);
+		this.specular = vec3.clone(specular);
 		this.shininess = shininess;
 	}
 }
 
-export var __js_materials = 
+export let __js_materials = 
 {
 	//	http://devernay.free.fr/cours/opengl/materials.html
 	emerald  		: new Material([0.0215,0.1745,0.0215],		[0.07568,0.61424,0.07568],		[0.633,0.727811,0.633],				0.6),

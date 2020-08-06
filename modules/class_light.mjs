@@ -1,17 +1,20 @@
 import {Shader} from "./class_shader.mjs"
+import * as vec4 from "../lib/gl-matrix/vec4.js"
+import * as vec3 from "../lib/gl-matrix/vec3.js"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
 
 export class Light
 {
 	constructor(gl, position, ambient, diffusive, specular, enabled, cutoff_angle = 180, direction = [0,0,0])
 	{
-		this.position = new Vector4(position);
-		this.ambient = new Vector3(ambient);
-		this.diffusive = new Vector3(diffusive);
-		this.specular = new Vector3(specular);
+		this.position = vec4.clone(position);
+		this.ambient = vec3.clone(ambient);
+		this.diffusive = vec3.clone(diffusive);
+		this.specular = vec3.clone(specular);
 		this.enabled = enabled;
-		this.M = new Matrix4();
-		this.MVP = new Matrix4();
-		this.direction = new Vector4([direction[0], direction[1], direction[2], 0.0]);
+		this.M = mat4.create();
+		this.MVP = mat4.create();
+		this.direction = vec4.clone([direction[0], direction[1], direction[2], 0.0]);
 		this.cutoff_angle = cutoff_angle;
 
 		if(!Light.shader)
@@ -19,8 +22,8 @@ export class Light
 	}
 	set_type(positional)
 	{
-		if(positional)	this.position.elements[3] = 1.0;
-		else			this.position.elements[3] = 0.0;
+		if(positional)	this.position[3] = 1.0;
+		else			this.position[3] = 0.0;
 	}
 	turn_on(enabled)
 	{
@@ -28,11 +31,16 @@ export class Light
 	}
 	render(gl, V, P)
 	{
+        let v = vec4.create();
 
 		gl.useProgram(Light.shader.h_prog);
-		this.MVP.set(P); this.MVP.multiply(V);
-		gl.uniformMatrix4fv(gl.getUniformLocation(Light.shader.h_prog, "MVP"), false, this.MVP.elements);
-		gl.vertexAttrib4fv(Light.loc_aPosition, this.M.multiplyVector4(this.position).elements);
+        mat4.copy(this.MVP, P);
+        mat4.multiply(this.MVP, this.MVP, V);
+//		this.MVP.set(P); this.MVP.multiply(V);
+		gl.uniformMatrix4fv(gl.getUniformLocation(Light.shader.h_prog, "MVP"), false, this.MVP);
+        vec4.transformMat4(v, this.position, this.M);
+		gl.vertexAttrib4fv(Light.loc_aPosition, v);
+//		gl.vertexAttrib4fv(Light.loc_aPosition, this.M.multiplyVector4(this.position).elements);
 		if(this.enabled)	gl.vertexAttrib3f(Light.loc_aColor, 1, 1, 1);
 		else				gl.vertexAttrib3f(Light.loc_aColor, .1, .1, .1);
 		gl.drawArrays(gl.POINTS, 0, 1);

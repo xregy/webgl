@@ -1,5 +1,7 @@
 import {Shader} from "./class_shader.mjs"
 import {shaders} from "./shaders.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import * as vec4 from "../lib/gl-matrix/vec4.js"
 
 export class Mesh
 {
@@ -11,10 +13,10 @@ export class Mesh
         this.draw_mode = draw_mode;
         this.n = n;
         this.index_buffer_type = index_buffer_type;
-        this.M = new Matrix4();
-        this.MV = new Matrix4();
-        this.MVP = new Matrix4();
-        this.N = new Matrix4();
+        this.M = mat4.create();
+        this.MV = mat4.create();
+        this.MVP = mat4.create();
+        this.N = mat4.create();
         this.id = -1;
         if(!Mesh.shader_id)
             Mesh.shader_id = new Shader(gl, shaders.src_vert_picking({loc_aPosition}), shaders.src_frag_picking(), ["MVP", "u_id"]);
@@ -105,33 +107,39 @@ export class Mesh
     }
     set_uniform_matrices(gl, shader, V, P)
     {
-        this.MV.set(V);
-        this.MV.multiply(this.M);
-        gl.uniformMatrix4fv(shader.loc_uniforms["MV"], false, this.MV.elements);
-        this.MVP.set(P);
-        this.MVP.multiply(this.MV);
-        gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, this.MVP.elements);
-        this.MVP.set(V);
-        this.MVP.multiply(this.M);
-        this.N.setInverseOf(this.MVP);
-        this.N.transpose();
-        gl.uniformMatrix4fv(shader.loc_uniforms["matNormal"], false, this.N.elements);
+        mat4.copy(this.MV, V);
+        mat4.multiply(this.MV, this.MV, this.M);
+        gl.uniformMatrix4fv(shader.loc_uniforms["MV"], false, this.MV);
+        mat4.copy(this.MVP, P);
+        mat4.multiply(this.MVP, this.MVP, this.MV);
+        gl.uniformMatrix4fv(shader.loc_uniforms["MVP"], false, this.MVP);
+        mat4.copy(this.MVP, V);
+        mat4.multiply(this.MVP, this.MVP, this.M);
+//        mat4.invert(this.N, this.MVP);
+        mat4.invert(this.N, this.MV);
+        mat4.transpose(this.N, this.N);
+        gl.uniformMatrix4fv(shader.loc_uniforms["matNormal"], false, this.N);
     }
     set_uniform_lights(gl, shader, lights, V)
     {
 //        let MV = new Matrix4();
         let i = 0;
+        let v = vec4.create();
         for(let name in lights)
         {
             let light = lights[name];
-            this.MV.set(V);
-            this.MV.multiply(light.M);
-            gl.uniform4fv(shader.loc_uniforms[`light[${i}].position`], (this.MV.multiplyVector4(light.position)).elements);
-            gl.uniform3fv(shader.loc_uniforms[`light[${i}].ambient`], light.ambient.elements);
-            gl.uniform3fv(shader.loc_uniforms[`light[${i}].diffuse`], light.diffusive.elements);
-            gl.uniform3fv(shader.loc_uniforms[`light[${i}].specular`], light.specular.elements);
+            mat4.copy(this.MV, V);
+            mat4.multiply(this.MV, this.MV, light.M);
+            vec4.transformMat4(v, light.position, this.MV);
+//            gl.uniform4fv(shader.loc_uniforms[`light[${i}].position`], (this.MV.multiplyVector4(light.position)).elements);
+            gl.uniform4fv(shader.loc_uniforms[`light[${i}].position`], v);
+            gl.uniform3fv(shader.loc_uniforms[`light[${i}].ambient`], light.ambient);
+            gl.uniform3fv(shader.loc_uniforms[`light[${i}].diffuse`], light.diffusive);
+            gl.uniform3fv(shader.loc_uniforms[`light[${i}].specular`], light.specular);
             gl.uniform1i(shader.loc_uniforms[`light[${i}].enabled`], light.enabled);
-            gl.uniform4fv(shader.loc_uniforms[`light[${i}].direction`], this.MV.multiplyVector4(light.direction).elements);
+            vec4.transformMat4(v, light.direction, this.MV);
+//            gl.uniform4fv(shader.loc_uniforms[`light[${i}].direction`], this.MV.multiplyVector4(light.direction).elements);
+            gl.uniform4fv(shader.loc_uniforms[`light[${i}].direction`], v);
             gl.uniform1f(shader.loc_uniforms[`light[${i}].cutoff_angle`], Math.cos(light.cutoff_angle*Math.PI/180.0));
 
             i++;
@@ -139,9 +147,9 @@ export class Mesh
     }
     set_uniform_material(gl, shader, mat)
     {
-        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.ambient"), mat.ambient.elements);
-        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.diffuse"), mat.diffusive.elements);
-        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.specular"), mat.specular.elements);
+        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.ambient"), mat.ambient);
+        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.diffuse"), mat.diffusive);
+        gl.uniform3fv(gl.getUniformLocation(shader.h_prog, "material.specular"), mat.specular);
         gl.uniform1f(gl.getUniformLocation(shader.h_prog, "material.shininess"), mat.shininess*128.0);
     }
     set_uniform_texture(gl, shader, textures)
@@ -177,10 +185,10 @@ export class Mesh
         gl.useProgram(h_prog);
         gl.bindVertexArray(this.vao);
         
-        this.MVP.set(P);
-        this.MVP.multiply(V);
-        this.MVP.multiply(this.M);
-        gl.uniformMatrix4fv(Mesh.shader_id.loc_uniforms["MVP"], false, this.MVP.elements);
+        mat4.copy(this.MVP, P);
+        mat4.multiply(this.MVP, this.MVP, V);
+        mat4.multiply(this.MVP, this.MVP, this.M);
+        gl.uniformMatrix4fv(Mesh.shader_id.loc_uniforms["MVP"], false, this.MVP);
         gl.uniform1i(Mesh.shader_id.loc_uniforms["u_id"], this.id);
         
         if(this.draw_call == "drawArrays") gl.drawArrays(this.draw_mode, 0, this.n);
