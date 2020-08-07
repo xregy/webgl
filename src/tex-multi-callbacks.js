@@ -1,77 +1,90 @@
-"use strict";
-const loc_aPosition = 3;
-const loc_aTexCoord0 = 5;
-const loc_aTexCoord1 = 6;
-const src_vert = 
-`#version 300 es
-layout(location=${loc_aPosition}) in vec2 aPosition;
-layout(location=${loc_aTexCoord0}) in vec2 aTexCoord0;
-layout(location=${loc_aTexCoord1}) in vec2 aTexCoord1;
-out vec2 vTexCoord0;
-out vec2 vTexCoord1;
-uniform mat4 MVP;
-void main()
-{
-    gl_Position = MVP * vec4(aPosition, 0, 1);
-    vTexCoord0 = aTexCoord0;
-    vTexCoord1 = aTexCoord1;
-}
-`;
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
 
-const src_frag =
-`#version 300 es
-precision mediump float;
-uniform sampler2D uSampler0;
-uniform sampler2D uSampler1;
-in vec2 vTexCoord0;
-in vec2 vTexCoord1;
-out vec4 fColor;
-void main()
-{
-    vec4 color0 = texture(uSampler0, vTexCoord0);
-    vec4 color1 = texture(uSampler1, vTexCoord1);
-    fColor = mix(color0, color1, 0.5);
-}
-`;
+"use strict";
 
 function main()
 {
-    let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext('webgl2');
+    const loc_aPosition = 3;
+    const loc_aTexCoord0 = 5;
+    const loc_aTexCoord1 = 6;
+
+    const src_vert = 
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec2 aPosition;
+    layout(location=${loc_aTexCoord0}) in vec2 aTexCoord0;
+    layout(location=${loc_aTexCoord1}) in vec2 aTexCoord1;
+    out vec2 vTexCoord0;
+    out vec2 vTexCoord1;
+    uniform mat4 MVP;
+    void main()
+    {
+        gl_Position = MVP * vec4(aPosition, 0, 1);
+        vTexCoord0 = aTexCoord0;
+        vTexCoord1 = aTexCoord1;
+    }
+    `;
     
-    let shader = {h_prog:init_shader(gl, src_vert, src_frag)};
-    let obj = initVBO(gl);
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    uniform sampler2D uSampler0;
+    uniform sampler2D uSampler1;
+    in vec2 vTexCoord0;
+    in vec2 vTexCoord1;
+    out vec4 fColor;
+    void main()
+    {
+        vec4 color0 = texture(uSampler0, vTexCoord0);
+        vec4 color1 = texture(uSampler1, vTexCoord1);
+        fColor = mix(color0, color1, 0.5);
+    }
+    `;
+
+    const canvas = document.getElementById('webgl');
+    const gl = canvas.getContext('webgl2');
+    
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
+
+    const obj = initVBO(gl, loc_aPosition, loc_aTexCoord0, loc_aTexCoord1);
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     
-    let textures = [{texture:null, unit:3, image:new Image(), loaded:false},
+    const textures = [{texture:null, unit:3, image:new Image(), loaded:false},
                     {texture:null, unit:5, image:new Image(), loaded:false}];
     
-    let MVP = new Matrix4();
-    
-    shader.set_uniforms = function(gl) 
+    const MVP = mat4.create();
+
+    const loc_uSampler 
+        = [0,1].map((i) => gl.getUniformLocation(prog.h_prog, "uSampler" + i));
+    const loc_MVP = gl.getUniformLocation(prog.h_prog, "MVP");
+
+    prog.set_uniforms = function(gl) 
     {
         for(let i in textures)
         {
             gl.activeTexture(gl.TEXTURE0 + textures[i].unit);
             gl.bindTexture(gl.TEXTURE_2D, textures[i].texture);
-            gl.uniform1i(gl.getUniformLocation(shader.h_prog, "uSampler" + i), textures[i].unit);
+            gl.uniform1i(loc_uSampler[i], textures[i].unit);
         }
-        gl.uniformMatrix4fv(gl.getUniformLocation(shader.h_prog, "MVP"), false, MVP.elements);
+        gl.uniformMatrix4fv(loc_MVP, false, MVP);
     };
     
     let t_last = Date.now();
+
     const ANGLE_STEP = 45;
     
-    let tick = function() {
+    function tick() {
         let now = Date.now();
         let elapsed = now - t_last;
         t_last = now;
         
-        MVP.rotate(( (ANGLE_STEP * elapsed) / 1000.0) % 360.0, 0, 0, 1);
+        mat4.rotate(MVP, MVP, toRadian(( (ANGLE_STEP * elapsed) / 1000.0) % 360.0), [0, 0, 1]);
         
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        render_object(gl, shader, obj);
+        render_object(gl, prog, obj);
         requestAnimationFrame(tick, canvas); // Request that the browser calls tick
     };
     
@@ -108,18 +121,10 @@ function main()
         });
 }
 
-function init_shader(gl, src_v, src_f)
+function render_object(gl, prog, object)
 {
-    initShaders(gl, src_v, src_f);
-    let h_prog = gl.program;
-    return h_prog;
-}
-
-
-function render_object(gl, shader, object)
-{
-    gl.useProgram(shader.h_prog);
-    shader.set_uniforms(gl);
+    gl.useProgram(prog.h_prog);
+    prog.set_uniforms(gl);
     gl.bindVertexArray(object.vao);
     
     if(object.drawcall == "drawArrays") gl.drawArrays(object.type, 0, object.n);
@@ -129,23 +134,22 @@ function render_object(gl, shader, object)
     gl.useProgram(null);
 }
 
-
-function initVBO(gl)
+function initVBO(gl, loc_aPosition, loc_aTexCoord0, loc_aTexCoord1)
 {
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     
-    let verts = new Float32Array([
+    const verts = new Float32Array([
         -0.5,  0.5,   0, 1,  -1,  2,
         -0.5, -0.5,   0, 0,  -1, -1,
          0.5,  0.5,   1, 1,   2,  2,
          0.5, -0.5,   1, 0,   2, -1
     ]);
-    let buf = gl.createBuffer();
+    const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
     
-    let SZ = verts.BYTES_PER_ELEMENT;
+    const SZ = verts.BYTES_PER_ELEMENT;
     
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, SZ*6, 0);
     gl.enableVertexAttribArray(loc_aPosition);
@@ -172,4 +176,5 @@ function init_texture(gl, tex)
     return true;
 }
 
+main();
 

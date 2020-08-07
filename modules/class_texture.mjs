@@ -1,6 +1,6 @@
 "use strict"
 
-class Texture
+export class Texture
 {
 	constructor(gl, image, flipY = true)
 	{
@@ -12,7 +12,7 @@ class Texture
 	}
 }
 
-class TextureCubemap
+export class TextureCubemap
 {
 	constructor(gl, images)
 	{

@@ -5,7 +5,7 @@
 		<title>Cubemap</title>
 	</head>
 
-	<body onload="main()">
+	<body>
 		<h1 align=center>Cubemap</h1>
 		<canvas id="webgl" width="1024" height="1024">
 			Please use a browser that supports "canvas"
@@ -19,18 +19,7 @@
 
 		<p id="output">
 		</p>
-
-
-
-		<script src="../lib/webgl-utils.js"></script>
-		<script src="../lib/webgl-debug.js"></script>
-		<script src="../lib/cuon-utils.js"></script>
-		<script src="../lib/cuon-matrix.js"></script>
 		<script src="../resources/monkey_sub2_smooth.js"></script>
-		
-		<script src="tex-cubemap.js"></script>
-		<script src="class_mesh.js"></script>
-		<script src="class_shader.js"></script>
-		<script src="class_texture.js"></script>
+		<script type="module" src="tex-cubemap.js"></script>
 	</body>
 </html>

@@ -1,38 +1,47 @@
-"use strict";
-const loc_aPosition = 5;
-const loc_aTexCoord = 2;
-let src_vert =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
-out vec2 vTexCoord;
-void main() {
-  gl_Position = aPosition;
-  vTexCoord = aTexCoord;
-}
-`;
+import {Shader} from "../modules/class_shader.mjs"
 
-let src_frag =
-`#version 300 es
-precision mediump float;
-uniform sampler2D uSampler;
-in vec2 vTexCoord;
-out vec4 fColor;
-void main() {
-  fColor = texture(uSampler, vTexCoord);
-}
-`;
+"use strict";
 
 function main() 
 {
-    let canvas = document.getElementById('webgl');
-    let gl = canvas.getContext("webgl2");
+    const loc_aPosition = 5;
+    const loc_aTexCoord = 2;
+
+    const src_vert =
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aTexCoord}) in vec2 aTexCoord;
+    out vec2 vTexCoord;
+    void main() {
+      gl_Position = aPosition;
+      vTexCoord = aTexCoord;
+    }
+    `;
     
-    initShaders(gl, src_vert, src_frag);
-    let vao = initVertexBuffers(gl);
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    uniform sampler2D uSampler;
+    in vec2 vTexCoord;
+    out vec4 fColor;
+    void main() {
+      fColor = texture(uSampler, vTexCoord);
+    }
+    `;
+
+
+    const canvas = document.getElementById('webgl');
+    const gl = canvas.getContext("webgl2");
+    
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
+
+    const loc_uSampler = gl.getUniformLocation(prog.h_prog, 'uSampler');
+
+    const vao = initVertexBuffers(gl, loc_aPosition, loc_aTexCoord);
     
     gl.clearColor(0.5, 0.5, 0.5, 1.0);
-    initTextures(gl);
+    initTextures(gl, loc_uSampler);
     gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
 
     gl.bindVertexArray(vao);
@@ -41,12 +50,12 @@ function main()
     
 }
 
-function initVertexBuffers(gl) 
+function initVertexBuffers(gl, loc_aPosition, loc_aTexCoord) 
 {
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    let verticesTexCoords = new Float32Array([
+    const verticesTexCoords = new Float32Array([
       // Vertex coordinates, texture coordinate
       -0.5,  0.5,   0.0, 1.0,
       -0.5, -0.5,   0.0, 0.0,
@@ -54,12 +63,12 @@ function initVertexBuffers(gl)
        0.5, -0.5,   1.0, 0.0,
     ]);
     
-    let vertexTexCoordBuffer = gl.createBuffer();
+    const vertexTexCoordBuffer = gl.createBuffer();
     
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
     
-    let FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+    const FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
     
     gl.vertexAttribPointer(loc_aPosition, 2, gl.FLOAT, false, FSIZE * 4, 0);
     gl.enableVertexAttribArray(loc_aPosition);  // Enable the assignment of the buffer object
@@ -72,10 +81,9 @@ function initVertexBuffers(gl)
     return vao;
 }
 
-function initTextures(gl) 
+function initTextures(gl, loc_uSampler) 
 {
-    let texture = gl.createTexture();
-    let loc_uSampler = gl.getUniformLocation(gl.program, 'uSampler');
+    const texture = gl.createTexture();
     
     gl.bindTexture(gl.TEXTURE_2D, texture);
     
@@ -92,3 +100,4 @@ function initTextures(gl)
 }
 
 
+main();
