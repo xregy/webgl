@@ -3,51 +3,54 @@
     <head>
         <meta charset="utf-8" />
         <title>default z-axis</title>
-        <script src="../lib/cuon-matrix.js"></script>
-        <script>
-            "use stricrt";
-            const loc_aPosition = 7;
-            const loc_aColor = 9;
-            const src_vert = 
-            `#version 300 es
-                layout(location=${loc_aPosition}) in vec4 aPosition;
-                layout(location=${loc_aColor}) in vec4 aColor;
-                out vec4 vColor;
-                uniform mat4 uMVP;
-                void main()
-                {
-                    gl_Position = uMVP*aPosition;
-                    vColor = aColor;
-                }
-            `;
-            const src_frag = 
-            `#version 300 es
-                precision mediump float;
-                in vec4 vColor;
-                out vec4 fColor;
-                void main()
-                {
-                    fColor = vColor;
-                }
-            `;
-            
+        <script type="module">
+            import * as mat4 from "../lib/gl-matrix/mat4.js"
+
+            "use strict"
+
             function main()
             {
+                const loc_aPosition = 7;
+                const loc_aColor = 9;
+
+                const src_vert = 
+                `#version 300 es
+                    layout(location=${loc_aPosition}) in vec4 aPosition;
+                    layout(location=${loc_aColor}) in vec4 aColor;
+                    out vec4 vColor;
+                    uniform mat4 uMVP;
+                    void main()
+                    {
+                        gl_Position = uMVP*aPosition;
+                        vColor = aColor;
+                    }
+                `;
+                const src_frag = 
+                `#version 300 es
+                    precision mediump float;
+                    in vec4 vColor;
+                    out vec4 fColor;
+                    void main()
+                    {
+                        fColor = vColor;
+                    }
+                `;
+ 
                 // Getting the WebGL context
-                let canvas = document.getElementById('webgl');
-                gl = canvas.getContext("webgl2");
+                const canvas = document.getElementById('webgl');
+                const gl = canvas.getContext("webgl2");
 
                 gl.enable(gl.DEPTH_TEST);
             
                 // Compiling the shaders
-                let h_prog = gl.createProgram();
+                const h_prog = gl.createProgram();
             
-                let h_vert = gl.createShader(gl.VERTEX_SHADER);
+                const h_vert = gl.createShader(gl.VERTEX_SHADER);
                 gl.shaderSource(h_vert, src_vert);
                 gl.compileShader(h_vert);
                 gl.attachShader(h_prog, h_vert);
             
-                let h_frag = gl.createShader(gl.FRAGMENT_SHADER);
+                const h_frag = gl.createShader(gl.FRAGMENT_SHADER);
                 gl.shaderSource(h_frag, src_frag);
                 gl.compileShader(h_frag);
                 gl.attachShader(h_prog, h_frag);
@@ -56,20 +59,12 @@
 
                 gl.useProgram(h_prog);
             
-                let MVP = new Matrix4();
-//                MVP.setIdentity();
-//                MVP.setOrtho(-1, 1, -1, 1, -1, 1);
+                const MVP = mat4.create();
 
-                let loc_uMVP = gl.getUniformLocation(h_prog, "uMVP");
-                if(!loc_uMVP)
-                {
-                    console.log("Failed to get the location of uMVP.");
-                    return;
-                }
-                console.log(loc_uMVP);
-                gl.uniformMatrix4fv(loc_uMVP, false, MVP.elements);
+                const loc_uMVP = gl.getUniformLocation(h_prog, "uMVP");
+                gl.uniformMatrix4fv(loc_uMVP, false, MVP);
             
-                let vertices = new Float32Array([
+                const vertices = new Float32Array([
                                     -0.9, -0.9, 0.0, 1.0, 0.0, 0.0, // red triangle
                                      0.9, -0.9, 0.0, 1.0, 0.0, 0.0,
                                     -0.9,  0.9, 0.0, 1.0, 0.0, 0.0,
@@ -78,15 +73,15 @@
                                      0.9,  0.9, 0.5, 0.0, 0.0, 1.0]);
             
                 // Setting up the geometry data
-                let vao = gl.createVertexArray();
+                const vao = gl.createVertexArray();
                 gl.bindVertexArray(vao);
             
-                let vbo = gl.createBuffer();
+                const vbo = gl.createBuffer();
             
                 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
                 gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             
-                let sz = vertices.BYTES_PER_ELEMENT;
+                const sz = vertices.BYTES_PER_ELEMENT;
                 
                 gl.vertexAttribPointer(loc_aPosition, 3, gl.FLOAT, false, 6*sz, 0);
                 gl.enableVertexAttribArray(loc_aPosition);
@@ -109,11 +104,12 @@
                 gl.bindVertexArray(null);
             
             }
+            main();
         </script>
 
     </head>
 
-    <body onload="main()">
+    <body>
         <h1 align=center>default z-axis</h1>
         <canvas id="webgl" width="512" height="512" align=center>
             Please use a browser that supports "canvas"

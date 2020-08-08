@@ -1,51 +1,53 @@
-"use strict";
-const loc_aPosition = 3;
-const VSHADER_SOURCE =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform matrices
-{
-    int  scale;
-    vec2 offset;
-    mat4 R;
-};
-void main() {
-    gl_Position = R * (vec4(0.001 * float(scale)*aPosition.xyz, 1) + vec4(offset.xy, 0, 0));
-}`;
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
 
-const FSHADER_SOURCE =
-`#version 300 es
-precision mediump float;
-out vec4 fColor;
-void main() {
-    fColor = vec4(1.0, 0.0, 0.0, 1.0);
-}`;
+"use strict";
+
 
 function main() {
+    const loc_aPosition = 3;
+    const binding_matrices = 7;
+
+    const src_vert =
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    uniform matrices
+    {
+        int  scale;
+        vec2 offset;
+        mat4 R;
+    };
+    void main() {
+        gl_Position = R * (vec4(0.001 * float(scale)*aPosition.xyz, 1) + vec4(offset.xy, 0, 0));
+    }`;
+    
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    out vec4 fColor;
+    void main() {
+        fColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }`;
+
     const canvas = document.getElementById('webgl');
     
     const gl = canvas.getContext('webgl2');
-    if (!gl) {
-        console.log('Failed to get the rendering context for WebGL');
-        return;
-    }
     
-    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
     
-    let {vao, n} = initVAO(gl);
+    let {vao, n} = initVAO(gl, loc_aPosition);
     
-    let matR = new Matrix4();
+    let matR = mat4.create();
     let offset = new Float32Array(2);
     let scale = new Int32Array(1);
 
-    let ubo = initUBO(gl, matR, offset, scale);
+    let ubo = initUBO(gl, prog, binding_matrices, matR, offset, scale);
     
     gl.clearColor(0, 0, 0, 1);
 
-    let tick = function() {
+    function tick() {
         render(gl, vao, n, ubo, matR, offset, scale);
         requestAnimationFrame(tick, canvas);
     };
@@ -59,7 +61,7 @@ function render(gl, vao, n, ubo, matR, offset, scale)
 
     let now = Date.now();
     
-    matR.setRotate( (now*0.001*ANGULAR_VELOCITY)%360, 0, 0, 1);
+    mat4.fromRotation(matR, toRadian( (now*0.001*ANGULAR_VELOCITY)%360), [0, 0, 1]);
     offset[0] = 0.2*(0.5**Math.sin(0.001*now) + 1);
     offset[1] = 0;
     scale[0] = (0.5*Math.sin(0.001*now) + 1)*1000;
@@ -80,7 +82,7 @@ function render(gl, vao, n, ubo, matR, offset, scale)
     */
     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, scale);
     gl.bufferSubData(gl.UNIFORM_BUFFER, FSIZE*2, offset);
-    gl.bufferSubData(gl.UNIFORM_BUFFER, FSIZE*4, matR.elements);
+    gl.bufferSubData(gl.UNIFORM_BUFFER, FSIZE*4, matR);
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
     
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -90,16 +92,16 @@ function render(gl, vao, n, ubo, matR, offset, scale)
     
 }
 
-function initVAO(gl) {
+function initVAO(gl, loc_aPosition) {
     const vertices = new Float32Array([
         0, 0.1,   -0.1, -0.1,   0.1, -0.1
     ]);
     const n = 3; // The number of vertices
     
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     
-    let vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -112,17 +114,15 @@ function initVAO(gl) {
     return {vao, n};
 }
 
-function initUBO(gl, matR, offset, scale) {
+function initUBO(gl, prog, binding_matrices) {
 
-    const binding_matrices = 7;
+    const idx_uniform_block = gl.getUniformBlockIndex(prog.h_prog, 'matrices');   // uniform block index
+    gl.uniformBlockBinding(prog.h_prog, idx_uniform_block, binding_matrices);
 
-    let idx_uniform_block = gl.getUniformBlockIndex(gl.program, 'matrices');   // uniform block index
-    gl.uniformBlockBinding(gl.program, idx_uniform_block, binding_matrices);
-
-    let ubo = gl.createBuffer();
+    const ubo = gl.createBuffer();
     gl.bindBufferBase(gl.UNIFORM_BUFFER, binding_matrices, ubo);
 
-    let FSIZE = 4;
+    const FSIZE = 4;
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
     gl.bufferData(gl.UNIFORM_BUFFER, FSIZE*16*3, gl.DYNAMIC_DRAW);
@@ -130,4 +130,6 @@ function initUBO(gl, matR, offset, scale) {
 
     return ubo;
 }
+
+main();
 

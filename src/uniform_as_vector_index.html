@@ -4,47 +4,48 @@
         <meta charset="utf-8" />
         <title>Uniform as a vector index</title>
     </head>
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script type="text/javascript">
+    <script type="module">
+
+        import {Shader} from "../modules/class_shader.mjs"
+
+        "use strict"
+
         function main()
         {
-            var canvas = document.getElementById('webgl');
-            var gl = canvas.getContext('webgl2');
-            var src_vert = document.getElementById("shader-vert").text;
-            var src_frag = document.getElementById("shader-frag").text;
-            if (!initShaders(gl, src_vert, src_frag))
+            const src_vert = `#version 300 es
+                uniform int u_index;
+                void main()
+                {
+                    vec4    offset = vec4(-0.9, -0.5, 0.5, 0.9);
+                    gl_Position = vec4(offset[u_index], 0.0, 0.0, 1.0);
+                    gl_PointSize = 10.0;
+                }`;
+            const src_frag = `#version 300 es
+                precision mediump float;
+                out vec4 fColor;
+                void main()
+                {
+                    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
+
+            const canvas = document.getElementById('webgl');
+            const gl = canvas.getContext('webgl2');
+            const prog = new Shader(gl, src_vert, src_frag);
+            if(!prog.h_prog)
             {
-                console.log('Failed to intialize shaders.');
+                console.log("Failed to create a Shader object.");
                 return;
             }
-            var loc_index = gl.getUniformLocation(gl.program, "u_index");
+            gl.useProgram(prog.h_prog);
+            const loc_index = gl.getUniformLocation(prog.h_prog, "u_index");
             gl.uniform1i(loc_index, 3);
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, 1);
         }
+        main();
     </script>
-    <script id="shader-vert" type="x-shader/x-vertex">#version 300 es
-        uniform int u_index;
-        void main()
-        {
-            vec4    offset = vec4(-0.9, -0.5, 0.5, 0.9);
-            gl_Position = vec4(offset[u_index], 0.0, 0.0, 1.0);
-            gl_PointSize = 10.0;
-        }
-    </script>
-    <script id="shader-frag" type="x-shader/x-fragment">#version 300 es
-        precision mediump float;
-        out vec4 fColor;
-        void main()
-        {
-            fColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }
-    </script>
-
-    <body onload="main()">
+    <body>
         <h1 align=center>Uniform as a vector index</h1>
         <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"

@@ -1,73 +1,62 @@
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {toRadian} from "../lib/gl-matrix/common.js"
+
 "use strict";
-const loc_aPosition = 3;
-const VSHADER_SOURCE_1 =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform matrices
-{
-    mat4 uMat[3];
-};
-void main() {
-    gl_Position = uMat[0] * uMat[1] * uMat[2] * aPosition;
-}`;
-
-const FSHADER_SOURCE_1 =
-`#version 300 es
-precision mediump float;
-out vec4 fColor;
-void main() {
-    fColor = vec4(1.0, 0.0, 0.0, 1.0);
-}`;
-const VSHADER_SOURCE_2 =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-uniform matrices
-{
-    mat4 uMat[3];
-};
-void main() {
-    gl_Position = uMat[0] * uMat[1] * uMat[2] * vec4(0.5*aPosition.xyz, 1);
-}`;
-
-const FSHADER_SOURCE_2 =
-`#version 300 es
-precision mediump float;
-out vec4 fColor;
-void main() {
-    fColor = vec4(0.0, 0.0, 1.0, 1.0);
-}`;
-
 
 function main() {
+    const loc_aPosition = 3;
+    const binding_matrices = 8;
+
+    const src_vert =
+    [
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    uniform matrices
+    {
+        mat4 uMat[3];
+    };
+    void main() {
+        gl_Position = uMat[0] * uMat[1] * uMat[2] * aPosition;
+    }`,
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    uniform matrices
+    {
+        mat4 uMat[3];
+    };
+    void main() {
+        gl_Position = uMat[0] * uMat[1] * uMat[2] * vec4(0.5*aPosition.xyz, 1);
+    }`];
+ 
+    const src_frag = 
+    [
+    `#version 300 es
+    precision mediump float;
+    out vec4 fColor;
+    void main() {
+        fColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }`,
+    `#version 300 es
+    precision mediump float;
+    out vec4 fColor;
+    void main() {
+        fColor = vec4(0.0, 0.0, 1.0, 1.0);
+    }`];
+
     const canvas = document.getElementById('webgl');
     
     const gl = canvas.getContext('webgl2');
-    if (!gl) {
-        console.log('Failed to get the rendering context for WebGL');
-        return;
-    }
 
     let progs = [];
-    
-    if (!initShaders(gl, VSHADER_SOURCE_1, FSHADER_SOURCE_1)) {
-        console.log('Failed to intialize shaders.');
-        return;
+    for(let i=0 ; i<2 ; i++)
+    {
+        progs[i] = new Shader(gl, src_vert[i], src_frag[i]);
     }
-    progs[0] = gl.program;
-
-     if (!initShaders(gl, VSHADER_SOURCE_2, FSHADER_SOURCE_2)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
-    progs[1] = gl.program
-   
-    let {vao, n} = initVAO(gl);
     
-    let matR = new Matrix4();
-    let matT = new Matrix4();
-    let matS = new Matrix4();
-
-    let {ubo,buffer} = initUBO(gl, progs, matR, matT, matS);
+    const {vao, n} = initVAO(gl, loc_aPosition);
+    
+    let {ubo, buffer, matR, matT, matS} = initUBO(gl, progs, binding_matrices);
 
     gl.clearColor(0, 0, 0, 1);
 
@@ -85,11 +74,11 @@ function render(gl, progs, vao, n, ubo, buffer, matR, matT, matS)
 
     let now = Date.now();
     
-    matR.setRotate( (now*0.001*ANGULAR_VELOCITY)%360, 0, 0, 1);
-    matT.setTranslate(0.2*(0.5**Math.sin(0.001*now) + 1), 0, 0);
-    let s = 0.5*Math.sin(0.001*now) + 1;
-    matS.setScale(s,s,s);
-    
+    mat4.fromRotation(matR, toRadian( (now*0.001*ANGULAR_VELOCITY)%360), [0, 0, 1]);
+    mat4.fromTranslation(matT, [0.2*(0.5**Math.sin(0.001*now) + 1), 0, 0]);
+    const s = 0.5*Math.sin(0.001*now) + 1;
+    mat4.fromScaling(matS, [s,s,s]);
+
     gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, buffer); // Update three uniforms all at once.
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
@@ -98,7 +87,7 @@ function render(gl, progs, vao, n, ubo, buffer, matR, matT, matS)
 
     for(let i=0 ; i<2 ; i++)
     {
-        gl.useProgram(progs[i]);
+        gl.useProgram(progs[i].h_prog);
         gl.bindVertexArray(vao);
         gl.drawArrays(gl.TRIANGLES, 0, n);
         gl.bindVertexArray(null);
@@ -106,7 +95,7 @@ function render(gl, progs, vao, n, ubo, buffer, matR, matT, matS)
     }
 }
 
-function initVAO(gl) {
+function initVAO(gl, loc_aPosition) {
     const vertices = new Float32Array([
         0, 0.1,   -0.1, -0.1,   0.1, -0.1
     ]);
@@ -128,35 +117,36 @@ function initVAO(gl) {
     return {vao, n};
 }
 
-function initUBO(gl, progs, matR, matT, matS) {
+function initUBO(gl, progs, binding_matrices) {
 
-    const binding_matrices = 7;
+    const ubo = gl.createBuffer();
 
-    let ubo = gl.createBuffer();
     gl.bindBufferBase(gl.UNIFORM_BUFFER, binding_matrices, ubo);
 
     for(let i=0 ; i<2 ; i++)
     {
-        let idx_uniform_block = gl.getUniformBlockIndex(progs[i], 'matrices');   // uniform block index
-        gl.uniformBlockBinding(progs[i], idx_uniform_block, binding_matrices);
+        let idx_uniform_block = gl.getUniformBlockIndex(progs[i].h_prog, 'matrices');   // uniform block index
+        gl.uniformBlockBinding(progs[i].h_prog, idx_uniform_block, binding_matrices);
     }
 
-    let FSIZE = 4;
+    const FSIZE = 4;
 
-    let buffer = new ArrayBuffer(FSIZE*16*3);
+    const buffer = new ArrayBuffer(FSIZE*16*3);
 
-    // We re-assign the `elements' properties of Matrix4 objects
+    // We re-assign the matrices
     // to the `DataView' in the buffer.
     // Old `Float32Array' objects referenced by `elements' will be garbage-collected later.
     // From now on, all the matrix operations will modify data in `buffer'.
-    matR.elements = new Float32Array(buffer, 0, 16);
-    matT.elements = new Float32Array(buffer, FSIZE*16, 16);
-    matS.elements = new Float32Array(buffer, FSIZE*16*2, 16);
+    let matR = new Float32Array(buffer, 0, 16);
+    let matT = new Float32Array(buffer, FSIZE*16, 16);
+    let matS = new Float32Array(buffer, FSIZE*16*2, 16);
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
     gl.bufferData(gl.UNIFORM_BUFFER, FSIZE*16*3, gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
-    return {ubo,buffer};
+    return {ubo, buffer, matR, matT, matS};
 }
+
+main();
 

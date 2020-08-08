@@ -5,17 +5,13 @@
     <title>Polygon Offset</title>
   </head>
 
-  <body onload="main()">
+  <body>
     <h1 align=center>Polygon Offset</h1>
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
 
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script src="../lib/cuon-matrix.js"></script>
-    <script src="polygon_offset.js"></script>
+    <script type="module" src="polygon_offset.js"></script>
     <table>
         <tr><td>longitude/azimuth</td><td><input type=range id="azimuth" min=0 max=360 value=30></td></tr>
         <tr><td>latitude/altitude</td><td> <input type=range id="altitude" min=0 max=90 value=30></td></tr>

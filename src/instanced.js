@@ -1,50 +1,47 @@
-"use strict";
-const loc_aPosition = 3;
-const loc_aColor = 8;
-const loc_aScale = 7;
-const VSHADER_SOURCE =
-`#version 300 es
-#define M_PI 3.1415926535897932384626433832795
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-layout(location=${loc_aScale}) in float aScale;
-uniform float uN;
-out vec4 vColor;
-void main() {
-    float angle = 2.0*M_PI*float(gl_InstanceID)/uN;
-    float c = cos(angle);
-    float s = sin(angle);
-    mat4 R = mat4(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-    gl_Position = R*vec4(aScale*aPosition.xyz, 1);
-    vColor = aColor;
-}`;
+import {Shader} from "../modules/class_shader.mjs"
 
-// Fragment shader program
-const FSHADER_SOURCE =
-`#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main() {
-    fColor = vColor;
-}`;
+"use strict"
 
 function main() {
+    const loc_aPosition = 3;
+    const loc_aColor = 8;
+    const loc_aScale = 7;
+
+    const src_vert =
+    `#version 300 es
+    #define M_PI 3.1415926535897932384626433832795
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    layout(location=${loc_aScale}) in float aScale;
+    uniform float uN;
+    out vec4 vColor;
+    void main() {
+        float angle = 2.0*M_PI*float(gl_InstanceID)/uN;
+        float c = cos(angle);
+        float s = sin(angle);
+        mat4 R = mat4(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        gl_Position = R*vec4(aScale*aPosition.xyz, 1);
+        vColor = aColor;
+    }`;
+    
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main() {
+        fColor = vColor;
+    }`;
+
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext('webgl2');
-    if (!gl) {
-        console.log('Failed to get the rendering context for WebGL');
-        return;
-    }
-    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
 
-    let loc_uN;
-    loc_uN = gl.getUniformLocation(gl.program, 'uN');
+    const loc_uN = gl.getUniformLocation(prog.h_prog, 'uN');
 
-    let {vao, n} = initVAO(gl);
+    let {vao, n} = initVAO(gl, loc_aPosition, loc_aScale, loc_aColor);
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -57,7 +54,7 @@ function main() {
     gl.bindVertexArray(null);
 }
 
-function initVAO(gl) {
+function initVAO(gl, loc_aPosition, loc_aScale, loc_aColor) {
     const vertices = new Float32Array([
         0, 0, -0.1, -0.5, 0.1, -0.5,
         1.5,
@@ -72,10 +69,10 @@ function initVAO(gl) {
     ]);
     const n = 3; // The number of vertices
     
-    let vao = gl.createVertexArray();
+    const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
-    let vbo = gl.createBuffer();
+    const vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
@@ -98,3 +95,5 @@ function initVAO(gl) {
     
     return {vao, n};
 }
+
+main();

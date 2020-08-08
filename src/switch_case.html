@@ -4,53 +4,56 @@
         <meta charset="utf-8" />
         <title>Switch-Case</title>
     </head>
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script type="text/javascript">
+    <script type="module">
+        import {Shader} from "../modules/class_shader.mjs"
+
         "use strict";
-        const loc_aIndex = 0;
-        const src_vert = `#version 300 es
-        layout(location=${loc_aIndex}) in int aIndex;
-        void main()
-        {
-            vec4    p;
-            switch(aIndex)
-            {
-                case 0:
-                    p = vec4(-.5,-.5, 0, 1);
-                    break;
-                case 1:
-                    p = vec4(.5,-.5, 0, 1);
-                    break;
-                case 2:
-                    p = vec4(0,.5, 0, 1);
-                    break;
-                default:
-                    p = vec4(0,0,0,1);
-                    break;
-            }
-            gl_Position = p;
-            gl_PointSize = 10.0;
-        }`;
-        const src_frag = `#version 300 es
-        precision mediump float;
-        out vec4 fColor;
-        void main()
-        {
-            fColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }`;
+
         function main()
         {
+            const loc_aIndex = 0;
+            const src_vert = `#version 300 es
+                layout(location=${loc_aIndex}) in int aIndex;
+                void main()
+                {
+                    vec4    p;
+                    switch(aIndex)
+                    {
+                        case 0:
+                            p = vec4(-.5,-.5, 0, 1);
+                            break;
+                        case 1:
+                            p = vec4(.5,-.5, 0, 1);
+                            break;
+                        case 2:
+                            p = vec4(0,.5, 0, 1);
+                            break;
+                        default:
+                            p = vec4(0,0,0,1);
+                            break;
+                    }
+                    gl_Position = p;
+                    gl_PointSize = 10.0;
+                }`;
+            const src_frag = `#version 300 es
+                precision mediump float;
+                out vec4 fColor;
+                void main()
+                {
+                    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
+
             const canvas = document.getElementById('webgl');
             const gl = canvas.getContext('webgl2');
-            initShaders(gl, src_vert, src_frag);
+            const prog = new Shader(gl, src_vert, src_frag);
+            gl.useProgram(prog.h_prog);
+
             const verts = new Int32Array([0, 1, 2]);
 
-            let vao = gl.createVertexArray();
+            const vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
-            let vbo = gl.createBuffer();
+            const vbo = gl.createBuffer();
 
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
             gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
@@ -62,9 +65,10 @@
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, 3);
         }
+        main();
     </script>
 
-    <body onload="main()">
+    <body>
         <h1 align=center>Switch-Case</h1>
         <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"

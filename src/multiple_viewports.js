@@ -1,65 +1,76 @@
+import {Shader} from "../modules/class_shader.mjs"
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+
 "use strict";
-const loc_aPosition = 3;
-const loc_aColor = 7;
-const SRC_VERT = 
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-out vec4 vColor;
-uniform mat4 uMVP;
-void main()
-{
-    gl_Position = uMVP*aPosition;
-    vColor = aColor;
-}`;
-const SRC_FRAG =
-`#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main()
-{
-    fColor = vColor;
-}`;
 
 function main()
 {
+    const loc_aPosition = 3;
+    const loc_aColor = 7;
+
+    const src_vert = 
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    out vec4 vColor;
+    uniform mat4 uMVP;
+    void main()
+    {
+        gl_Position = uMVP*aPosition;
+        vColor = aColor;
+    }`;
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main()
+    {
+        fColor = vColor;
+    }`;
+
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext("webgl2");
 
-    initShaders(gl, SRC_VERT, SRC_FRAG);
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-    const {vao,n} = init_vbo(gl);
+    const {vao,n} = init_vbo(gl, loc_aPosition, loc_aColor);
     
-    let w = canvas.width;
-    let h = canvas.height;
+    const w = canvas.width;
+    const h = canvas.height;
     
-    const loc_MVP = gl.getUniformLocation(gl.program, 'uMVP');
-    let MVP = new Matrix4();
+    const loc_MVP = gl.getUniformLocation(prog.h_prog, 'uMVP');
     
     gl.clear(gl.COLOR_BUFFER_BIT);
     
     gl.viewport(0, 0, w/2, h);
-    MVP.setOrtho(-1,1,-1,1,0,2);
-    MVP.lookAt(1,.1,1, 0,0,0, 0,1,0);
-    gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
+
+    const P = mat4.create();
+    const V = mat4.create();
+    const MVP = mat4.create();
+    mat4.ortho(P, -1,1,-1,1,0,2);
+    mat4.lookAt(V, [1,.1,1], [0,0,0], [0,1,0]);
+    mat4.multiply(MVP, P, V);
+    gl.uniformMatrix4fv(loc_MVP, false, MVP);
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
     gl.bindVertexArray(null);
     
     gl.viewport(w/2, 0, w/2, h);
-    MVP.setOrtho(-1,1,-1,1,0,2);
-    MVP.lookAt(1,.3,-1, 0,0,0, 0,1,0);
-    gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
+    mat4.ortho(P, -1,1,-1,1,0,2);
+    mat4.lookAt(V, [1,.3,-1], [0,0,0], [0,1,0]);
+    mat4.multiply(MVP, P, V);
+    gl.uniformMatrix4fv(loc_MVP, false, MVP);
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
     gl.bindVertexArray(null);
-
 }
 
-function init_vbo(gl, n)
+function init_vbo(gl, loc_aPosition, loc_aColor)
 {
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -89,3 +100,6 @@ function init_vbo(gl, n)
 
     return {vao,n:4};
 }
+
+main();
+

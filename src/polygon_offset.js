@@ -1,45 +1,50 @@
-// ColoredCube.js (c) 2012 matsuda
-// Vertex shader program
-"use strict";
-const loc_aPosition = 3;
-const loc_aColor = 7;
-const VSHADER_SOURCE =
-`#version 300 es
-layout(location=${loc_aPosition}) in vec4 aPosition;
-layout(location=${loc_aColor}) in vec4 aColor;
-uniform mat4 uMVP;
-out vec4 vColor;
-void main() {
-    gl_Position = uMVP * aPosition;
-    vColor = aColor;
-}`;
+import * as mat4 from "../lib/gl-matrix/mat4.js"
+import {Shader} from "../modules/class_shader.mjs"
+import {toRadian} from "../lib/gl-matrix/common.js"
 
-// Fragment shader program
-const FSHADER_SOURCE =
-`#version 300 es
-precision mediump float;
-in vec4 vColor;
-out vec4 fColor;
-void main() {
-    fColor = vColor;
-}`;
+"use strict";
 
 function main() {
+    const loc_aPosition = 3;
+    const loc_aColor = 7;
+    
+    const src_vert =
+    `#version 300 es
+    layout(location=${loc_aPosition}) in vec4 aPosition;
+    layout(location=${loc_aColor}) in vec4 aColor;
+    uniform mat4 uMVP;
+    out vec4 vColor;
+    void main() {
+        gl_Position = uMVP * aPosition;
+        vColor = aColor;
+    }`;
+    
+    const src_frag =
+    `#version 300 es
+    precision mediump float;
+    in vec4 vColor;
+    out vec4 fColor;
+    void main() {
+        fColor = vColor;
+    }`;
+
+
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext('webgl2');
-    initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+    const prog = new Shader(gl, src_vert, src_frag);
+    gl.useProgram(prog.h_prog);
     
-    const cube = initFaces(gl);
-    const edges = initEdges(gl);
-    const axes = initAxes(gl);
+    const cube = initFaces(gl, loc_aPosition, loc_aColor);
+    const edges = initEdges(gl, loc_aPosition, loc_aColor);
+    const axes = initAxes(gl, loc_aPosition, loc_aColor);
     
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.polygonOffset(1.0, 1.0);
     
-    const loc_uMVP = gl.getUniformLocation(gl.program, 'uMVP');
+    const loc_uMVP = gl.getUniformLocation(prog.h_prog, 'uMVP');
     
-    let MVP = new Matrix4();
+    const MVP = mat4.create();
 
     document.getElementById("distance").oninput = function(ev) {refresh(gl, cube, edges, axes, MVP, loc_uMVP);};
     document.getElementById("azimuth").oninput = function(ev) {refresh(gl, cube, edges, axes, MVP, loc_uMVP);};
@@ -53,9 +58,9 @@ function main() {
 
 function refresh(gl, cube, edges, axes, MVP, loc_uMVP)
 {
-    let distance = 0.1*parseFloat(document.getElementById("distance").value);
-    let azimuth = parseInt(document.getElementById("azimuth").value);
-    let altitude = parseInt(document.getElementById("altitude").value);
+    const distance = 0.1*parseFloat(document.getElementById("distance").value);
+    const azimuth = parseInt(document.getElementById("azimuth").value);
+    const altitude = parseInt(document.getElementById("altitude").value);
 
     if(document.getElementById("polygonoffset").checked)
     {
@@ -66,13 +71,13 @@ function refresh(gl, cube, edges, axes, MVP, loc_uMVP)
         gl.disable(gl.POLYGON_OFFSET_FILL);
     }
 
-    MVP.setPerspective(30, 1, 1, 100);
+    mat4.perspective(MVP, toRadian(30), 1, 1, 100);
 
-    MVP.translate(0, 0, -distance);
-    MVP.rotate(altitude, 1, 0, 0);
-    MVP.rotate(azimuth, 0, 1, 0);
+    mat4.translate(MVP, MVP, [0, 0, -distance]);
+    mat4.rotate(MVP, MVP, toRadian(altitude), [1, 0, 0]);
+    mat4.rotate(MVP, MVP, toRadian(azimuth), [0, 1, 0]);
 
-    gl.uniformMatrix4fv(loc_uMVP, false, MVP.elements);
+    gl.uniformMatrix4fv(loc_uMVP, false, MVP);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.bindVertexArray(cube.vao);
@@ -90,7 +95,7 @@ function refresh(gl, cube, edges, axes, MVP, loc_uMVP)
 
 }
 
-function initAxes(gl)
+function initAxes(gl, loc_aPosition, loc_aColor)
 {
     const vertices = new Float32Array([
         0, 0, 0, 1, 0, 0,
@@ -122,7 +127,7 @@ function initAxes(gl)
 
 }
 
-function initFaces(gl) {
+function initFaces(gl, loc_aPosition, loc_aColor) {
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -187,7 +192,7 @@ function initFaces(gl) {
 
 }
 
-function initEdges(gl) {
+function initEdges(gl, loc_aPosition, loc_aColor) {
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -264,3 +269,6 @@ function initArrayBuffer(gl, data, num, type, loc_attribute) {
     
     return true;
 }
+
+main();
+

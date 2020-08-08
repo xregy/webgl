@@ -4,42 +4,45 @@
         <meta charset="utf-8" />
         <title>Attribute as a loop count</title>
     </head>
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
-    <script type="text/javascript">
-        "use strict";
-        const loc_aPosition = 0;
-        const src_vert = `#version 300 es
-        layout(location=${loc_aPosition}) in ivec2 aPosition;
-        void main()
-        {
-            ivec2 n = aPosition.xy;
-            float   x=-1.0, y=-1.0;
-            for(int i=0 ; i<n.x ; i++)  x += 0.1;
-            for(int i=0 ; i<n.y ; i++)  y += 0.1;
-            gl_Position = vec4(x,y,0,1);
+    <script type="module">
+        import {Shader} from "../modules/class_shader.mjs"
 
-            gl_PointSize = 10.0;
-        }`;
-        const src_frag = `#version 300 es
-        precision mediump float;
-        out vec4 fColor;
-        void main()
-        {
-            fColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }`;
+        "use strict";
+
         function main()
         {
+            const loc_aPosition = 0;
+            const src_vert = `#version 300 es
+                layout(location=${loc_aPosition}) in ivec2 aPosition;
+                void main()
+                {
+                    ivec2 n = aPosition.xy;
+                    float   x=-1.0, y=-1.0;
+                    for(int i=0 ; i<n.x ; i++)  x += 0.1;
+                    for(int i=0 ; i<n.y ; i++)  y += 0.1;
+                    gl_Position = vec4(x,y,0,1);
+        
+                    gl_PointSize = 10.0;
+                }`;
+            const src_frag = `#version 300 es
+                precision mediump float;
+                out vec4 fColor;
+                void main()
+                {
+                    fColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
+    
             const canvas = document.getElementById('webgl');
             const gl = canvas.getContext('webgl2');
-            initShaders(gl, src_vert, src_frag);
+            const prog = new Shader(gl, src_vert, src_frag);
+            gl.useProgram(prog.h_prog);
+
             const verts = new Int32Array([5,5, 15,5, 10,15]);
 
-            let vao = gl.createVertexArray();
+            const vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
-            let vbo = gl.createBuffer();
+            const vbo = gl.createBuffer();
 
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo);    
             gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
@@ -51,9 +54,10 @@
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, 3);
         }
+        main();
     </script>
 
-    <body onload="main()">
+    <body>
         <h1 align=center>Using an attribute  as a loop count</h1>
         <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"

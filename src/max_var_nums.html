@@ -4,29 +4,25 @@
     <meta charset="utf-8" />
     <title>Querying maximum variable numbers (uniforms, attributes, varyings)</title>
   </head>
-  <script type="text/javascript">
-
-function main() {
-  var canvas = document.getElementById('webgl');
-
-  var gl = getWebGLContext(canvas);
-
-  console.log("maximum # of attributes              = " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
-  console.log("maximum # of uniforms (vert shader)  = " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
-  console.log("maximum # of uniforms (frag shader)  = " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
-  console.log("maximum # of varyings                = " + gl.getParameter(gl.MAX_VARYING_VECTORS));
-
-}
+  <script type="module">
+        function main() {
+            const canvas = document.getElementById('webgl');
+            
+            const gl = canvas.getContext("webgl2");
+            
+            console.log("maximum # of attributes              = " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+            console.log("maximum # of uniforms (vert shader)  = " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
+            console.log("maximum # of uniforms (frag shader)  = " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+            console.log("maximum # of varyings                = " + gl.getParameter(gl.MAX_VARYING_VECTORS));
+        
+        }
+        main();
   </script>
 
-  <body onload="main()">
+  <body>
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
     <h2>Please turn on the console window! </h2>
-
-    <script src="../lib/webgl-utils.js"></script>
-    <script src="../lib/webgl-debug.js"></script>
-    <script src="../lib/cuon-utils.js"></script>
   </body>
 </html>
