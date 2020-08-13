@@ -1,4 +1,3 @@
-//import {Shader} from "../modules/class_shader.mjs"
 import * as mat4 from "../lib/gl-matrix/mat4.js"
 import {toRadian} from "../lib/gl-matrix/common.js"
 
@@ -8,32 +7,48 @@ function main() {
 
     const loc_aPosition = 3;
     const loc_aNormal = 5;
-    const loc_aColor = 7;
+
     const src_vert =
     `#version 300 es
     layout(location=${loc_aPosition}) in vec4 aPosition;
-    layout(location=${loc_aColor}) in vec4 aColor;
-    layout(location=${loc_aNormal}) in vec4 aNormal;
+    layout(location=${loc_aNormal}) in vec3 aNormal;
     uniform mat4 uMVP;
-    out vec4 vColor;
-    out vec4 vNormal;
+    uniform mat4 uN;
+    out vec3 vNormal;
     void main() {
         gl_Position = uMVP * aPosition;
-        vColor = aColor;
-        vNormal = aNormal;
+        vNormal = (uN * vec4(aNormal,0)).xyz;
     }`;
     
     const src_frag =
     `#version 300 es
     precision mediump float;
-    in vec4 vColor;
-    in vec4 vNormal;
+    in vec3 vNormal;
     out vec4 fColor;
-    void main() {
-//        fColor = vColor;
-        fColor = vNormal;
-    }`;
+    struct TMaterial
+    {
+        vec3    ambient;
+        vec3    diffuse;
+    };
+    struct TLight
+    {
+        vec4    position;
+        vec3    ambient;
+        vec3    diffuse;
+    };
+    uniform TMaterial   material;
+    uniform TLight      light;
+    void main()
+    {
+        vec3    n = normalize(vNormal);
+        vec3    l = normalize(light.position.xyz);
 
+        float   l_dot_n = max(dot(l, n), 0.0);
+        vec3    ambient = light.ambient * material.ambient;
+        vec3    diffuse = light.diffuse * material.diffuse * l_dot_n;
+
+        fColor = vec4(ambient + diffuse, 1);
+    }`;
 
     const canvas = document.getElementById('webgl');
     const gl = canvas.getContext('webgl2');
@@ -55,39 +70,96 @@ function main() {
 
     gl.useProgram(h_prog);
 
+    // uniform locations
     const loc_uMVP = gl.getUniformLocation(h_prog, "uMVP");
+    const loc_uN = gl.getUniformLocation(h_prog, "uN");
+    const loc_light = {
+                    position:gl.getUniformLocation(h_prog, "light.position"),
+                    ambient:gl.getUniformLocation(h_prog, "light.ambient"),
+                    diffuse:gl.getUniformLocation(h_prog, "light.diffuse"),
+                };
+    const loc_material = {
+                    ambient:gl.getUniformLocation(h_prog, "material.ambient"),
+                    diffuse:gl.getUniformLocation(h_prog, "material.diffuse"),
+                };
     
-    const cube = initCube({gl, loc_aPosition, loc_aNormal, loc_aColor});
-    const plane = initPlane({gl, loc_aPosition, loc_aNormal, loc_aColor});
+    // initialize VAOs
+    const cube = initCube({gl, loc_aPosition, loc_aNormal});
+    const plane = initPlane({gl, loc_aPosition, loc_aNormal});
     
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    // initialize WebGL states
+    gl.clearColor(0.5, 0.5, 0.5, 1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
+    // matrices
+    let M = mat4.create();
+    let V = mat4.create();
+    let P = mat4.create();
+    let N = mat4.create();
     let MVP = mat4.create();
     let VP = mat4.create();
 
-    mat4.perspective(VP, toRadian(50), 1, 1, 100);
-//    mat4.perspective(VP, toRadian(60), 1, 1, 100);
+    // set up a light
+    const   light = {position:new Float32Array([5, 5, 1, 1]),
+                    ambient:new Float32Array([.3, .3, .3]),
+                    diffuse:new Float32Array([1, 1, 1])};
 
-    mat4.rotate(VP, VP, toRadian(10), [1, 0, 0]);
-    mat4.rotate(VP, VP, toRadian(-40), [0, 1, 0]);
-    mat4.translate(VP, VP, [-3, -1.5, -4]);
+    gl.uniform4fv(loc_light.position, light.position);
+    gl.uniform3fv(loc_light.ambient, light.ambient);
+    gl.uniform3fv(loc_light.diffuse, light.diffuse);
 
-    mat4.copy(MVP, VP);
-    mat4.scale(MVP, MVP, [5, 5, 5]);
-    mat4.rotate(MVP, MVP, toRadian(90), [1, 0, 0]);
+    // set up materials
+    cube.material = {diffuse:new Float32Array([1, .5, .5]),
+                    ambient:new Float32Array([1, .5, .5])};
+
+    plane.material = {diffuse:new Float32Array([.5, 1, 1]),
+                    ambient:new Float32Array([.5, 1, 1])};
+
+    // set up projection 
+    mat4.perspective(P, toRadian(50), 1, 1, 100);
+
+    // set up view transformation
+    mat4.rotate(V, V, toRadian(10), [1, 0, 0]);
+    mat4.rotate(V, V, toRadian(-40), [0, 1, 0]);
+    mat4.translate(V, V, [-3, -1.5, -4]);
+
+    mat4.multiply(VP, P, V);
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // render the plane
+    gl.uniform3fv(loc_material.ambient, plane.material.ambient);
+    gl.uniform3fv(loc_material.diffuse, plane.material.diffuse);
+
+    mat4.fromScaling(M, [5, 5, 5]);
+    mat4.rotate(M, M, toRadian(-90), [1, 0, 0]);
+
+    mat4.multiply(MVP, VP, M);
+
+    mat4.multiply(N, V, M);
+    mat4.invert(N, N);
+    mat4.transpose(N, N);
+
     gl.uniformMatrix4fv(loc_uMVP, false, MVP);
+    gl.uniformMatrix4fv(loc_uN, false, N);
 
     gl.bindVertexArray(plane.vao);
     gl.drawElements(gl.TRIANGLES, plane.n, gl.UNSIGNED_BYTE, 0);
     gl.bindVertexArray(null);
 
-    mat4.copy(MVP, VP);
-    mat4.translate(MVP, MVP, [0, 0.5, 0]);
+    // render the cube
+    gl.uniform3fv(loc_material.ambient, cube.material.ambient);
+    gl.uniform3fv(loc_material.diffuse, cube.material.diffuse);
+
+    mat4.fromTranslation(M, [0, 0.5, 0]);
+    mat4.multiply(MVP, VP, M);
+    mat4.multiply(N, V, M);
+    mat4.invert(N, N);
+    mat4.transpose(N, N);
     gl.uniformMatrix4fv(loc_uMVP, false, MVP);
+    gl.uniformMatrix4fv(loc_uN, false, N);
 
     gl.bindVertexArray(cube.vao);
     gl.drawElements(gl.TRIANGLES, cube.n, gl.UNSIGNED_BYTE, 0);
@@ -95,7 +167,7 @@ function main() {
 }
 
 
-function initCube({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
+function initCube({gl, loc_aPosition, loc_aNormal}) {
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -114,15 +186,6 @@ function initCube({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
        .5,-.5,-.5,  -.5,-.5,-.5,  -.5, .5,-.5,   .5, .5,-.5   // v4-v7-v6-v5 back
     ]);
     
-    const colors = new Float32Array([     // Colors
-      0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  0.4, 0.4, 1.0,  // v0-v1-v2-v3 front(blue)
-      0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  0.4, 1.0, 0.4,  // v0-v3-v4-v5 right(green)
-      1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  1.0, 0.4, 0.4,  // v0-v5-v6-v1 up(red)
-      1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  1.0, 1.0, 0.4,  // v1-v6-v7-v2 left
-      1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  // v7-v4-v3-v2 down
-      0.4, 1.0, 1.0,  0.4, 1.0, 1.0,  0.4, 1.0, 1.0,  0.4, 1.0, 1.0   // v4-v7-v6-v5 back
-    ]);
-
     const normals = new Float32Array([     // normals
          0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1,
          1, 0, 0,    1, 0, 0,    1, 0, 0,    1, 0, 0,
@@ -152,9 +215,6 @@ function initCube({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
     if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, loc_aPosition))
       return -1;
     
-    if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, loc_aColor))
-      return -1;
-
     if (!initArrayBuffer(gl, normals, 3, gl.FLOAT, loc_aNormal))
       return -1;
     
@@ -167,17 +227,12 @@ function initCube({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
     return {vao, n:indices.length};
 }
 
-function initPlane({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
+function initPlane({gl, loc_aPosition, loc_aNormal}) {
 
     const vertices = new Float32Array([   // Vertex coordinates
-//       .5, 0, .5,   .5, 0,-.5,  -.5, 0,-.5,  -.5, 0, .5,  // v0-v5-v6-v1 up
-       .5, .5, 0,   .5, -.5, 0,  -.5, -.5, 0,  -.5, .5, 0  // v0-v5-v6-v1 up
+       .5, .5, 0,   -.5, .5, 0,  -.5, -.5, 0,  .5, -.5, 0  // v0-v5-v6-v1 up
     ]);
     
-    const colors = new Float32Array([     // Colors
-      .5, 1, 1, .5, 1, 1, .5, 1, 1, .5, 1, 1
-    ]);
-
     const normals = new Float32Array([     // Normals
         0, 0, 1,    0, 0, 1,    0, 0, 1,    0, 0, 1
     ]);
@@ -195,9 +250,6 @@ function initPlane({gl, loc_aPosition, loc_aNormal, loc_aColor}) {
     
     // Write the vertex coordinates and color to the buffer object
     if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, loc_aPosition))
-      return -1;
-    
-    if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, loc_aColor))
       return -1;
     
     if (!initArrayBuffer(gl, normals, 3, gl.FLOAT, loc_aNormal))
